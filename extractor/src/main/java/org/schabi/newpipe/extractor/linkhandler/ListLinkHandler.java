@@ -17,6 +17,12 @@ public class ListLinkHandler extends LinkHandler {
         this.sortFilter = sortFilter;
     }
 
+    public ListLinkHandler(String originalUrl, String url, String id) {
+        super(originalUrl, url, id);
+        this.contentFilters = Collections.emptyList();
+        this.sortFilter = "";
+    }
+
     public ListLinkHandler(ListLinkHandler handler) {
         this(handler.originalUrl,
                 handler.url,

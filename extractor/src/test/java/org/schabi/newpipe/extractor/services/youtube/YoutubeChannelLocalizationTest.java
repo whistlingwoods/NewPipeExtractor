@@ -10,6 +10,7 @@ import org.schabi.newpipe.extractor.channel.ChannelExtractor;
 import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.localization.DateWrapper;
 import org.schabi.newpipe.extractor.localization.Localization;
+import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeChannelExtractor;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 
 import java.text.SimpleDateFormat;
@@ -20,6 +21,7 @@ import java.util.Map;
 import static org.junit.Assert.fail;
 import static org.schabi.newpipe.extractor.ServiceList.YouTube;
 import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestRelatedItems;
+import static org.schabi.newpipe.extractor.services.DefaultTests.getCompleteChannelTab;
 
 /**
  * A class that tests multiple channels and ranges of "time ago".
@@ -55,9 +57,9 @@ public class YoutubeChannelLocalizationTest {
                 extractor.fetchPage();
 
                 for (ChannelTabExtractor tab : extractor.getTabs()) {
-                    if (tab.getName().equals("Videos")) {
+                    if (tab.getId().equals(YoutubeChannelExtractor.VIDEOS_TAB)) {
                         tab.fetchPage();
-                        itemsPage = defaultTestRelatedItems(tab);
+                        itemsPage = defaultTestRelatedItems(getCompleteChannelTab(tab, true));
                     }
                 }
             } catch (Throwable e) {

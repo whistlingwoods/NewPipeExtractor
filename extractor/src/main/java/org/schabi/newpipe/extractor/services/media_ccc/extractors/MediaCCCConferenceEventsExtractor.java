@@ -21,7 +21,7 @@ public class MediaCCCConferenceEventsExtractor extends ChannelTabExtractor {
     private JsonObject conferenceData;
 
     public MediaCCCConferenceEventsExtractor(StreamingService service, ListLinkHandler linkHandler, JsonObject conferenceData) {
-        super(service, linkHandler);
+        super(service, MediaCCCConferenceExtractor.EVENTS_TAB, linkHandler);
 
         this.conferenceData = conferenceData;
     }
@@ -49,10 +49,4 @@ public class MediaCCCConferenceEventsExtractor extends ChannelTabExtractor {
 
     @Override
     public void onFetchPage(@Nonnull Downloader downloader) throws IOException, ExtractionException {}
-
-    @Nonnull
-    @Override
-    public String getName() throws ParsingException {
-        return "Events";
-    }
 }

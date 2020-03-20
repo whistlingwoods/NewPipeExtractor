@@ -5,7 +5,6 @@ import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
-import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
 import org.schabi.newpipe.extractor.MixedInfoItemsCollector;
 
@@ -18,17 +17,11 @@ public class SoundcloudChannelPlaylistsExtractor extends ChannelTabExtractor {
     private String nextPageUrl = null;
 
     public SoundcloudChannelPlaylistsExtractor(StreamingService service, ListLinkHandler linkHandler) {
-        super(service, linkHandler);
+        super(service, SoundcloudChannelExtractor.PLAYLISTS_TAB, linkHandler);
     }
 
     @Override
     public void onFetchPage(@Nonnull Downloader downloader) throws IOException, ExtractionException {}
-
-    @Nonnull
-    @Override
-    public String getName() throws ParsingException {
-        return "Playlists";
-    }
 
     @Nonnull
     @Override
@@ -51,7 +44,7 @@ public class SoundcloudChannelPlaylistsExtractor extends ChannelTabExtractor {
         try {
             playlistInfoItemsCollector = new MixedInfoItemsCollector(getServiceId());
 
-            String apiUrl = "https://api-v2.soundcloud.com/users/" + getId() + "/playlists_without_albums"
+            String apiUrl = "https://api-v2.soundcloud.com/users/" + getLinkHandler().getId() + "/playlists_without_albums"
                     + "?client_id=" + SoundcloudParsingHelper.clientId()
                     + "&limit=20"
                     + "&linked_partitioning=1";

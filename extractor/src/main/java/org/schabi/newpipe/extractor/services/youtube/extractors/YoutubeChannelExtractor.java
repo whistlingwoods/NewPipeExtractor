@@ -2,10 +2,10 @@ package org.schabi.newpipe.extractor.services.youtube.extractors;
 
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
-
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
 import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.PlaceholderChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
@@ -14,15 +14,12 @@ import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeChannelL
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper;
 import org.schabi.newpipe.extractor.utils.Utils;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.fixThumbnailUrl;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.getJsonResponse;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.getTextFromObject;
+import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.*;
 
 /*
  * Created by Christian Schabesberger on 25.07.16.
@@ -46,6 +43,9 @@ import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeP
 
 @SuppressWarnings("WeakerAccess")
 public class YoutubeChannelExtractor extends ChannelExtractor {
+    public static final String VIDEOS_TAB = "videos";
+    public static final String PLAYLISTS_TAB = "playlists";
+
     private JsonObject initialData;
 
     public YoutubeChannelExtractor(StreamingService service, ListLinkHandler linkHandler) {
@@ -160,10 +160,11 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
 
     @Override
     public List<ChannelTabExtractor> getTabs() throws ParsingException {
-        List<ChannelTabExtractor> tabs = new ArrayList<>();
+        final List<ChannelTabExtractor> tabs = new ArrayList<>();
+        final ListLinkHandler listLinkHandler = (ListLinkHandler) getLinkHandler();
 
-        tabs.add(new YoutubeChannelVideosExtractor(getService(), (ListLinkHandler) getLinkHandler(), getTab("videos"), getName()));
-        tabs.add(new YoutubeChannelPlaylistsExtractor(getService(), (ListLinkHandler) getLinkHandler(), getName()));
+        tabs.add(new YoutubeChannelVideosExtractor(getService(), listLinkHandler, getTab("videos"), getName()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), PLAYLISTS_TAB, listLinkHandler));
 
         return tabs;
     }

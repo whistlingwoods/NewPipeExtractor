@@ -2,20 +2,17 @@ package org.schabi.newpipe.extractor.services.youtube.extractors;
 
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
-
 import org.schabi.newpipe.extractor.InfoItem;
+import org.schabi.newpipe.extractor.MixedInfoItemsCollector;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
-import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
-import org.schabi.newpipe.extractor.MixedInfoItemsCollector;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
+import java.io.IOException;
 
 import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.getJsonResponse;
 import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.getTextFromObject;
@@ -25,10 +22,8 @@ public class YoutubeChannelPlaylistsExtractor extends ChannelTabExtractor {
     private JsonObject playlistsTab;
     private String channelName;
 
-    public YoutubeChannelPlaylistsExtractor(StreamingService service, ListLinkHandler linkHandler, String channelName) {
-        super(service, linkHandler);
-
-        this.channelName = channelName;
+    public YoutubeChannelPlaylistsExtractor(StreamingService service, ListLinkHandler linkHandler) {
+        super(service, YoutubeChannelExtractor.PLAYLISTS_TAB, linkHandler);
     }
 
     @Override
@@ -40,6 +35,7 @@ public class YoutubeChannelPlaylistsExtractor extends ChannelTabExtractor {
         initialData = ajaxJson.getObject(1).getObject("response");
         YoutubeParsingHelper.defaultAlertsCheck(initialData);
         playlistsTab = getTab("playlists");
+        channelName = initialData.getObject("metadata").getObject("channelMetadataRenderer").getString("title");
     }
 
     @Override
@@ -47,11 +43,6 @@ public class YoutubeChannelPlaylistsExtractor extends ChannelTabExtractor {
         return getNextPageUrlFrom(playlistsTab.getObject("content").getObject("sectionListRenderer")
                 .getArray("contents").getObject(0).getObject("itemSectionRenderer")
                 .getArray("contents").getObject(0).getObject("gridRenderer").getArray("continuations"));
-    }
-    @Nonnull
-    @Override
-    public String getName() throws ParsingException {
-        return "Playlists";
     }
 
     @Nonnull
@@ -78,14 +69,19 @@ public class YoutubeChannelPlaylistsExtractor extends ChannelTabExtractor {
         MixedInfoItemsCollector collector = new MixedInfoItemsCollector(getServiceId());
         final JsonArray ajaxJson = getJsonResponse(pageUrl, getExtractorLocalization());
 
-        if (ajaxJson.getObject(1).getObject("response").getObject("continuationContents") == null)
-            return new InfoItemsPage<>(collector, null);
+        if (ajaxJson.getObject(1).getObject("response").getObject("continuationContents") == null) {
+            return InfoItemsPage.emptyPage();
+        }
 
+        channelName = ajaxJson.getObject(1)
+                .getObject("response").getObject("metadata")
+                .getObject("channelMetadataRenderer").getString("title");
         JsonObject sectionListContinuation = ajaxJson.getObject(1).getObject("response")
                 .getObject("continuationContents").getObject("gridContinuation");
 
-        if (sectionListContinuation.getArray("items") == null)
-            return new InfoItemsPage<>(collector, null);
+        if (sectionListContinuation.getArray("items") == null) {
+            return InfoItemsPage.emptyPage();
+        }
 
         collectPlaylistsFrom(collector, sectionListContinuation.getArray("items"));
 

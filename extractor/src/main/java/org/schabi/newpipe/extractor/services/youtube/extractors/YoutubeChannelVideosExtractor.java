@@ -24,7 +24,7 @@ public class YoutubeChannelVideosExtractor extends ChannelTabExtractor {
     private String channelName;
 
     public YoutubeChannelVideosExtractor(StreamingService service, ListLinkHandler linkHandler, JsonObject videoTab, String channelName) {
-        super(service, linkHandler);
+        super(service, YoutubeChannelExtractor.VIDEOS_TAB, linkHandler);
 
         this.videoTab = videoTab;
         this.channelName = channelName;
@@ -38,11 +38,6 @@ public class YoutubeChannelVideosExtractor extends ChannelTabExtractor {
         return getNextPageUrlFrom(videoTab.getObject("content").getObject("sectionListRenderer")
                 .getArray("contents").getObject(0).getObject("itemSectionRenderer")
                 .getArray("contents").getObject(0).getObject("gridRenderer").getArray("continuations"));
-    }
-    @Nonnull
-    @Override
-    public String getName() throws ParsingException {
-        return "Videos";
     }
 
     @Nonnull
@@ -72,8 +67,10 @@ public class YoutubeChannelVideosExtractor extends ChannelTabExtractor {
         if (ajaxJson.getObject(1).getObject("response").getObject("continuationContents") == null)
             return new InfoItemsPage<>(collector, null);
 
+        channelName = ajaxJson.getObject(1).getObject("response").getObject("metadata").getObject("channelMetadataRenderer").getString("title");
         JsonObject sectionListContinuation = ajaxJson.getObject(1).getObject("response")
                 .getObject("continuationContents").getObject("gridContinuation");
+
 
         if (sectionListContinuation.getArray("items") == null)
             return new InfoItemsPage<>(collector, null);

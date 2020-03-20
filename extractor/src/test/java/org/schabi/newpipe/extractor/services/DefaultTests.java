@@ -3,7 +3,10 @@ package org.schabi.newpipe.extractor.services;
 import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.ListExtractor;
 import org.schabi.newpipe.extractor.StreamingService;
+import org.schabi.newpipe.extractor.channel.ChannelExtractor;
 import org.schabi.newpipe.extractor.channel.ChannelInfoItem;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.PlaceholderChannelTabExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.localization.DateWrapper;
@@ -15,13 +18,8 @@ import java.util.Calendar;
 import java.util.List;
 
 import static junit.framework.TestCase.assertFalse;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.schabi.newpipe.extractor.ExtractorAsserts.assertEmptyErrors;
-import static org.schabi.newpipe.extractor.ExtractorAsserts.assertIsSecureUrl;
-import static org.schabi.newpipe.extractor.ExtractorAsserts.assertNotEmpty;
+import static org.junit.Assert.*;
+import static org.schabi.newpipe.extractor.ExtractorAsserts.*;
 import static org.schabi.newpipe.extractor.StreamingService.LinkType;
 
 public final class DefaultTests {
@@ -90,7 +88,7 @@ public final class DefaultTests {
         return page;
     }
 
-    public static <T extends InfoItem> ListExtractor.InfoItemsPage<T> defaultTestMoreItems(ListExtractor<T> extractor) throws IOException, ExtractionException {
+    public static <T extends InfoItem> ListExtractor.InfoItemsPage<T> defaultTestMoreItems(ListExtractor<T> extractor) throws Exception {
         if (extractor.hasNextPage()) {
             ListExtractor.InfoItemsPage<T> nextPage = extractor.getPage(extractor.getNextPageUrl());
             final List<T> items = nextPage.getItems();
@@ -101,6 +99,33 @@ public final class DefaultTests {
             return nextPage;
         }
         return null;
+    }
+
+
+    public static ChannelTabExtractor getCompleteChannelTab(ChannelTabExtractor extractor, boolean autoFetchNewExtractor) throws ExtractionException, IOException {
+        if (extractor instanceof PlaceholderChannelTabExtractor) {
+            final PlaceholderChannelTabExtractor placeholderTabInfo = (PlaceholderChannelTabExtractor) extractor;
+            extractor = extractor.getService().getChannelTabExtractorFactory()
+                    .getTabExtractor(placeholderTabInfo.getId(), extractor.getLinkHandler());
+            if (autoFetchNewExtractor) extractor.fetchPage();
+        }
+        return extractor;
+    }
+
+    public static void defaultTestChannelTabs(ChannelExtractor channelExtractor) throws Exception {
+        for (ChannelTabExtractor tabExtractor : channelExtractor.getTabs()) {
+            tabExtractor = getCompleteChannelTab(tabExtractor, true);
+
+            final ListExtractor.InfoItemsPage<InfoItem> initialPage = defaultTestRelatedItems(tabExtractor);
+
+            if (initialPage.hasNextPage()) {
+                final ChannelTabExtractor newTabExtractor = channelExtractor.getService().getChannelTabExtractorFactory()
+                        .getTabExtractor(tabExtractor.getId(), tabExtractor.getLinkHandler());
+
+                final ListExtractor.InfoItemsPage<? extends InfoItem> nextPage = newTabExtractor.getPage(initialPage.getNextPageUrl());
+                defaultTestListOfItems(channelExtractor.getService(), nextPage.getItems(), nextPage.getErrors());
+            }
+        }
     }
 
     public static void defaultTestGetPageInNewExtractor(ListExtractor<? extends InfoItem> extractor, ListExtractor<? extends InfoItem> newExtractor) throws Exception {

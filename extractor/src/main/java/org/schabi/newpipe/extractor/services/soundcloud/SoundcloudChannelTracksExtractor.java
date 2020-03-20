@@ -18,17 +18,11 @@ public class SoundcloudChannelTracksExtractor extends ChannelTabExtractor {
     private String nextPageUrl = null;
 
     public SoundcloudChannelTracksExtractor(StreamingService service, ListLinkHandler linkHandler) {
-        super(service, linkHandler);
+        super(service, SoundcloudChannelExtractor.TRACKS_TAB, linkHandler);
     }
 
     @Override
     public void onFetchPage(@Nonnull Downloader downloader) throws IOException, ExtractionException {}
-
-    @Nonnull
-    @Override
-    public String getName() throws ParsingException {
-        return "Tracks";
-    }
 
     @Nonnull
     @Override
@@ -51,7 +45,7 @@ public class SoundcloudChannelTracksExtractor extends ChannelTabExtractor {
         try {
             streamInfoItemsCollector = new MixedInfoItemsCollector(getServiceId());
 
-            String apiUrl = "https://api-v2.soundcloud.com/users/" + getId() + "/tracks"
+            String apiUrl = "https://api-v2.soundcloud.com/users/" + getLinkHandler().getId() + "/tracks"
                     + "?client_id=" + SoundcloudParsingHelper.clientId()
                     + "&limit=20"
                     + "&linked_partitioning=1";

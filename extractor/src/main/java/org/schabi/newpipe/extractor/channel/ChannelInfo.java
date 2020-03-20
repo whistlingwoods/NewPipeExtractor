@@ -81,11 +81,20 @@ public class ChannelInfo extends Info {
             info.addError(e);
         }
 
-        List<ChannelTabInfo> tabs = new ArrayList<>();
+        final List<ChannelTabInfo> tabs = new ArrayList<>();
+        final String defaultTabId = NewPipe.getService(serviceId).getChannelTabExtractorFactory().defaultTabId();
+
         for (int i = 0; i < extractor.getTabs().size(); i++) {
             try {
-                ChannelTabInfo tabInfo = ChannelTabInfo.getInfo(extractor.getTabs().get(i), i == 0);
-                tabs.add(tabInfo);
+                final ChannelTabExtractor tabExtractor = extractor.getTabs().get(i);
+                final boolean isDefaultTab = tabExtractor.getId().equals(defaultTabId);
+
+                if (tabExtractor instanceof PlaceholderChannelTabExtractor) {
+                    final PlaceholderChannelTabExtractor placeholderTabExtractor = (PlaceholderChannelTabExtractor) tabExtractor;
+                    tabs.add(PlaceholderChannelTabInfo.getPlaceHolder(placeholderTabExtractor, isDefaultTab));
+                } else {
+                    tabs.add(ChannelTabInfo.getInfo(tabExtractor, isDefaultTab));
+                }
             } catch (Exception e) {
                 info.addError(e);
             }

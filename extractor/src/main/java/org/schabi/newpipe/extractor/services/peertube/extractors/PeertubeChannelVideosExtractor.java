@@ -3,9 +3,9 @@ package org.schabi.newpipe.extractor.services.peertube.extractors;
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
-
 import org.jsoup.helper.StringUtil;
 import org.schabi.newpipe.extractor.InfoItem;
+import org.schabi.newpipe.extractor.MixedInfoItemsCollector;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
@@ -13,14 +13,12 @@ import org.schabi.newpipe.extractor.downloader.Response;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
-import org.schabi.newpipe.extractor.MixedInfoItemsCollector;
 import org.schabi.newpipe.extractor.services.peertube.PeertubeParsingHelper;
 import org.schabi.newpipe.extractor.utils.JsonUtils;
 import org.schabi.newpipe.extractor.utils.Parser;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
+import java.io.IOException;
 
 public class PeertubeChannelVideosExtractor extends ChannelTabExtractor {
     private static final String START_KEY = "start";
@@ -32,7 +30,7 @@ public class PeertubeChannelVideosExtractor extends ChannelTabExtractor {
     private long total;
 
     public PeertubeChannelVideosExtractor(StreamingService service, ListLinkHandler linkHandler) {
-        super(service, linkHandler);
+        super(service, PeertubeChannelExtractor.VIDEOS_TAB, linkHandler);
     }
 
     @Override
@@ -45,12 +43,6 @@ public class PeertubeChannelVideosExtractor extends ChannelTabExtractor {
     public void onFetchPage(@Nonnull Downloader downloader) throws IOException, ExtractionException {
         String pageUrl = getUrl() + "/videos?" + START_KEY + "=0&" + COUNT_KEY + "=" + ITEMS_PER_PAGE;
         this.initPage = getPage(pageUrl);
-    }
-
-    @Nonnull
-    @Override
-    public String getName() throws ParsingException {
-        return "Videos";
     }
 
     private void collectStreamsFrom(MixedInfoItemsCollector collector, JsonObject json, String pageUrl) throws ParsingException {

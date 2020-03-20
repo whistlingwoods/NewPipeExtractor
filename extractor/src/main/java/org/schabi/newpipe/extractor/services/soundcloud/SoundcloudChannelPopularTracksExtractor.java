@@ -1,34 +1,26 @@
 package org.schabi.newpipe.extractor.services.soundcloud;
 
 import org.schabi.newpipe.extractor.InfoItem;
+import org.schabi.newpipe.extractor.MixedInfoItemsCollector;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
-import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
-import org.schabi.newpipe.extractor.MixedInfoItemsCollector;
-
-import java.io.IOException;
 
 import javax.annotation.Nonnull;
+import java.io.IOException;
 
 public class SoundcloudChannelPopularTracksExtractor extends ChannelTabExtractor {
     private MixedInfoItemsCollector streamInfoItemsCollector = null;
     private String nextPageUrl = null;
 
     public SoundcloudChannelPopularTracksExtractor(StreamingService service, ListLinkHandler linkHandler) {
-        super(service, linkHandler);
+        super(service, SoundcloudChannelExtractor.POPULAR_TRACKS_TAB, linkHandler);
     }
 
     @Override
     public void onFetchPage(@Nonnull Downloader downloader) throws IOException, ExtractionException {}
-
-    @Nonnull
-    @Override
-    public String getName() throws ParsingException {
-        return "Popular tracks";
-    }
 
     @Nonnull
     @Override
@@ -51,7 +43,7 @@ public class SoundcloudChannelPopularTracksExtractor extends ChannelTabExtractor
         try {
             streamInfoItemsCollector = new MixedInfoItemsCollector(getServiceId());
 
-            String apiUrl = "https://api-v2.soundcloud.com/users/" + getId() + "/toptracks"
+            String apiUrl = "https://api-v2.soundcloud.com/users/" + getLinkHandler().getId() + "/toptracks"
                     + "?client_id=" + SoundcloudParsingHelper.clientId()
                     + "&limit=20"
                     + "&linked_partitioning=1";

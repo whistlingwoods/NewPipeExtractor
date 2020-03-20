@@ -64,22 +64,6 @@ public class PeertubeChannelExtractorTest {
         }
 
         /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            for (ChannelTabExtractor tab : extractor.getTabs()) {
-                tab.fetchPage();
-                defaultTestRelatedItems(tab);
-            }
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-        }
-
-        /*//////////////////////////////////////////////////////////////////////////
         // ChannelExtractor
         //////////////////////////////////////////////////////////////////////////*/
 
@@ -107,6 +91,11 @@ public class PeertubeChannelExtractorTest {
         @Test
         public void testSubscriberCount() throws ParsingException {
             assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 5);
+        }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
         }
     }
 
@@ -173,26 +162,6 @@ public class PeertubeChannelExtractorTest {
         }
 
         /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            for (ChannelTabExtractor tab : extractor.getTabs()) {
-                tab.fetchPage();
-                defaultTestRelatedItems(tab);
-            }
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-            for (ChannelTabExtractor tab : extractor.getTabs()) {
-                tab.fetchPage();
-                defaultTestMoreItems(tab);
-            }
-        }
-
-        /*//////////////////////////////////////////////////////////////////////////
         // ChannelExtractor
         //////////////////////////////////////////////////////////////////////////*/
 
@@ -220,6 +189,11 @@ public class PeertubeChannelExtractorTest {
         @Test
         public void testSubscriberCount() throws ParsingException {
             assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 1);
+        }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
         }
     }
 }

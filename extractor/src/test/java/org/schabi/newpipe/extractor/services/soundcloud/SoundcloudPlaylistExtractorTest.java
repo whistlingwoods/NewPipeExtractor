@@ -71,7 +71,7 @@ public class SoundcloudPlaylistExtractorTest {
         }
 
         @Test
-        public void testMoreRelatedItems() throws IOException, ExtractionException {
+        public void testMoreRelatedItems() throws Exception {
             defaultTestMoreItems(extractor);
         }
 

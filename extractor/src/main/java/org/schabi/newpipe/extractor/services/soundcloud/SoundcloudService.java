@@ -2,6 +2,8 @@ package org.schabi.newpipe.extractor.services.soundcloud;
 
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractorFactory;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.kiosk.KioskExtractor;
@@ -12,8 +14,13 @@ import org.schabi.newpipe.extractor.search.SearchExtractor;
 import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
 
+import javax.annotation.Nonnull;
+import java.util.List;
+
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.AUDIO;
+import static org.schabi.newpipe.extractor.services.soundcloud.SoundcloudChannelExtractor.*;
 
 public class SoundcloudService extends StreamingService {
 
@@ -116,4 +123,46 @@ public class SoundcloudService extends StreamingService {
         return null;
     }
 
+    private final ChannelTabExtractorFactory channelTabExtractorFactory = new ChannelTabExtractorFactory() {
+        @Nonnull
+        @Override
+        public List<String> availableTabIdList() {
+            return asList(TRACKS_TAB, POPULAR_TRACKS_TAB, ALBUMS_TAB, PLAYLISTS_TAB, REPOSTS_TAB);
+        }
+
+        @Override
+        public String defaultTabId() {
+            return TRACKS_TAB;
+        }
+
+        @Override
+        protected ChannelTabExtractor instantiateTabExtractor(String tabId, ListLinkHandler channelLinkHandler) {
+            ChannelTabExtractor extractor = null;
+
+            switch (tabId) {
+                case TRACKS_TAB:
+                    extractor = new SoundcloudChannelTracksExtractor(SoundcloudService.this, channelLinkHandler);
+                    break;
+                case POPULAR_TRACKS_TAB:
+                    extractor = new SoundcloudChannelPopularTracksExtractor(SoundcloudService.this, channelLinkHandler);
+                    break;
+                case ALBUMS_TAB:
+                    extractor = new SoundcloudChannelAlbumsExtractor(SoundcloudService.this, channelLinkHandler);
+                    break;
+                case PLAYLISTS_TAB:
+                    extractor = new SoundcloudChannelPlaylistsExtractor(SoundcloudService.this, channelLinkHandler);
+                    break;
+                case REPOSTS_TAB:
+                    extractor = new SoundcloudChannelRepostsExtractor(SoundcloudService.this, channelLinkHandler);
+                    break;
+            }
+
+            return extractor;
+        }
+    };
+
+    @Override
+    public ChannelTabExtractorFactory getChannelTabExtractorFactory() {
+        return channelTabExtractorFactory;
+    }
 }

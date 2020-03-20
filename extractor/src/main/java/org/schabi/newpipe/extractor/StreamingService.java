@@ -1,6 +1,8 @@
 package org.schabi.newpipe.extractor;
 
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractorFactory;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
@@ -18,6 +20,7 @@ import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
 import org.schabi.newpipe.extractor.suggestion.SuggestionExtractor;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 
@@ -216,6 +219,8 @@ public abstract class StreamingService {
 
     public abstract CommentsExtractor getCommentsExtractor(ListLinkHandler linkHandler) throws ExtractionException;
 
+    public abstract ChannelTabExtractorFactory getChannelTabExtractorFactory();
+
     /*//////////////////////////////////////////////////////////////////////////
     // Extractors without link handler
     //////////////////////////////////////////////////////////////////////////*/
@@ -267,6 +272,10 @@ public abstract class StreamingService {
             return null;
         }
         return getCommentsExtractor(llhf.fromUrl(url));
+    }
+
+    public ChannelTabExtractor getChannelTabExtractor(String tabId, String channelUrl) throws ExtractionException, IOException {
+        return getChannelTabExtractorFactory().getTabExtractor(tabId, getChannelLHFactory().fromUrl(channelUrl));
     }
 
     /*//////////////////////////////////////////////////////////////////////////

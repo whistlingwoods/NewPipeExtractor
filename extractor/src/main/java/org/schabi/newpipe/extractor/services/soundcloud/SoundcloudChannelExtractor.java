@@ -4,23 +4,28 @@ import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
-
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
 import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.PlaceholderChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Nonnull;
-
 @SuppressWarnings("WeakerAccess")
 public class SoundcloudChannelExtractor extends ChannelExtractor {
+    public static final String TRACKS_TAB = "tracks";
+    public static final String POPULAR_TRACKS_TAB = "popular_tracks";
+    public static final String ALBUMS_TAB = "albums";
+    public static final String PLAYLISTS_TAB = "playlists";
+    public static final String REPOSTS_TAB = "reposts";
+
     private String userId;
     private JsonObject user;
 
@@ -87,11 +92,11 @@ public class SoundcloudChannelExtractor extends ChannelExtractor {
     public List<ChannelTabExtractor> getTabs() {
         List<ChannelTabExtractor> tabs = new ArrayList<>();
 
-        tabs.add(new SoundcloudChannelTracksExtractor(getService(), (ListLinkHandler) getLinkHandler()));
-        tabs.add(new SoundcloudChannelPopularTracksExtractor(getService(), (ListLinkHandler) getLinkHandler()));
-        tabs.add(new SoundcloudChannelAlbumsExtractor(getService(), (ListLinkHandler) getLinkHandler()));
-        tabs.add(new SoundcloudChannelPlaylistsExtractor(getService(), (ListLinkHandler) getLinkHandler()));
-        tabs.add(new SoundcloudChannelRepostsExtractor(getService(), (ListLinkHandler) getLinkHandler()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), TRACKS_TAB, (ListLinkHandler) getLinkHandler()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), POPULAR_TRACKS_TAB, (ListLinkHandler) getLinkHandler()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), ALBUMS_TAB, (ListLinkHandler) getLinkHandler()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), PLAYLISTS_TAB, (ListLinkHandler) getLinkHandler()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), REPOSTS_TAB, (ListLinkHandler) getLinkHandler()));
 
         return tabs;
     }

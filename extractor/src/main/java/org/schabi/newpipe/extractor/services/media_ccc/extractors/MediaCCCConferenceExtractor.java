@@ -19,6 +19,8 @@ import java.util.List;
 import javax.annotation.Nonnull;
 
 public class MediaCCCConferenceExtractor extends ChannelExtractor {
+    public static final String EVENTS_TAB = "events";
+
     private JsonObject conferenceData;
 
     public MediaCCCConferenceExtractor(StreamingService service, ListLinkHandler linkHandler) {

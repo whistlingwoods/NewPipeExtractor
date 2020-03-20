@@ -7,6 +7,7 @@ import com.grack.nanojson.JsonParserException;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
 import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.PlaceholderChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.downloader.Response;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
@@ -19,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PeertubeChannelExtractor extends ChannelExtractor {
+    public static final String VIDEOS_TAB = "videos";
+
     private JsonObject json;
     private final String baseUrl;
 
@@ -96,7 +99,7 @@ public class PeertubeChannelExtractor extends ChannelExtractor {
     public List<ChannelTabExtractor> getTabs() throws ParsingException {
         List<ChannelTabExtractor> tabs = new ArrayList<>();
 
-        tabs.add(new PeertubeChannelVideosExtractor(getService(), (ListLinkHandler) getLinkHandler()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), VIDEOS_TAB, (ListLinkHandler) getLinkHandler()));
 
         return tabs;
     }
