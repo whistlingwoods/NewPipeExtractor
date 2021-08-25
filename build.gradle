@@ -5,15 +5,21 @@ allprojects {
     compileJava.options.encoding = 'UTF-8'
     compileTestJava.options.encoding = 'UTF-8'
 
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
+    sourceCompatibility = 1.7
+    targetCompatibility = 1.7
 
-    version 'v0.21.8'
+    version 'v0.21.9'
     group 'com.github.TeamNewPipe'
 
     repositories {
         jcenter()
         maven { url "https://jitpack.io" }
+    }
+
+    ext {
+        nanojsonVersion = "1d9e1aea9049fc9f85e68b43ba39fe7be1c1f751"
+        spotbugsVersion = "4.4.0"
+        junitVersion = "4.13.2"
     }
 }
 
@@ -46,7 +52,7 @@ task aggregatedJavadocs(type: Javadoc, group: 'Documentation') {
     destinationDir = file("$buildDir/docs/javadoc")
     title = "$project.name $version"
     // options.memberLevel = JavadocMemberLevel.PRIVATE
-    options.links 'https://docs.oracle.com/javase/8/docs/api/'
+    options.links 'https://docs.oracle.com/javase/7/docs/api/'
     options.encoding 'UTF-8'
     // Fixes unknown tag @implNote; the other two were added precautionary
     options.tags = [
