@@ -122,6 +122,11 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
             if (isNullOrEmpty(duration)) throw new ParsingException("Could not get duration");
         }
 
+        // YT returns not a correct duration for "YT shorts" videos
+        if ("SHORTS".equals(duration)) {
+            return 0;
+        }
+
         return YoutubeParsingHelper.parseDurationString(duration);
     }
 
