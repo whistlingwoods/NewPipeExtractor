@@ -20,8 +20,8 @@ package org.schabi.newpipe.extractor.services.youtube;
  * along with NewPipe.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.downloader.DownloaderFactory;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.StreamingService;
@@ -30,8 +30,8 @@ import org.schabi.newpipe.extractor.linkhandler.LinkHandlerFactory;
 
 import java.util.Random;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.schabi.newpipe.extractor.ServiceList.YouTube;
 
 /**
@@ -43,12 +43,12 @@ public class YoutubeTrendingKioskInfoTest {
 
     static KioskInfo kioskInfo;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp()
             throws Exception {
         YoutubeParsingHelper.resetClientVersionAndKey();
         YoutubeParsingHelper.setNumberGenerator(new Random(1));
-        NewPipe.init(new DownloaderFactory().getDownloader(RESOURCE_PATH));
+        NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH));
         LinkHandlerFactory LinkHandlerFactory = ((StreamingService) YouTube).getKioskList().getListLinkHandlerFactoryByType("Trending");
 
         kioskInfo = KioskInfo.getInfo(YouTube, LinkHandlerFactory.fromId("Trending").getUrl());

@@ -9,6 +9,7 @@ import org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeStreamLinkHandlerFactory;
 import org.schabi.newpipe.extractor.stream.StreamInfoItemExtractor;
 import org.schabi.newpipe.extractor.stream.StreamType;
+import org.schabi.newpipe.extractor.utils.JsonUtils;
 import org.schabi.newpipe.extractor.utils.Utils;
 
 import javax.annotation.Nullable;
@@ -40,7 +41,7 @@ import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
  */
 
 public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
-    private JsonObject videoInfo;
+    private final JsonObject videoInfo;
     private final TimeAgoParser timeAgoParser;
     private StreamType cachedStreamType;
 
@@ -162,6 +163,23 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
         return url;
     }
 
+    @Nullable
+    @Override
+    public String getUploaderAvatarUrl() throws ParsingException {
+
+        if (videoInfo.has("channelThumbnailSupportedRenderers")) {
+            return JsonUtils.getArray(videoInfo, "channelThumbnailSupportedRenderers.channelThumbnailWithLinkRenderer.thumbnail.thumbnails")
+                    .getObject(0).getString("url");
+        }
+
+        if (videoInfo.has("channelThumbnail")) {
+            return JsonUtils.getArray(videoInfo, "channelThumbnail.thumbnails")
+                    .getObject(0).getString("url");
+        }
+
+        return null;
+    }
+
     @Override
     public boolean isUploaderVerified() throws ParsingException {
         return YoutubeParsingHelper.isVerified(videoInfo.getArray("ownerBadges"));
@@ -234,15 +252,7 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
 
     @Override
     public String getThumbnailUrl() throws ParsingException {
-        try {
-            // TODO: Don't simply get the first item, but look at all thumbnails and their resolution
-            String url = videoInfo.getObject("thumbnail").getArray("thumbnails")
-                    .getObject(0).getString("url");
-
-            return fixThumbnailUrl(url);
-        } catch (Exception e) {
-            throw new ParsingException("Could not get thumbnail url", e);
-        }
+        return getThumbnailUrlFromInfoItem(videoInfo);
     }
 
     private boolean isPremium() {
@@ -269,5 +279,20 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
         } catch (Exception e) {
             throw new ParsingException("Could not parse date from premiere:  \"" + startTime + "\"");
         }
+    }
+
+    @Nullable
+    @Override
+    public String getShortDescription() throws ParsingException {
+
+        if (videoInfo.has("detailedMetadataSnippets")) {
+            return getTextFromObject(videoInfo.getArray("detailedMetadataSnippets").getObject(0).getObject("snippetText"));
+        }
+
+        if (videoInfo.has("descriptionSnippet")) {
+            return getTextFromObject(videoInfo.getObject("descriptionSnippet"));
+        }
+
+        return null;
     }
 }

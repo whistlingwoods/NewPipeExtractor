@@ -1,11 +1,12 @@
 package org.schabi.newpipe.extractor.services.youtube.stream;
 
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 import org.schabi.newpipe.downloader.DownloaderFactory;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.services.DefaultStreamExtractorTest;
 import org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper;
+import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor;
 import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.stream.StreamType;
 
@@ -24,11 +25,12 @@ public class YoutubeStreamExtractorUnlistedTest extends DefaultStreamExtractorTe
     static final String URL = YoutubeStreamExtractorDefaultTest.BASE_URL + ID;
     private static StreamExtractor extractor;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() throws Exception {
         YoutubeParsingHelper.resetClientVersionAndKey();
         YoutubeParsingHelper.setNumberGenerator(new Random(1));
-        NewPipe.init(new DownloaderFactory().getDownloader(RESOURCE_PATH + "unlisted"));
+        YoutubeStreamExtractor.resetDeobfuscationCode();
+        NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "unlisted"));
         extractor = YouTube.getStreamExtractor(URL);
         extractor.fetchPage();
     }
@@ -43,6 +45,7 @@ public class YoutubeStreamExtractorUnlistedTest extends DefaultStreamExtractorTe
     @Override public StreamType expectedStreamType() { return StreamType.VIDEO_STREAM; }
     @Override public String expectedUploaderName() { return "Hooked"; }
     @Override public String expectedUploaderUrl() { return "https://www.youtube.com/channel/UCPysfiuOv4VKBeXFFPhKXyw"; }
+    @Override public long expectedUploaderSubscriberCountAtLeast() { return 24_300; }
     @Override public List<String> expectedDescriptionContains() {
         return Arrays.asList("https://www.youtube.com/user/Roccowschiptune",
                 "https://www.facebook.com/HookedMagazinDE");
@@ -52,7 +55,7 @@ public class YoutubeStreamExtractorUnlistedTest extends DefaultStreamExtractorTe
     @Nullable @Override public String expectedUploadDate() { return "2017-09-22 00:00:00.000"; }
     @Nullable @Override public String expectedTextualUploadDate() { return "2017-09-22"; }
     @Override public long expectedLikeCountAtLeast() { return 110; }
-    @Override public long expectedDislikeCountAtLeast() { return 0; }
+    @Override public long expectedDislikeCountAtLeast() { return -1; }
     @Override public StreamExtractor.Privacy expectedPrivacy() { return UNLISTED; }
     @Override public String expectedLicence() { return "YouTube licence"; }
     @Override public String expectedCategory() { return "Gaming"; }

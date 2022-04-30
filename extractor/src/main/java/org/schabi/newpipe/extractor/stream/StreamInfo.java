@@ -80,12 +80,12 @@ public class StreamInfo extends Info {
             // country.
             //
             // We will now detect whether the video is blocked by country or not.
-            String errorMsg = extractor.getErrorMessage();
 
-            if (errorMsg != null) {
-                throw new ContentNotAvailableException(errorMsg);
-            } else {
+            final String errorMessage = extractor.getErrorMessage();
+            if (isNullOrEmpty(errorMessage)) {
                 throw e;
+            } else {
+                throw new ContentNotAvailableException(errorMessage, e);
             }
         }
 
@@ -230,6 +230,16 @@ public class StreamInfo extends Info {
         } catch (Exception e) {
             streamInfo.addError(e);
         }
+        try {
+            streamInfo.setUploaderVerified(extractor.isUploaderVerified());
+        } catch (Exception e) {
+            streamInfo.addError(e);
+        }
+        try {
+            streamInfo.setUploaderSubscriberCount(extractor.getUploaderSubscriberCount());
+        } catch (Exception e) {
+            streamInfo.addError(e);
+        }
 
         try {
             streamInfo.setSubChannelName(extractor.getSubChannelName());
@@ -335,6 +345,12 @@ public class StreamInfo extends Info {
             streamInfo.addError(e);
         }
 
+        try {
+            streamInfo.setPreviewFrames(extractor.getFrames());
+        } catch (Exception e) {
+            streamInfo.addError(e);
+        }
+
         streamInfo.setRelatedItems(ExtractorHelper.getRelatedItemsOrLogError(streamInfo, extractor));
 
         return streamInfo;
@@ -355,6 +371,8 @@ public class StreamInfo extends Info {
     private String uploaderName = "";
     private String uploaderUrl = "";
     private String uploaderAvatarUrl = "";
+    private boolean uploaderVerified = false;
+    private long uploaderSubscriberCount = -1;
 
     private String subChannelName = "";
     private String subChannelUrl = "";
@@ -385,6 +403,11 @@ public class StreamInfo extends Info {
     private List<String> tags = new ArrayList<>();
     private List<StreamSegment> streamSegments = new ArrayList<>();
     private List<MetaInfo> metaInfo = new ArrayList<>();
+
+    /**
+     * Preview frames, e.g. for the storyboard / seekbar thumbnail preview
+     */
+    private List<Frameset> previewFrames = Collections.emptyList();
 
     /**
      * Get the stream type
@@ -513,6 +536,22 @@ public class StreamInfo extends Info {
 
     public void setUploaderAvatarUrl(String uploaderAvatarUrl) {
         this.uploaderAvatarUrl = uploaderAvatarUrl;
+    }
+
+    public boolean isUploaderVerified() {
+        return uploaderVerified;
+    }
+
+    public void setUploaderVerified(final boolean uploaderVerified) {
+        this.uploaderVerified = uploaderVerified;
+    }
+
+    public long getUploaderSubscriberCount() {
+        return uploaderSubscriberCount;
+    }
+
+    public void setUploaderSubscriberCount(long uploaderSubscriberCount) {
+        this.uploaderSubscriberCount = uploaderSubscriberCount;
     }
 
     public String getSubChannelName() {
@@ -709,6 +748,14 @@ public class StreamInfo extends Info {
 
     public void setMetaInfo(final List<MetaInfo> metaInfo) {
         this.metaInfo = metaInfo;
+    }
+
+    public List<Frameset> getPreviewFrames() {
+        return previewFrames;
+    }
+
+    public void setPreviewFrames(final List<Frameset> previewFrames) {
+        this.previewFrames = previewFrames;
     }
 
     @Nonnull

@@ -1,7 +1,7 @@
 package org.schabi.newpipe.extractor.services.youtube;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.downloader.DownloaderTestImpl;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.ServiceList;
@@ -11,11 +11,12 @@ import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
 import org.schabi.newpipe.extractor.subscription.SubscriptionItem;
 
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.schabi.newpipe.FileUtils.resolveTestResource;
 import static org.schabi.newpipe.extractor.utils.Utils.UTF_8;
 
@@ -28,7 +29,7 @@ public class YoutubeSubscriptionExtractorTest {
     private static YoutubeSubscriptionExtractor subscriptionExtractor;
     private static LinkHandlerFactory urlHandler;
 
-    @BeforeClass
+    @BeforeAll
     public static void setupClass() {
         //Doesn't make network requests
         NewPipe.init(DownloaderTestImpl.getInstance());
@@ -106,8 +107,52 @@ public class YoutubeSubscriptionExtractorTest {
                 if (!correctType) {
                     e.printStackTrace();
                 }
-                assertTrue(e.getClass().getSimpleName() + " is not InvalidSourceException", correctType);
+                assertTrue(correctType, e.getClass().getSimpleName() + " is not InvalidSourceException");
             }
+        }
+    }
+
+    private static void assertSubscriptionItems(final List<SubscriptionItem> subscriptionItems)
+            throws Exception {
+        assertTrue(subscriptionItems.size() > 0);
+
+        for (final SubscriptionItem item : subscriptionItems) {
+            assertNotNull(item.getName());
+            assertNotNull(item.getUrl());
+            assertTrue(urlHandler.acceptUrl(item.getUrl()));
+            assertEquals(ServiceList.YouTube.getServiceId(), item.getServiceId());
+        }
+    }
+
+    @Test
+    public void fromZipInputStream() throws Exception {
+        final List<String> zipPaths = Arrays.asList(
+                "youtube_takeout_import_test_1.zip",
+                "youtube_takeout_import_test_2.zip"
+        );
+
+        for (final String path : zipPaths)
+        {
+            final File file = resolveTestResource(path);
+            final FileInputStream fileInputStream = new FileInputStream(file);
+            final List<SubscriptionItem> subscriptionItems = subscriptionExtractor.fromZipInputStream(fileInputStream);
+            assertSubscriptionItems(subscriptionItems);
+        }
+    }
+
+    @Test
+    public void fromCsvInputStream() throws Exception {
+        final List<String> csvPaths = Arrays.asList(
+                "youtube_takeout_import_test_1.csv",
+                "youtube_takeout_import_test_2.csv"
+        );
+
+        for (String path : csvPaths)
+        {
+            final File file = resolveTestResource(path);
+            final FileInputStream fileInputStream = new FileInputStream(file);
+            final List<SubscriptionItem> subscriptionItems = subscriptionExtractor.fromCsvInputStream(fileInputStream);
+            assertSubscriptionItems(subscriptionItems);
         }
     }
 }
