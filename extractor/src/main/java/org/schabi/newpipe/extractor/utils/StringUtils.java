@@ -45,7 +45,8 @@ public class StringUtils {
         return string.substring(startIndex, endIndex);
     }
 
-    private static int findNextParenthesis(@Nonnull final String string, final int offset,
+    private static int findNextParenthesis(@Nonnull final String string,
+                                           final int offset,
                                            final boolean onlyOpen) {
         boolean lastEscaped = false;
         char quote = ' ';
@@ -83,6 +84,7 @@ public class StringUtils {
 
             lastEscaped = thisEscaped;
         }
+
         return -1;
     }
 }
