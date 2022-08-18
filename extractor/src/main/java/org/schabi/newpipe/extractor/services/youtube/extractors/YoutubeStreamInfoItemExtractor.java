@@ -123,7 +123,7 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
         }
 
         // YT returns not a correct duration for "YT shorts" videos
-        if ("SHORTS".equals(duration)) {
+        if ("SHORTS".equalsIgnoreCase(duration)) {
             return 0;
         }
 
