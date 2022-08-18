@@ -25,14 +25,15 @@ import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.localization.ContentCountry;
 import org.schabi.newpipe.extractor.localization.Localization;
 
+import java.util.List;
+
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 
 /**
  * Provides access to streaming services supported by NewPipe.
  */
-public class NewPipe {
+public final class NewPipe {
     private static Downloader downloader;
     private static Localization preferredLocalization;
     private static ContentCountry preferredContentCountry;
@@ -40,19 +41,16 @@ public class NewPipe {
     private NewPipe() {
     }
 
-    public static void init(Downloader d) {
-        downloader = d;
-        preferredLocalization = Localization.DEFAULT;
-        preferredContentCountry = ContentCountry.DEFAULT;
+    public static void init(final Downloader d) {
+        init(d, Localization.DEFAULT);
     }
 
-    public static void init(Downloader d, Localization l) {
-        downloader = d;
-        preferredLocalization = l;
-        preferredContentCountry = l.getCountryCode().isEmpty() ? ContentCountry.DEFAULT : new ContentCountry(l.getCountryCode());
+    public static void init(final Downloader d, final Localization l) {
+        init(d, l, l.getCountryCode().isEmpty()
+                ? ContentCountry.DEFAULT : new ContentCountry(l.getCountryCode()));
     }
 
-    public static void init(Downloader d, Localization l, ContentCountry c) {
+    public static void init(final Downloader d, final Localization l, final ContentCountry c) {
         downloader = d;
         preferredLocalization = l;
         preferredContentCountry = c;
@@ -70,26 +68,24 @@ public class NewPipe {
         return ServiceList.all();
     }
 
-    public static StreamingService getService(int serviceId) throws ExtractionException {
-        for (StreamingService service : ServiceList.all()) {
-            if (service.getServiceId() == serviceId) {
-                return service;
-            }
-        }
-        throw new ExtractionException("There's no service with the id = \"" + serviceId + "\"");
+    public static StreamingService getService(final int serviceId) throws ExtractionException {
+        return ServiceList.all().stream()
+                .filter(service -> service.getServiceId() == serviceId)
+                .findFirst()
+                .orElseThrow(() -> new ExtractionException(
+                        "There's no service with the id = \"" + serviceId + "\""));
     }
 
-    public static StreamingService getService(String serviceName) throws ExtractionException {
-        for (StreamingService service : ServiceList.all()) {
-            if (service.getServiceInfo().getName().equals(serviceName)) {
-                return service;
-            }
-        }
-        throw new ExtractionException("There's no service with the name = \"" + serviceName + "\"");
+    public static StreamingService getService(final String serviceName) throws ExtractionException {
+        return ServiceList.all().stream()
+                .filter(service -> service.getServiceInfo().getName().equals(serviceName))
+                .findFirst()
+                .orElseThrow(() -> new ExtractionException(
+                        "There's no service with the name = \"" + serviceName + "\""));
     }
 
-    public static StreamingService getServiceByUrl(String url) throws ExtractionException {
-        for (StreamingService service : ServiceList.all()) {
+    public static StreamingService getServiceByUrl(final String url) throws ExtractionException {
+        for (final StreamingService service : ServiceList.all()) {
             if (service.getLinkTypeByUrl(url) != StreamingService.LinkType.NONE) {
                 return service;
             }
@@ -97,41 +93,25 @@ public class NewPipe {
         throw new ExtractionException("No service can handle the url = \"" + url + "\"");
     }
 
-    public static int getIdOfService(String serviceName) {
-        try {
-            return getService(serviceName).getServiceId();
-        } catch (ExtractionException ignored) {
-            return -1;
-        }
-    }
-
-    public static String getNameOfService(int id) {
-        try {
-            return getService(id).getServiceInfo().getName();
-        } catch (Exception e) {
-            System.err.println("Service id not known");
-            e.printStackTrace();
-            return "<unknown>";
-        }
-    }
-
     /*//////////////////////////////////////////////////////////////////////////
     // Localization
     //////////////////////////////////////////////////////////////////////////*/
 
-    public static void setupLocalization(Localization preferredLocalization) {
-        setupLocalization(preferredLocalization, null);
+    public static void setupLocalization(final Localization thePreferredLocalization) {
+        setupLocalization(thePreferredLocalization, null);
     }
 
-    public static void setupLocalization(Localization preferredLocalization, @Nullable ContentCountry preferredContentCountry) {
-        NewPipe.preferredLocalization = preferredLocalization;
+    public static void setupLocalization(
+            final Localization thePreferredLocalization,
+            @Nullable final ContentCountry thePreferredContentCountry) {
+        NewPipe.preferredLocalization = thePreferredLocalization;
 
-        if (preferredContentCountry != null) {
-            NewPipe.preferredContentCountry = preferredContentCountry;
+        if (thePreferredContentCountry != null) {
+            NewPipe.preferredContentCountry = thePreferredContentCountry;
         } else {
-            NewPipe.preferredContentCountry = preferredLocalization.getCountryCode().isEmpty()
+            NewPipe.preferredContentCountry = thePreferredLocalization.getCountryCode().isEmpty()
                     ? ContentCountry.DEFAULT
-                    : new ContentCountry(preferredLocalization.getCountryCode());
+                    : new ContentCountry(thePreferredLocalization.getCountryCode());
         }
     }
 
@@ -140,7 +120,7 @@ public class NewPipe {
         return preferredLocalization == null ? Localization.DEFAULT : preferredLocalization;
     }
 
-    public static void setPreferredLocalization(Localization preferredLocalization) {
+    public static void setPreferredLocalization(final Localization preferredLocalization) {
         NewPipe.preferredLocalization = preferredLocalization;
     }
 
@@ -149,7 +129,7 @@ public class NewPipe {
         return preferredContentCountry == null ? ContentCountry.DEFAULT : preferredContentCountry;
     }
 
-    public static void setPreferredContentCountry(ContentCountry preferredContentCountry) {
+    public static void setPreferredContentCountry(final ContentCountry preferredContentCountry) {
         NewPipe.preferredContentCountry = preferredContentCountry;
     }
 }

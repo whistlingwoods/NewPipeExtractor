@@ -1,8 +1,9 @@
 package org.schabi.newpipe.extractor.linkhandler;
 
-import org.schabi.newpipe.extractor.exceptions.FoundAdException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.utils.Utils;
+
+import java.util.Objects;
 
 /*
  * Created by Christian Schabesberger on 26.07.16.
@@ -31,10 +32,12 @@ public abstract class LinkHandlerFactory {
     ///////////////////////////////////
 
     public abstract String getId(String url) throws ParsingException;
-    public abstract String getUrl(String id) throws ParsingException;
-    public abstract boolean onAcceptUrl(final String url) throws ParsingException;
 
-    public String getUrl(String id, String baseUrl) throws ParsingException {
+    public abstract String getUrl(String id) throws ParsingException;
+
+    public abstract boolean onAcceptUrl(String url) throws ParsingException;
+
+    public String getUrl(final String id, final String baseUrl) throws ParsingException {
         return getUrl(id);
     }
 
@@ -46,6 +49,7 @@ public abstract class LinkHandlerFactory {
      * Builds a {@link LinkHandler} from a url.<br>
      * Be sure to call {@link Utils#followGoogleRedirectIfNeeded(String)} on the url if overriding
      * this function.
+     *
      * @param url the url to extract path and id from
      * @return a {@link LinkHandler} complete with information
      */
@@ -64,12 +68,13 @@ public abstract class LinkHandlerFactory {
      * extracted?).<br>
      * So do not call {@link Utils#followGoogleRedirectIfNeeded(String)} on the URL if overriding
      * this function, since that should be done in {@link #fromUrl(String)}.
-     * @param url the URL without Google search redirects to extract id from
+     *
+     * @param url     the URL without Google search redirects to extract id from
      * @param baseUrl the base URL
      * @return a {@link LinkHandler} complete with information
      */
-    public LinkHandler fromUrl(String url, String baseUrl) throws ParsingException {
-        if (url == null) throw new IllegalArgumentException("URL cannot be null");
+    public LinkHandler fromUrl(final String url, final String baseUrl) throws ParsingException {
+        Objects.requireNonNull(url, "URL cannot be null");
         if (!acceptUrl(url)) {
             throw new ParsingException("URL not accepted: " + url);
         }
@@ -78,14 +83,14 @@ public abstract class LinkHandlerFactory {
         return new LinkHandler(url, getUrl(id, baseUrl), id);
     }
 
-    public LinkHandler fromId(String id) throws ParsingException {
-        if (id == null) throw new IllegalArgumentException("id can not be null");
+    public LinkHandler fromId(final String id) throws ParsingException {
+        Objects.requireNonNull(id, "ID cannot be null");
         final String url = getUrl(id);
         return new LinkHandler(url, url, id);
     }
 
-    public LinkHandler fromId(String id, String baseUrl) throws ParsingException {
-        if (id == null) throw new IllegalArgumentException("id can not be null");
+    public LinkHandler fromId(final String id, final String baseUrl) throws ParsingException {
+        Objects.requireNonNull(id, "ID cannot be null");
         final String url = getUrl(id, baseUrl);
         return new LinkHandler(url, url, id);
     }
@@ -96,11 +101,6 @@ public abstract class LinkHandlerFactory {
      * Return false if this service shall not allow to be called through ACTIONs.
      */
     public boolean acceptUrl(final String url) throws ParsingException {
-        try {
-            return onAcceptUrl(url);
-        } catch (FoundAdException fe) {
-            throw fe;
-        }
+        return onAcceptUrl(url);
     }
-
 }

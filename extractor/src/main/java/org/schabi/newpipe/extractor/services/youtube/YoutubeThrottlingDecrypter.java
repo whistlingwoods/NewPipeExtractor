@@ -8,27 +8,28 @@ import org.schabi.newpipe.extractor.utils.StringUtils;
 import javax.annotation.Nonnull;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
+ * YouTube's streaming URLs of HTML5 clients are protected with a cipher, which modifies their
+ * {@code n} query parameter.
+ *
  * <p>
- * YouTube's media is protected with a cipher,
- * which modifies the "n" query parameter of it's video playback urls.
- * This class handles extracting that "n" query parameter,
- * applying the cipher on it and returning the resulting url which is not throttled.
+ * This class handles extracting that {@code n} query parameter, applying the cipher on it and
+ * returning the resulting URL which is not throttled.
  * </p>
  *
- * <pre>
- * https://r5---sn-4g5ednsz.googlevideo.com/videoplayback?n=VVF2xyZLVRZZxHXZ&amp;other=other
- * </pre>
- * becomes
- * <pre>
- * https://r5---sn-4g5ednsz.googlevideo.com/videoplayback?n=iHywZkMipkszqA&amp;other=other
- * </pre>
- * <br>
  * <p>
- * Decoding the "n" parameter is time intensive. For this reason, the results are cached.
- * The cache can be cleared using {@link #clearCache()}
+ * For instance,
+ * {@code https://r5---sn-4g5ednsz.googlevideo.com/videoplayback?n=VVF2xyZLVRZZxHXZ&other=other}
+ * becomes
+ * {@code https://r5---sn-4g5ednsz.googlevideo.com/videoplayback?n=iHywZkMipkszqA&other=other}.
+ * </p>
+ *
+ * <p>
+ * Decoding the {@code n} parameter is time intensive. For this reason, the results are cached.
+ * The cache can be cleared using {@link #clearCache()}.
  * </p>
  *
  */
@@ -36,11 +37,11 @@ public class YoutubeThrottlingDecrypter {
 
     private static final Pattern N_PARAM_PATTERN = Pattern.compile("[&?]n=([^&]+)");
     private static final Pattern FUNCTION_NAME_PATTERN = Pattern.compile(
-            "b=a\\.get\\(\"n\"\\)\\)&&\\(b=(\\S+)\\(b\\),a\\.set\\(\"n\",b\\)");
+            "\\.get\\(\"n\"\\)\\)&&\\(b=([a-zA-Z0-9$]+)(?:\\[(\\d+)])?\\([a-zA-Z0-9]\\)");
 
     private static final Map<String, String> N_PARAMS_CACHE = new HashMap<>();
-    private static String FUNCTION;
-    private static String FUNCTION_NAME;
+    @SuppressWarnings("StaticVariableName") private static String FUNCTION;
+    @SuppressWarnings("StaticVariableName") private static String FUNCTION_NAME;
 
     private final String functionName;
     private final String function;
@@ -72,45 +73,71 @@ public class YoutubeThrottlingDecrypter {
     }
 
     /**
+     * Try to decrypt a YouTube streaming URL protected with a throttling parameter.
+     *
      * <p>
-     * The videoId is only used to fetch the decryption function.
-     * It can be a constant value of any existing video.
-     * A constant value is discouraged, because it could allow tracking.
+     * If the streaming URL provided doesn't contain a throttling parameter, it is returned as it
+     * is; otherwise, the encrypted value is decrypted and this value is replaced by the decrypted
+     * one.
+     * </p>
+     *
+     * <p>
+     * If the JavaScript code has been not extracted, it is extracted with the given video ID using
+     * {@link YoutubeJavaScriptExtractor#extractJavaScriptCode(String)}.
+     * </p>
+     *
+     * @param streamingUrl The streaming URL to decrypt, if needed.
+     * @param videoId      A video ID, used to fetch the JavaScript code to get the decryption
+     *                     function. It can be a constant value of any existing video, but a
+     *                     constant value is discouraged, because it could allow tracking.
+     * @return A streaming URL with the decrypted parameter or the streaming URL itself if no
+     * throttling parameter has been found
+     * @throws ParsingException If the streaming URL contains a throttling parameter and its
+     *                          decryption failed
      */
-    public static String apply(final String url, final String videoId) throws ParsingException {
-        if (containsNParam(url)) {
+    public static String apply(@Nonnull final String streamingUrl,
+                               @Nonnull final String videoId) throws ParsingException {
+        if (!containsNParam(streamingUrl)) {
+            return streamingUrl;
+        }
+
+        try {
             if (FUNCTION == null) {
-                final String playerJsCode = YoutubeJavaScriptExtractor.extractJavaScriptCode(videoId);
+                final String playerJsCode
+                        = YoutubeJavaScriptExtractor.extractJavaScriptCode(videoId);
 
                 FUNCTION_NAME = parseDecodeFunctionName(playerJsCode);
                 FUNCTION = parseDecodeFunction(playerJsCode, FUNCTION_NAME);
             }
 
-            final String oldNParam = parseNParam(url);
+            final String oldNParam = parseNParam(streamingUrl);
             final String newNParam = decryptNParam(FUNCTION, FUNCTION_NAME, oldNParam);
-            return replaceNParam(url, oldNParam, newNParam);
-        } else {
-            return url;
+            return replaceNParam(streamingUrl, oldNParam, newNParam);
+        } catch (final Exception e) {
+            throw new ParsingException("Could not parse, decrypt or replace n parameter", e);
         }
     }
 
     private static String parseDecodeFunctionName(final String playerJsCode)
             throws Parser.RegexException {
-        String functionName = Parser.matchGroup1(FUNCTION_NAME_PATTERN, playerJsCode);
-        final int arrayStartBrace = functionName.indexOf("[");
-
-        if (arrayStartBrace > 0) {
-            final String arrayVarName = functionName.substring(0, arrayStartBrace);
-            final String order = functionName.substring(
-                    arrayStartBrace + 1, functionName.indexOf("]"));
-            final int arrayNum = Integer.parseInt(order);
-            final Pattern arrayPattern = Pattern.compile(
-                    String.format("var %s=\\[(.+?)\\];", arrayVarName));
-            final String arrayStr = Parser.matchGroup1(arrayPattern, playerJsCode);
-            final String[] names = arrayStr.split(",");
-            functionName = names[arrayNum];
+        final Matcher matcher = FUNCTION_NAME_PATTERN.matcher(playerJsCode);
+        final boolean foundMatch = matcher.find();
+        if (!foundMatch) {
+            throw new Parser.RegexException("Failed to find pattern \""
+                    + FUNCTION_NAME_PATTERN + "\"");
         }
-        return functionName;
+
+        final String functionName = matcher.group(1);
+        if (matcher.groupCount() == 1) {
+            return functionName;
+        }
+
+        final int arrayNum = Integer.parseInt(matcher.group(2));
+        final Pattern arrayPattern = Pattern.compile(
+                "var " + Pattern.quote(functionName) + "\\s*=\\s*\\[(.+?)];");
+        final String arrayStr = Parser.matchGroup1(arrayPattern, playerJsCode);
+        final String[] names = arrayStr.split(",");
+        return names[arrayNum];
     }
 
     @Nonnull
@@ -118,19 +145,22 @@ public class YoutubeThrottlingDecrypter {
             throws Parser.RegexException {
         try {
             return parseWithParenthesisMatching(playerJsCode, functionName);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return parseWithRegex(playerJsCode, functionName);
         }
     }
 
     @Nonnull
-    private static String parseWithParenthesisMatching(final String playerJsCode, final String functionName) {
+    private static String parseWithParenthesisMatching(final String playerJsCode,
+                                                       final String functionName) {
         final String functionBase = functionName + "=function";
-        return functionBase + StringUtils.matchToClosingParenthesis(playerJsCode, functionBase) + ";";
+        return functionBase + StringUtils.matchToClosingParenthesis(playerJsCode, functionBase)
+                + ";";
     }
 
     @Nonnull
-    private static String parseWithRegex(final String playerJsCode, final String functionName) throws Parser.RegexException {
+    private static String parseWithRegex(final String playerJsCode, final String functionName)
+            throws Parser.RegexException {
         final Pattern functionPattern = Pattern.compile(functionName + "=function(.*?}};)\n",
                 Pattern.DOTALL);
         return "function " + functionName + Parser.matchGroup1(functionPattern, playerJsCode);
@@ -155,7 +185,9 @@ public class YoutubeThrottlingDecrypter {
         return Parser.matchGroup1(N_PARAM_PATTERN, url);
     }
 
-    private static String decryptNParam(final String function, final String functionName, final String nParam) {
+    private static String decryptNParam(final String function,
+                                        final String functionName,
+                                        final String nParam) {
         if (N_PARAMS_CACHE.containsKey(nParam)) {
             return N_PARAMS_CACHE.get(nParam);
         }

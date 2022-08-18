@@ -2,10 +2,10 @@ package org.schabi.newpipe.extractor.services.youtube.extractors;
 
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonPostResponse;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareDesktopJsonBuilder;
+import static org.schabi.newpipe.extractor.utils.Utils.UTF_8;
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -103,7 +103,8 @@ public class YoutubeCommentsExtractor extends CommentsExtractor {
                                 itemSectionRenderer
                                         .getObject("itemSectionRenderer")
                                         .getArray("contents").getObject(0),
-                                "continuationItemRenderer.continuationEndpoint.continuationCommand.token");
+                                "continuationItemRenderer.continuationEndpoint"
+                                        + ".continuationCommand.token");
                     } catch (final ParsingException ignored) {
                         return null;
                     }
@@ -184,7 +185,7 @@ public class YoutubeCommentsExtractor extends CommentsExtractor {
                 prepareDesktopJsonBuilder(localization, getExtractorContentCountry())
                     .value("continuation", page.getId())
                     .done())
-                .getBytes(StandardCharsets.UTF_8);
+                .getBytes(UTF_8);
 
         final JsonObject ajaxJson = getJsonPostResponse("next", body, localization);
 
@@ -257,7 +258,7 @@ public class YoutubeCommentsExtractor extends CommentsExtractor {
                 prepareDesktopJsonBuilder(localization, getExtractorContentCountry())
                     .value("videoId", getId())
                     .done())
-                .getBytes(StandardCharsets.UTF_8);
+                .getBytes(UTF_8);
 
         nextResponse = getJsonPostResponse("next", body, localization);
     }

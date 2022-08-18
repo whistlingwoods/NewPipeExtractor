@@ -1,8 +1,15 @@
 package org.schabi.newpipe.extractor.services.bandcamp.extractors;
 
+import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampExtractorHelper.getImageUrl;
+import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampStreamExtractor.getAlbumInfoJson;
+import static org.schabi.newpipe.extractor.utils.JsonUtils.getJsonData;
+import static org.schabi.newpipe.extractor.utils.Utils.EMPTY_STRING;
+import static org.schabi.newpipe.extractor.utils.Utils.HTTPS;
+
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParserException;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.schabi.newpipe.extractor.Page;
@@ -17,22 +24,16 @@ import org.schabi.newpipe.extractor.services.bandcamp.extractors.streaminfoitem.
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.extractor.stream.StreamInfoItemsCollector;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.Objects;
 
-import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampExtractorHelper.getImageUrl;
-import static org.schabi.newpipe.extractor.utils.JsonUtils.getJsonData;
-import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampStreamExtractor.getAlbumInfoJson;
-import static org.schabi.newpipe.extractor.utils.Utils.EMPTY_STRING;
-import static org.schabi.newpipe.extractor.utils.Utils.HTTPS;
+import javax.annotation.Nonnull;
 
 public class BandcampPlaylistExtractor extends PlaylistExtractor {
 
     /**
-     * An arbitrarily chosen number above which cover arts won't be fetched individually for each track;
-     * instead, it will be assumed that every track has the same cover art as the album, which is not
-     * always the case.
+     * An arbitrarily chosen number above which cover arts won't be fetched individually for each
+     * track; instead, it will be assumed that every track has the same cover art as the album,
+     * which is not always the case.
      */
     private static final int MAXIMUM_INDIVIDUAL_COVER_ARTS = 10;
 
@@ -41,12 +42,14 @@ public class BandcampPlaylistExtractor extends PlaylistExtractor {
     private JsonArray trackInfo;
     private String name;
 
-    public BandcampPlaylistExtractor(final StreamingService service, final ListLinkHandler linkHandler) {
+    public BandcampPlaylistExtractor(final StreamingService service,
+                                     final ListLinkHandler linkHandler) {
         super(service, linkHandler);
     }
 
     @Override
-    public void onFetchPage(@Nonnull final Downloader downloader) throws IOException, ExtractionException {
+    public void onFetchPage(@Nonnull final Downloader downloader)
+            throws IOException, ExtractionException {
         final String html = downloader.get(getLinkHandler().getUrl()).responseBody();
         document = Jsoup.parse(html);
         albumJson = getAlbumInfoJson(html);
@@ -90,12 +93,10 @@ public class BandcampPlaylistExtractor extends PlaylistExtractor {
 
     @Override
     public String getUploaderAvatarUrl() {
-        try {
-            return Objects.requireNonNull(document.getElementsByClass("band-photo").first())
-                    .attr("src");
-        } catch (final NullPointerException e) {
-            return EMPTY_STRING;
-        }
+        return document.getElementsByClass("band-photo").stream()
+                .map(element -> element.attr("src"))
+                .findFirst()
+                .orElse(EMPTY_STRING);
     }
 
     @Override
@@ -115,7 +116,7 @@ public class BandcampPlaylistExtractor extends PlaylistExtractor {
         final StreamInfoItemsCollector collector = new StreamInfoItemsCollector(getServiceId());
 
         for (int i = 0; i < trackInfo.size(); i++) {
-            JsonObject track = trackInfo.getObject(i);
+            final JsonObject track = trackInfo.getObject(i);
 
             if (trackInfo.size() < MAXIMUM_INDIVIDUAL_COVER_ARTS) {
                 // Load cover art of every track individually
