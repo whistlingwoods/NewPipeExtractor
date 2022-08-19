@@ -21,14 +21,25 @@ public final class YoutubeSearchQueryHandlerFactory extends SearchQueryHandlerFa
     public static final String MUSIC_ALBUMS = "music_albums";
     public static final String MUSIC_PLAYLISTS = "music_playlists";
     public static final String MUSIC_ARTISTS = "music_artists";
+    private static YoutubeSearchQueryHandlerFactory instance = null;
 
     private YoutubeSearchQueryHandlerFactory() {
         super(new YoutubeFilters());
     }
 
+    /**
+     * Singleton to get the same objects of filters during search.
+     * <p>
+     * The content filter holds a variable search parameter: (filter.getParams())
+     *
+     * @return
+     */
     @Nonnull
-    public static YoutubeSearchQueryHandlerFactory getInstance() {
-        return new YoutubeSearchQueryHandlerFactory();
+    public static synchronized YoutubeSearchQueryHandlerFactory getInstance() {
+        if (instance == null) {
+            instance = new YoutubeSearchQueryHandlerFactory();
+        }
+        return instance;
     }
 
     @Override
