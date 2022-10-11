@@ -7,9 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.schabi.newpipe.extractor.ExtractorAsserts.assertEmptyErrors;
 import static org.schabi.newpipe.extractor.ServiceList.YouTube;
 import static org.schabi.newpipe.extractor.services.DefaultTests.assertNoDuplicatedItems;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.CHANNELS;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.PLAYLISTS;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.VIDEOS;
 import static java.util.Collections.singletonList;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -24,8 +21,10 @@ import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelInfoItem;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.search.SearchExtractor;
+import org.schabi.newpipe.extractor.search.filter.FilterItem;
 import org.schabi.newpipe.extractor.services.DefaultSearchExtractorTest;
 import org.schabi.newpipe.extractor.services.youtube.YoutubeTestsUtils;
+import org.schabi.newpipe.extractor.services.youtube.search.filter.YoutubeFilters;
 import org.schabi.newpipe.extractor.stream.Description;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 
@@ -73,7 +72,8 @@ public class YoutubeSearchExtractorTest {
         public static void setUp() throws Exception {
             YoutubeTestsUtils.ensureStateless();
             NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "channel"));
-            extractor = YouTube.getSearchExtractor(QUERY, singletonList(CHANNELS), "");
+            final FilterItem item = getFilterItem(YouTube, YoutubeFilters.ID_CF_MAIN_CHANNELS);
+            extractor = YouTube.getSearchExtractor(QUERY, singletonList(item), null);
             extractor.fetchPage();
         }
 
@@ -97,7 +97,8 @@ public class YoutubeSearchExtractorTest {
         public static void setUp() throws Exception {
             YoutubeTestsUtils.ensureStateless();
             NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "playlist"));
-            extractor = YouTube.getSearchExtractor(QUERY, singletonList(PLAYLISTS), "");
+            final FilterItem item = getFilterItem(YouTube, YoutubeFilters.ID_CF_MAIN_PLAYLISTS);
+            extractor = YouTube.getSearchExtractor(QUERY, singletonList(item), null);
             extractor.fetchPage();
         }
 
@@ -121,7 +122,8 @@ public class YoutubeSearchExtractorTest {
         public static void setUp() throws Exception {
             YoutubeTestsUtils.ensureStateless();
             NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "videos"));
-            extractor = YouTube.getSearchExtractor(QUERY, singletonList(VIDEOS), "");
+            final FilterItem item = getFilterItem(YouTube, YoutubeFilters.ID_CF_MAIN_VIDEOS);
+            extractor = YouTube.getSearchExtractor(QUERY, singletonList(item), null);
             extractor.fetchPage();
         }
 
@@ -153,7 +155,8 @@ public class YoutubeSearchExtractorTest {
         public static void setUp() throws Exception {
             YoutubeTestsUtils.ensureStateless();
             NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "suggestions"));
-            extractor = YouTube.getSearchExtractor(QUERY, singletonList(VIDEOS), "");
+            final FilterItem item = getFilterItem(YouTube, YoutubeFilters.ID_CF_MAIN_VIDEOS);
+            extractor = YouTube.getSearchExtractor(QUERY, singletonList(item), null);
             extractor.fetchPage();
         }
 
@@ -180,7 +183,8 @@ public class YoutubeSearchExtractorTest {
         public static void setUp() throws Exception {
             YoutubeTestsUtils.ensureStateless();
             NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "corrected"));
-            extractor = YouTube.getSearchExtractor(QUERY, singletonList(VIDEOS), "");
+            final FilterItem item = getFilterItem(YouTube, YoutubeFilters.ID_CF_MAIN_VIDEOS);
+            extractor = YouTube.getSearchExtractor(QUERY, singletonList(item), null);
             extractor.fetchPage();
         }
 
@@ -239,7 +243,10 @@ public class YoutubeSearchExtractorTest {
         public void duplicatedItemsCheck() throws Exception {
             YoutubeTestsUtils.ensureStateless();
             NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "paging"));
-            final SearchExtractor extractor = YouTube.getSearchExtractor("cirque du soleil", singletonList(VIDEOS), "");
+
+            final FilterItem item = DefaultSearchExtractorTest.getFilterItem(
+                    YouTube, YoutubeFilters.ID_CF_MAIN_VIDEOS);
+            final SearchExtractor extractor = YouTube.getSearchExtractor("cirque du soleil", singletonList(item), null);
             extractor.fetchPage();
 
             final ListExtractor.InfoItemsPage<InfoItem> page1 = extractor.getInitialPage();
@@ -257,7 +264,8 @@ public class YoutubeSearchExtractorTest {
         public static void setUp() throws Exception {
             YoutubeTestsUtils.ensureStateless();
             NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "metaInfo"));
-            extractor = YouTube.getSearchExtractor(QUERY, singletonList(VIDEOS), "");
+            final FilterItem item = getFilterItem(YouTube, YoutubeFilters.ID_CF_MAIN_VIDEOS);
+            extractor = YouTube.getSearchExtractor(QUERY, singletonList(item), null);
             extractor.fetchPage();
         }
 
@@ -292,7 +300,9 @@ public class YoutubeSearchExtractorTest {
         public static void setUp() throws Exception {
             YoutubeTestsUtils.ensureStateless();
             NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "verified"));
-            extractor = YouTube.getSearchExtractor(QUERY, singletonList(CHANNELS), "");
+
+            final FilterItem item = getFilterItem(YouTube, YoutubeFilters.ID_CF_MAIN_CHANNELS);
+            extractor = YouTube.getSearchExtractor(QUERY, singletonList(item), null);
             extractor.fetchPage();
         }
 
@@ -329,7 +339,8 @@ public class YoutubeSearchExtractorTest {
         public static void setUp() throws Exception {
             YoutubeTestsUtils.ensureStateless();
             NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "video_uploader_avatar"));
-            extractor = YouTube.getSearchExtractor(QUERY, singletonList(VIDEOS), "");
+            final FilterItem item = getFilterItem(YouTube, YoutubeFilters.ID_CF_MAIN_VIDEOS);
+            extractor = YouTube.getSearchExtractor(QUERY, singletonList(item), null);
             extractor.fetchPage();
         }
 
@@ -360,7 +371,8 @@ public class YoutubeSearchExtractorTest {
         public static void setUp() throws Exception {
             YoutubeTestsUtils.ensureStateless();
             NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "video_description"));
-            extractor = YouTube.getSearchExtractor(QUERY, singletonList(VIDEOS), "");
+            final FilterItem item = getFilterItem(YouTube, YoutubeFilters.ID_CF_MAIN_VIDEOS);
+            extractor = YouTube.getSearchExtractor(QUERY, singletonList(item), null);
             extractor.fetchPage();
         }
 
