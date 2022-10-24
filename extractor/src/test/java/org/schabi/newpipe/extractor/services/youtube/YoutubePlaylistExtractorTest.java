@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.schabi.newpipe.extractor.ExtractorAsserts.assertGreater;
 import static org.schabi.newpipe.extractor.ExtractorAsserts.assertIsSecureUrl;
 import static org.schabi.newpipe.extractor.ServiceList.YouTube;
 import static org.schabi.newpipe.extractor.services.DefaultTests.assertNoMoreItems;
@@ -382,6 +381,7 @@ public class YoutubePlaylistExtractorTest {
         }
 
         @Test
+        @Disabled("stream count is sometimes displayed")
         public void testStreamCount() throws Exception {
             ExtractorAsserts.assertGreater(40, extractor.getStreamCount());
         }
