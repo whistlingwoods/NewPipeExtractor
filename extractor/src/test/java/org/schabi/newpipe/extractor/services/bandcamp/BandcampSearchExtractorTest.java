@@ -72,7 +72,7 @@ public class BandcampSearchExtractorTest {
      */
     @Test
     void testAlbumSearch() throws ExtractionException, IOException {
-        final SearchExtractor extractor = Bandcamp.getSearchExtractor("minecraft volume alpha");
+        final SearchExtractor extractor = Bandcamp.getSearchExtractor("minecraft volume alpha cover");
         InfoItem minecraft = extractor.getInitialPage()
                 .getItems().get(0);
 
