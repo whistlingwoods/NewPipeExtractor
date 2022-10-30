@@ -34,6 +34,7 @@ import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonIosPostResponse;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonPostResponse;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getTextFromObject;
+import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getAttributedDescription;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareAndroidMobileJsonBuilder;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareDesktopJsonBuilder;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareIosMobileJsonBuilder;
@@ -49,6 +50,7 @@ import org.mozilla.javascript.ScriptableObject;
 import org.schabi.newpipe.extractor.MediaFormat;
 import org.schabi.newpipe.extractor.MetaInfo;
 import org.schabi.newpipe.extractor.MultiInfoItemsCollector;
+import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.AgeRestrictedContentException;
@@ -97,6 +99,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -287,6 +291,12 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                     true);
             if (!isNullOrEmpty(description)) {
                 return new Description(description, Description.HTML);
+            }
+
+            final String attributedDescription = getAttributedDescription(
+                    getVideoSecondaryInfoRenderer().getObject("attributedDescription"));
+            if (!isNullOrEmpty(attributedDescription)) {
+                return new Description(attributedDescription, Description.HTML);
             }
         } catch (final ParsingException ignored) {
             // Age-restricted videos cause a ParsingException here
@@ -830,6 +840,35 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         final ContentCountry contentCountry = getExtractorContentCountry();
         html5Cpn = generateContentPlaybackNonce();
 
+        final Future<Void> nextFuture = NewPipe.getExecutorService().submit(() -> {
+            try {
+                final byte[] body = JsonWriter.string(
+                                prepareDesktopJsonBuilder(localization, contentCountry)
+                                        .value(VIDEO_ID, videoId)
+                                        .value(CONTENT_CHECK_OK, true)
+                                        .value(RACY_CHECK_OK, true)
+                                        .done())
+                        .getBytes(StandardCharsets.UTF_8);
+                nextResponse = getJsonPostResponse(NEXT, body, localization);
+            } catch (final Exception e) {
+                throw new RuntimeException(e);
+            }
+            return null;
+        });
+
+        Future<Void> androidPlayerFuture = null;
+
+        if (isAndroidClientFetchForced) {
+            androidPlayerFuture = getAndroidFetchFuture(contentCountry, localization, videoId);
+        }
+
+        Future<Void> iosPlayerFuture = null;
+
+        if (isIosClientFetchForced) {
+            iosPlayerFuture = getIosFetchFuture(contentCountry, localization, videoId);
+        }
+
+
         playerResponse = getJsonPostResponse(PLAYER,
                 createDesktopPlayerBody(localization, contentCountry, videoId, sts, false,
                         html5Cpn),
@@ -877,37 +916,64 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         playerMicroFormatRenderer = youtubePlayerResponse.getObject("microformat")
                 .getObject("playerMicroformatRenderer");
 
-        final byte[] body = JsonWriter.string(
-                prepareDesktopJsonBuilder(localization, contentCountry)
-                        .value(VIDEO_ID, videoId)
-                        .value(CONTENT_CHECK_OK, true)
-                        .value(RACY_CHECK_OK, true)
-                        .done())
-                .getBytes(StandardCharsets.UTF_8);
-        nextResponse = getJsonPostResponse(NEXT, body, localization);
-
         // streamType can only have LIVE_STREAM, POST_LIVE_STREAM and VIDEO_STREAM values (see
         // setStreamType()), so this block will be run only for POST_LIVE_STREAM and VIDEO_STREAM
         // values if fetching of the ANDROID client is not forced
         if ((!isAgeRestricted && streamType != StreamType.LIVE_STREAM)
-                || isAndroidClientFetchForced) {
+                && androidPlayerFuture == null) {
+            androidPlayerFuture = getAndroidFetchFuture(contentCountry, localization, videoId);
+        }
+
+        if ((!isAgeRestricted && streamType == StreamType.LIVE_STREAM)
+                && iosPlayerFuture == null) {
+            iosPlayerFuture = getIosFetchFuture(contentCountry, localization, videoId);
+        }
+
+        try {
+            nextFuture.get();
+
+            if (androidPlayerFuture != null) {
+                androidPlayerFuture.get();
+            }
+            if (iosPlayerFuture != null) {
+                iosPlayerFuture.get();
+            }
+
+        } catch (final InterruptedException ignored) {
+        } catch (final ExecutionException e) {
+            final Throwable cause = e.getCause();
+            if (cause != null) {
+                throw new RuntimeException(cause);
+            }
+        }
+    }
+
+    private Future<Void> getAndroidFetchFuture(final ContentCountry contentCountry,
+                                               final Localization localization,
+                                               final String videoId) {
+        return NewPipe.getExecutorService().submit(() -> {
             try {
                 fetchAndroidMobileJsonPlayer(contentCountry, localization, videoId);
             } catch (final Exception ignored) {
                 // Ignore exceptions related to ANDROID client fetch or parsing, as it is not
                 // compulsory to play contents
             }
-        }
+            return null;
+        });
+    }
 
-        if ((!isAgeRestricted && streamType == StreamType.LIVE_STREAM)
-                || isIosClientFetchForced) {
+    private Future<Void> getIosFetchFuture(final ContentCountry contentCountry,
+                                               final Localization localization,
+                                               final String videoId) {
+        return NewPipe.getExecutorService().submit(() -> {
             try {
                 fetchIosMobileJsonPlayer(contentCountry, localization, videoId);
             } catch (final Exception ignored) {
                 // Ignore exceptions related to IOS client fetch or parsing, as it is not
                 // compulsory to play contents
             }
-        }
+            return null;
+        });
     }
 
     private void checkPlayabilityStatus(final JsonObject youtubePlayerResponse,
@@ -981,6 +1047,11 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                         .value(CPN, androidCpn)
                         .value(CONTENT_CHECK_OK, true)
                         .value(RACY_CHECK_OK, true)
+                        // Workaround getting streaming URLs which can return 403 HTTP response
+                        // codes by using stories parameter for Android client requests
+                        // This behavior only happen in certain countries such as UK as of
+                        // 10.29.2022
+                        .value("params", "8AEB")
                         .done())
                 .getBytes(StandardCharsets.UTF_8);
 
@@ -1409,9 +1480,18 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         return streamingData.getArray(streamingDataKey).stream()
                 .filter(JsonObject.class::isInstance)
                 .map(JsonObject.class::cast)
+                .filter(formatData -> !formatData.getString("mimeType", "")
+                        .startsWith("text"))
                 .map(formatData -> {
                     try {
-                        final ItagItem itagItem = ItagItem.getItag(formatData.getInt("itag"));
+                        final int itag = formatData.getInt("itag");
+                        final int averageBitrate = formatData.getInt("averageBitrate");
+                        final int fps = formatData.getInt("fps");
+                        final String qualityLabel = formatData.getString("qualityLabel");
+                        final String mimeType = formatData.getString("mimeType");
+
+                        final ItagItem itagItem = ItagItem.
+                                getItag(itag, averageBitrate, fps, qualityLabel, mimeType);
                         if (itagItem.itagType == itagTypeWanted) {
                             return buildAndAddItagInfoToList(videoId, formatData, itagItem,
                                     itagItem.itagType, contentPlaybackNonce);

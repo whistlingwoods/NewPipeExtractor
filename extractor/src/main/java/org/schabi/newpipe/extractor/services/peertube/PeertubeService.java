@@ -1,14 +1,12 @@
 package org.schabi.newpipe.extractor.services.peertube;
 
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.COMMENTS;
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.VIDEO;
-import static java.util.Arrays.asList;
-
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.kiosk.KioskList;
+import org.schabi.newpipe.extractor.linkhandler.ChannelTabHandler;
 import org.schabi.newpipe.extractor.linkhandler.LinkHandler;
 import org.schabi.newpipe.extractor.linkhandler.LinkHandlerFactory;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
@@ -18,7 +16,9 @@ import org.schabi.newpipe.extractor.linkhandler.SearchQueryHandlerFactory;
 import org.schabi.newpipe.extractor.playlist.PlaylistExtractor;
 import org.schabi.newpipe.extractor.search.SearchExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeAccountExtractor;
+import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeAccountTabExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeChannelExtractor;
+import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeChannelTabExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeCommentsExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubePlaylistExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeSearchExtractor;
@@ -36,6 +36,10 @@ import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
 import org.schabi.newpipe.extractor.suggestion.SuggestionExtractor;
 
 import java.util.List;
+
+import static java.util.Arrays.asList;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.COMMENTS;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.VIDEO;
 
 public class PeertubeService extends StreamingService {
 
@@ -100,6 +104,16 @@ public class PeertubeService extends StreamingService {
             return new PeertubeChannelExtractor(this, linkHandler);
         } else {
             return new PeertubeAccountExtractor(this, linkHandler);
+        }
+    }
+
+    @Override
+    public ChannelTabExtractor getChannelTabExtractor(final ChannelTabHandler linkHandler)
+            throws ExtractionException {
+        if (linkHandler.getUrl().contains("/video-channels/")) {
+            return new PeertubeChannelTabExtractor(this, linkHandler);
+        } else {
+            return new PeertubeAccountTabExtractor(this, linkHandler);
         }
     }
 

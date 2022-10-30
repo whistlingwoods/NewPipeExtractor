@@ -3,8 +3,13 @@ package org.schabi.newpipe.extractor.channel;
 import org.schabi.newpipe.extractor.ListExtractor;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
+import org.schabi.newpipe.extractor.linkhandler.ChannelTabHandler;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
+
+import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.List;
 
 /*
  * Created by Christian Schabesberger on 25.07.16.
@@ -43,5 +48,12 @@ public abstract class ChannelExtractor extends ListExtractor<StreamInfoItem> {
     public abstract String getParentChannelUrl() throws ParsingException;
     public abstract String getParentChannelAvatarUrl() throws ParsingException;
     public abstract boolean isVerified() throws ParsingException;
-
+    @Nonnull
+    public List<ChannelTabHandler> getTabs() throws ParsingException {
+        return Collections.emptyList();
+    }
+    @Nonnull
+    public List<String> getTags() throws ParsingException {
+        return Collections.emptyList();
+    }
 }

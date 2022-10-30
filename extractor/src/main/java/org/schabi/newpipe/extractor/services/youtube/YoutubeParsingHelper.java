@@ -20,21 +20,12 @@
 
 package org.schabi.newpipe.extractor.services.youtube;
 
-import static org.schabi.newpipe.extractor.NewPipe.getDownloader;
-import static org.schabi.newpipe.extractor.utils.Utils.HTTP;
-import static org.schabi.newpipe.extractor.utils.Utils.HTTPS;
-import static org.schabi.newpipe.extractor.utils.Utils.UTF_8;
-import static org.schabi.newpipe.extractor.utils.Utils.getStringResultFromRegexArray;
-import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
-import static java.util.Collections.singletonList;
-
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonBuilder;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonWriter;
-
 import org.schabi.newpipe.extractor.MetaInfo;
 import org.schabi.newpipe.extractor.downloader.Response;
 import org.schabi.newpipe.extractor.exceptions.AccountTerminatedException;
@@ -51,6 +42,8 @@ import org.schabi.newpipe.extractor.utils.Parser;
 import org.schabi.newpipe.extractor.utils.RandomStringFromAlphabetGenerator;
 import org.schabi.newpipe.extractor.utils.Utils;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -73,8 +66,13 @@ import java.util.Random;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import static java.util.Collections.singletonList;
+import static org.schabi.newpipe.extractor.NewPipe.getDownloader;
+import static org.schabi.newpipe.extractor.utils.Utils.HTTP;
+import static org.schabi.newpipe.extractor.utils.Utils.HTTPS;
+import static org.schabi.newpipe.extractor.utils.Utils.UTF_8;
+import static org.schabi.newpipe.extractor.utils.Utils.getStringResultFromRegexArray;
+import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 
 public final class YoutubeParsingHelper {
 
@@ -257,6 +255,12 @@ public final class YoutubeParsingHelper {
      * @see #generateConsentCookie()
      */
     private static boolean consentAccepted = false;
+
+    /**
+     * Attach YouTube visitor data (session token) to all requests made with the desktop client.
+     * Used for testing to reproduce A/B tests.
+     */
+    private static String visitorData = null;
 
     private static boolean isGoogleURL(final String url) {
         final String cachedUrl = extractCachedUrlIfNeeded(url);
@@ -1009,9 +1013,104 @@ public final class YoutubeParsingHelper {
         return text;
     }
 
+    /**
+     * Parse the video description in the new "attributed" format which contains
+     * the entire visible plaintext ("content") and an array of "commandRuns".
+     * The commandRuns include the links and their position in the text.
+     *
+     * @param attributedDescription JSON object of the attributed description
+     * @return Parsed description in HTML format
+     */
+    @Nullable
+    public static String getAttributedDescription(
+            @Nullable final JsonObject attributedDescription) {
+        if (isNullOrEmpty(attributedDescription)) {
+            return null;
+        }
+
+        final String content = attributedDescription.getString("content");
+        final JsonArray commandRuns = attributedDescription.getArray("commandRuns");
+        if (content == null || commandRuns.isEmpty()) {
+            return null;
+        }
+
+        final StringBuilder textBuilder = new StringBuilder();
+        int textStart = 0;
+
+        for (final Object commandRun: commandRuns) {
+            final JsonObject run = ((JsonObject) commandRun);
+            final int startIndex = run.getInt("startIndex", -1);
+            final int length = run.getInt("length");
+            final JsonObject navigationEndpoint = run
+                    .getObject("onTap").getObject("innertubeCommand");
+
+            if (startIndex < 0 || length < 1 || navigationEndpoint == null) {
+                continue;
+            }
+
+            final String url;
+            try {
+                url = getUrlFromNavigationEndpoint(navigationEndpoint);
+            } catch (final ParsingException e) {
+                continue;
+            }
+            if (url == null) {
+                continue;
+            }
+
+            // Append text before the link
+            if (startIndex > textStart) {
+                textBuilder.append(content, textStart, startIndex);
+            }
+
+            // Trim and append link text
+            // Channel/Video format: 3xu00a0, (/ •), u00a0, <Name>, 2xu00a0
+            String linkText = content.substring(startIndex, startIndex + length);
+            linkText = linkText.replace('\u00a0', ' ')
+                    .trim().replaceFirst("^[/•] *", "");
+
+            textBuilder.append("<a href=\"").append(url).append("\">").append(linkText)
+                    .append("</a>");
+
+            textStart = startIndex + length;
+        }
+
+        // Append the remaining text
+        if (textStart < content.length()) {
+            textBuilder.append(content.substring(textStart));
+        }
+
+        String text = textBuilder.toString();
+        text = text.replaceAll("\\n", "<br>");
+        text = text.replaceAll(" {2}", " &nbsp;");
+        return text;
+    }
+
     @Nullable
     public static String getTextFromObject(final JsonObject textObject) throws ParsingException {
         return getTextFromObject(textObject, false);
+    }
+
+    @Nullable
+    public static String getUrlFromObject(final JsonObject textObject) throws ParsingException {
+
+        if (isNullOrEmpty(textObject)) {
+            return null;
+        }
+
+        if (textObject.getArray("runs").isEmpty()) {
+            return null;
+        }
+
+        for (final Object textPart : textObject.getArray("runs")) {
+            final String url = getUrlFromNavigationEndpoint(((JsonObject) textPart)
+                    .getObject("navigationEndpoint"));
+            if (!isNullOrEmpty(url)) {
+                return url;
+            }
+        }
+
+        return null;
     }
 
     @Nullable
@@ -1138,10 +1237,11 @@ public final class YoutubeParsingHelper {
     @Nonnull
     public static JsonBuilder<JsonObject> prepareDesktopJsonBuilder(
             @Nonnull final Localization localization,
-            @Nonnull final ContentCountry contentCountry)
+            @Nonnull final ContentCountry contentCountry,
+            @Nullable final String vData)
             throws IOException, ExtractionException {
         // @formatter:off
-        return JsonObject.builder()
+        final JsonBuilder<JsonObject> builder = JsonObject.builder()
                 .object("context")
                     .object("client")
                         .value("hl", localization.getLocalizationCode())
@@ -1149,8 +1249,16 @@ public final class YoutubeParsingHelper {
                         .value("clientName", "WEB")
                         .value("clientVersion", getClientVersion())
                         .value("originalUrl", "https://www.youtube.com")
-                        .value("platform", "DESKTOP")
-                    .end()
+                        .value("platform", "DESKTOP");
+
+        // Use specified visitor data, otherwise fall back to the configured value
+        if (vData != null) {
+            builder.value("visitorData", vData);
+        } else if (visitorData != null) {
+            builder.value("visitorData", visitorData);
+        }
+
+        builder.end()
                     .object("request")
                         .array("internalExperimentFlags")
                         .end()
@@ -1163,6 +1271,16 @@ public final class YoutubeParsingHelper {
                     .end()
                 .end();
         // @formatter:on
+
+        return builder;
+    }
+
+    @Nonnull
+    public static JsonBuilder<JsonObject> prepareDesktopJsonBuilder(
+            @Nonnull final Localization localization,
+            @Nonnull final ContentCountry contentCountry)
+            throws IOException, ExtractionException {
+        return prepareDesktopJsonBuilder(localization, contentCountry, visitorData);
     }
 
     @Nonnull
@@ -1337,6 +1455,7 @@ public final class YoutubeParsingHelper {
 
     /**
      * Add required headers and cookies to an existing headers Map.
+     *
      * @see #addClientInfoHeaders(Map)
      * @see #addCookieHeader(Map)
      */
@@ -1349,6 +1468,7 @@ public final class YoutubeParsingHelper {
     /**
      * Add the <code>X-YouTube-Client-Name</code>, <code>X-YouTube-Client-Version</code>,
      * <code>Origin</code>, and <code>Referer</code> headers.
+     *
      * @param headers The headers which should be completed
      */
     public static void addClientInfoHeaders(@Nonnull final Map<String, List<String>> headers)
@@ -1363,6 +1483,7 @@ public final class YoutubeParsingHelper {
 
     /**
      * Create a map with the required cookie header.
+     *
      * @return A singleton map containing the header.
      */
     public static Map<String, List<String>> getCookieHeader() {
@@ -1371,6 +1492,7 @@ public final class YoutubeParsingHelper {
 
     /**
      * Add the <code>CONSENT</code> cookie to prevent redirect to <code>consent.youtube.com</code>
+     *
      * @param headers the headers which should be completed
      */
     public static void addCookieHeader(@Nonnull final Map<String, List<String>> headers) {
@@ -1609,6 +1731,139 @@ public final class YoutubeParsingHelper {
         return false;
     }
 
+    public static String resolveChannelId(final String idOrPath)
+            throws ExtractionException, IOException {
+        final String[] channelId = idOrPath.split("/");
+
+        if (channelId[0].startsWith("UC")) {
+            return channelId[0];
+        }
+
+        // If the url is an URL which is not a /channel URL, we need to use the
+        // navigation/resolve_url endpoint of the InnerTube API to get the channel id. Otherwise,
+        // we couldn't get information about the channel associated with this URL, if there is one.
+        if (!channelId[0].equals("channel")) {
+            final byte[] body = JsonWriter.string(prepareDesktopJsonBuilder(
+                            Localization.DEFAULT, ContentCountry.DEFAULT)
+                            .value("url", "https://www.youtube.com/" + idOrPath)
+                            .done())
+                    .getBytes(UTF_8);
+
+            final JsonObject jsonResponse = getJsonPostResponse("navigation/resolve_url",
+                    body, Localization.DEFAULT);
+
+            if (!isNullOrEmpty(jsonResponse.getObject("error"))) {
+                final JsonObject errorJsonObject = jsonResponse.getObject("error");
+                final int errorCode = errorJsonObject.getInt("code");
+                if (errorCode == 404) {
+                    throw new ContentNotAvailableException("This channel doesn't exist.");
+                } else {
+                    throw new ContentNotAvailableException("Got error:\""
+                            + errorJsonObject.getString("status") + "\": "
+                            + errorJsonObject.getString("message"));
+                }
+            }
+
+            final JsonObject endpoint = jsonResponse.getObject("endpoint");
+
+            final String webPageType = endpoint.getObject("commandMetadata")
+                    .getObject("webCommandMetadata")
+                    .getString("webPageType", "");
+
+            final JsonObject browseEndpoint = endpoint.getObject("browseEndpoint");
+            final String browseId = browseEndpoint.getString("browseId", "");
+
+            if (webPageType.equalsIgnoreCase("WEB_PAGE_TYPE_BROWSE")
+                    || webPageType.equalsIgnoreCase("WEB_PAGE_TYPE_CHANNEL")
+                    && !browseId.isEmpty()) {
+                if (!browseId.startsWith("UC")) {
+                    throw new ExtractionException("Redirected id is not pointing to a channel");
+                }
+
+                return browseId;
+            }
+        }
+        return channelId[1];
+    }
+
+    public static final class ChannelResponseData {
+        public final JsonObject responseJson;
+        public final String channelId;
+
+        private ChannelResponseData(final JsonObject responseJson, final String channelId) {
+            this.responseJson = responseJson;
+            this.channelId = channelId;
+        }
+    }
+
+    public static ChannelResponseData getChannelResponse(final String channelId,
+                                                         final String params,
+                                                         final Localization loc,
+                                                         final ContentCountry country,
+                                                         @Nullable final String vData)
+            throws ExtractionException, IOException {
+        String id = channelId;
+        JsonObject ajaxJson = null;
+
+        int level = 0;
+        while (level < 3) {
+            final byte[] body = JsonWriter.string(prepareDesktopJsonBuilder(
+                            loc, country, vData)
+                            .value("browseId", id)
+                            .value("params", params) // Equal to videos
+                            .done())
+                    .getBytes(UTF_8);
+
+            final JsonObject jsonResponse = getJsonPostResponse("browse", body, loc);
+
+            if (!isNullOrEmpty(jsonResponse.getObject("error"))) {
+                final JsonObject errorJsonObject = jsonResponse.getObject("error");
+                final int errorCode = errorJsonObject.getInt("code");
+                if (errorCode == 404) {
+                    throw new ContentNotAvailableException("This channel doesn't exist.");
+                } else {
+                    throw new ContentNotAvailableException("Got error:\""
+                            + errorJsonObject.getString("status") + "\": "
+                            + errorJsonObject.getString("message"));
+                }
+            }
+
+            final JsonObject endpoint = jsonResponse.getArray("onResponseReceivedActions")
+                    .getObject(0)
+                    .getObject("navigateAction")
+                    .getObject("endpoint");
+
+            final String webPageType = endpoint.getObject("commandMetadata")
+                    .getObject("webCommandMetadata")
+                    .getString("webPageType", "");
+
+            final String browseId = endpoint.getObject("browseEndpoint").getString("browseId",
+                    "");
+
+            if (webPageType.equalsIgnoreCase("WEB_PAGE_TYPE_BROWSE")
+                    || webPageType.equalsIgnoreCase("WEB_PAGE_TYPE_CHANNEL")
+                    && !browseId.isEmpty()) {
+                if (!browseId.startsWith("UC")) {
+                    throw new ExtractionException("Redirected id is not pointing to a channel");
+                }
+
+                id = browseId;
+                level++;
+            } else {
+                ajaxJson = jsonResponse;
+                break;
+            }
+        }
+
+        if (ajaxJson == null) {
+            throw new ExtractionException("Got no channel response");
+        }
+
+        defaultAlertsCheck(ajaxJson);
+
+        return new ChannelResponseData(ajaxJson, id);
+    }
+
     /**
      * Generate a content playback nonce (also called {@code cpn}), sent by YouTube clients in
      * playback requests (and also for some clients, in the player request body).
@@ -1692,5 +1947,16 @@ public final class YoutubeParsingHelper {
      */
     public static boolean isConsentAccepted() {
         return consentAccepted;
+    }
+
+    /**
+     * @see #visitorData
+     */
+    public static void setVisitorData(@Nullable final String visitorData) {
+        if (visitorData == null || visitorData.isEmpty()) {
+            YoutubeParsingHelper.visitorData = null;
+        } else {
+            YoutubeParsingHelper.visitorData = visitorData;
+        }
     }
 }
