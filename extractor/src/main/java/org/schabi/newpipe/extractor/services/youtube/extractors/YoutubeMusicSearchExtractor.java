@@ -5,15 +5,11 @@ import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getTextFromObject;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getUrlFromNavigationEndpoint;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getValidJsonResponseBody;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.MUSIC_ALBUMS;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.MUSIC_ARTISTS;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.MUSIC_PLAYLISTS;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.MUSIC_SONGS;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.MUSIC_VIDEOS;
 import static org.schabi.newpipe.extractor.utils.Utils.UTF_8;
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 
 import org.schabi.newpipe.extractor.search.SearchExtractor;
+import org.schabi.newpipe.extractor.search.filter.FilterContainer;
 import org.schabi.newpipe.extractor.services.youtube.search.filter.YoutubeFilters;
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
@@ -56,13 +52,13 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
         super(service, linkHandler);
     }
 
-    private String getSearchType() {
+    private int getSearchTypeId() {
         final YoutubeFilters.MusicYoutubeContentFilterItem contentFilterItem =
                 Utils.getFirstContentFilterItem(getLinkHandler());
-        if (contentFilterItem != null && contentFilterItem.getName() != null) {
-            return contentFilterItem.getName();
+        if (contentFilterItem != null) {
+            return contentFilterItem.getIdentifier();
         }
-        return "";
+        return FilterContainer.ITEM_IDENTIFIER_UNKNOWN;
     }
 
     @Override
@@ -291,8 +287,9 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
                         .getObject("musicResponsiveListItemFlexColumnRenderer");
                 final JsonArray descriptionElements = flexColumnRenderer.getObject("text")
                         .getArray("runs");
-                final String searchType = getSearchType();
-                if (searchType.equals(MUSIC_SONGS) || searchType.equals(MUSIC_VIDEOS)) {
+                final int searchTypeId = getSearchTypeId();
+                if (searchTypeId == YoutubeFilters.ID_CF_MAIN_YOUTUBE_MUSIC_SONGS
+                        || searchTypeId == YoutubeFilters.ID_CF_MAIN_YOUTUBE_MUSIC_VIDEOS) {
                     collector.commit(new YoutubeStreamInfoItemExtractor(info, timeAgoParser) {
                         @Override
                         public String getUrl() throws ParsingException {
@@ -338,7 +335,7 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
 
                         @Override
                         public String getUploaderUrl() throws ParsingException {
-                            if (searchType.equals(MUSIC_VIDEOS)) {
+                            if (searchTypeId == YoutubeFilters.ID_CF_MAIN_YOUTUBE_MUSIC_VIDEOS) {
                                 final JsonArray items = info.getObject("menu")
                                         .getObject("menuRenderer")
                                         .getArray("items");
@@ -390,7 +387,7 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
 
                         @Override
                         public long getViewCount() throws ParsingException {
-                            if (searchType.equals(MUSIC_SONGS)) {
+                            if (searchTypeId == YoutubeFilters.ID_CF_MAIN_YOUTUBE_MUSIC_SONGS) {
                                 return -1;
                             }
                             final String viewCount = descriptionElements
@@ -423,7 +420,7 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
                             }
                         }
                     });
-                } else if (searchType.equals(MUSIC_ARTISTS)) {
+                } else if (searchTypeId == YoutubeFilters.ID_CF_MAIN_YOUTUBE_MUSIC_ARTISTS) {
                     collector.commit(new YoutubeChannelInfoItemExtractor(info) {
                         @Override
                         public String getThumbnailUrl() throws ParsingException {
@@ -490,7 +487,8 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
                             return null;
                         }
                     });
-                } else if (searchType.equals(MUSIC_ALBUMS) || searchType.equals(MUSIC_PLAYLISTS)) {
+                } else if (searchTypeId == YoutubeFilters.ID_CF_MAIN_YOUTUBE_MUSIC_ALBUMS
+                        || searchTypeId == YoutubeFilters.ID_CF_MAIN_YOUTUBE_MUSIC_PLAYLISTS) {
                     collector.commit(new YoutubePlaylistInfoItemExtractor(info) {
                         @Override
                         public String getThumbnailUrl() throws ParsingException {
@@ -550,7 +548,7 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
                         @Override
                         public String getUploaderName() throws ParsingException {
                             final String name;
-                            if (searchType.equals(MUSIC_ALBUMS)) {
+                            if (searchTypeId == YoutubeFilters.ID_CF_MAIN_YOUTUBE_MUSIC_ALBUMS) {
                                 name = descriptionElements.getObject(2).getString("text");
                             } else {
                                 name = descriptionElements.getObject(0).getString("text");
@@ -563,7 +561,7 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
 
                         @Override
                         public long getStreamCount() throws ParsingException {
-                            if (searchType.equals(MUSIC_ALBUMS)) {
+                            if (searchTypeId == YoutubeFilters.ID_CF_MAIN_YOUTUBE_MUSIC_ALBUMS) {
                                 return ITEM_COUNT_UNKNOWN;
                             }
                             final String count = descriptionElements.getObject(2)
