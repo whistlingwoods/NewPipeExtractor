@@ -5,13 +5,15 @@ import org.schabi.newpipe.extractor.MediaFormat;
 import java.io.Serializable;
 import java.util.List;
 
+import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
+
 /**
  * Creates a stream object from url, format and optional torrent url
  */
 public abstract class Stream implements Serializable {
     private final MediaFormat mediaFormat;
-    public final String url;
     public final String torrentUrl;
+    private final DeliveryFormat deliveryFormat;
 
     /**
      * @deprecated Use {@link #getFormat()}  or {@link #getFormatId()}
@@ -22,23 +24,23 @@ public abstract class Stream implements Serializable {
     /**
      * Instantiates a new stream object.
      *
-     * @param url    the url
+     * @param deliveryFormat how this stream is delivered
      * @param format the format
      */
-    public Stream(String url, MediaFormat format) {
-        this(url, null, format);
+    public Stream(DeliveryFormat deliveryFormat, MediaFormat format) {
+        this(null, deliveryFormat, format);
     }
 
     /**
      * Instantiates a new stream object.
-     *
-     * @param url        the url
      * @param torrentUrl the url to torrent file, example https://webtorrent.io/torrents/big-buck-bunny.torrent
+     * @param deliveryFormat how this stream is delivered
      * @param format     the format
      */
-    public Stream(String url, String torrentUrl, MediaFormat format) {
-        this.url = url;
+    public Stream(String torrentUrl,
+                  DeliveryFormat deliveryFormat, MediaFormat format) {
         this.torrentUrl = torrentUrl;
+        this.deliveryFormat = deliveryFormat;
         this.format = format.id;
         this.mediaFormat = format;
     }
@@ -54,27 +56,18 @@ public abstract class Stream implements Serializable {
      * Reveals whether two Streams are equal
      */
     public boolean equals(Stream cmp) {
-        return equalStats(cmp) && url.equals(cmp.url);
+        return equalStats(cmp) && deliveryFormat.equals(cmp.deliveryFormat);
     }
 
     /**
      * Check if the list already contains one stream with equals stats
      */
     public static boolean containSimilarStream(Stream stream, List<? extends Stream> streamList) {
-        if (stream == null || streamList == null) return false;
+        if (isNullOrEmpty(streamList)) return false;
         for (Stream cmpStream : streamList) {
             if (stream.equalStats(cmpStream)) return true;
         }
         return false;
-    }
-
-    /**
-     * Gets the url.
-     *
-     * @return the url
-     */
-    public String getUrl() {
-        return url;
     }
 
     /**
@@ -84,6 +77,13 @@ public abstract class Stream implements Serializable {
      */
     public String getTorrentUrl() {
         return torrentUrl;
+    }
+
+    /**
+     * @return how this stream is delivered by a service.
+     */
+    public DeliveryFormat getDeliveryFormat() {
+        return deliveryFormat;
     }
 
     /**

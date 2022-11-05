@@ -88,6 +88,33 @@ public class PeertubeStreamExtractorDefaultTest {
     }
 
     @Test
+    public void testGetUploaderUrl() throws ParsingException {
+        assertIsSecureUrl(extractor.getUploaderUrl());
+        assertEquals("https://framatube.org/api/v1/accounts/framasoft@framatube.org", extractor.getUploaderUrl());
+    }
+
+    @Test
+    public void testGetUploaderAvatarUrl() throws ParsingException {
+        assertIsSecureUrl(extractor.getUploaderAvatarUrl());
+    }
+
+    @Test
+    public void testGetSubChannelName() throws ParsingException {
+        assertEquals("Les vidéos de Framasoft", extractor.getSubChannelName());
+    }
+
+    @Test
+    public void testGetSubChannelUrl() throws ParsingException {
+        assertIsSecureUrl(extractor.getSubChannelUrl());
+        assertEquals("https://framatube.org/video-channels/bf54d359-cfad-4935-9d45-9d6be93f63e8", extractor.getSubChannelUrl());
+    }
+
+    @Test
+    public void testGetSubChannelAvatarUrl() throws ParsingException {
+        assertIsSecureUrl(extractor.getSubChannelAvatarUrl());
+    }
+
+    @Test
     public void testGetLength() throws ParsingException {
         assertEquals(113, extractor.getLength());
     }
@@ -99,19 +126,8 @@ public class PeertubeStreamExtractorDefaultTest {
     }
 
     @Test
-    public void testGetUploaderUrl() throws ParsingException {
-        assertIsSecureUrl(extractor.getUploaderUrl());
-        assertEquals("https://framatube.org/api/v1/accounts/framasoft@framatube.org", extractor.getUploaderUrl());
-    }
-
-    @Test
     public void testGetThumbnailUrl() throws ParsingException {
         assertIsSecureUrl(extractor.getThumbnailUrl());
-    }
-
-    @Test
-    public void testGetUploaderAvatarUrl() throws ParsingException {
-        assertIsSecureUrl(extractor.getUploaderAvatarUrl());
     }
 
     @Test
@@ -145,7 +161,7 @@ public class PeertubeStreamExtractorDefaultTest {
     @Test
     public void testGetAgeLimit() throws ExtractionException, IOException {
         assertEquals(0, extractor.getAgeLimit());
-        PeertubeStreamExtractor ageLimit = (PeertubeStreamExtractor) PeerTube.getStreamExtractor("https://peertube.co.uk/videos/watch/0d501633-f2d9-4476-87c6-71f1c02402a4");
+        PeertubeStreamExtractor ageLimit = (PeertubeStreamExtractor) PeerTube.getStreamExtractor("https://nocensoring.net/videos/embed/dbd8e5e1-c527-49b6-b70c-89101dbb9c08");
         ageLimit.fetchPage();
         assertEquals(18, ageLimit.getAgeLimit());
     }

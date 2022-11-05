@@ -37,8 +37,9 @@ import java.io.IOException;
 
 import javax.annotation.Nonnull;
 
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.getJsonResponse;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.getTextFromObject;
+import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonResponse;
+import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getTextFromObject;
+import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 
 public class YoutubeTrendingExtractor extends KioskExtractor<StreamInfoItem> {
     private JsonObject initialData;
@@ -72,13 +73,8 @@ public class YoutubeTrendingExtractor extends KioskExtractor<StreamInfoItem> {
     @Nonnull
     @Override
     public String getName() throws ParsingException {
-        String name;
-        try {
-            name = getTextFromObject(initialData.getObject("header").getObject("feedTabbedHeaderRenderer").getObject("title"));
-        } catch (Exception e) {
-            throw new ParsingException("Could not get Trending name", e);
-        }
-        if (name != null && !name.isEmpty()) {
+        String name = getTextFromObject(initialData.getObject("header").getObject("feedTabbedHeaderRenderer").getObject("title"));
+        if (!isNullOrEmpty(name)) {
             return name;
         }
         throw new ParsingException("Could not get Trending name");
@@ -97,14 +93,11 @@ public class YoutubeTrendingExtractor extends KioskExtractor<StreamInfoItem> {
             JsonObject expandedShelfContentsRenderer = ((JsonObject) itemSectionRenderer).getObject("itemSectionRenderer")
                     .getArray("contents").getObject(0).getObject("shelfRenderer").getObject("content")
                     .getObject("expandedShelfContentsRenderer");
-            if (expandedShelfContentsRenderer != null) {
-                for (Object ul : expandedShelfContentsRenderer.getArray("items")) {
-                    final JsonObject videoInfo = ((JsonObject) ul).getObject("videoRenderer");
-                    collector.commit(new YoutubeStreamInfoItemExtractor(videoInfo, timeAgoParser));
-                }
+            for (Object ul : expandedShelfContentsRenderer.getArray("items")) {
+                final JsonObject videoInfo = ((JsonObject) ul).getObject("videoRenderer");
+                collector.commit(new YoutubeStreamInfoItemExtractor(videoInfo, timeAgoParser));
             }
         }
         return new InfoItemsPage<>(collector, getNextPageUrl());
-
     }
 }

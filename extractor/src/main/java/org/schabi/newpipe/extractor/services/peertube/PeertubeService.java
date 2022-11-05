@@ -44,8 +44,7 @@ public class PeertubeService extends StreamingService {
 
     @Override
     public ListLinkHandlerFactory getPlaylistLHFactory() {
-        // TODO Auto-generated method stub
-        return null;
+        return PeertubePlaylistLinkHandlerFactory.getInstance();
     }
 
     @Override
@@ -70,21 +69,24 @@ public class PeertubeService extends StreamingService {
 
     @Override
     public SubscriptionExtractor getSubscriptionExtractor() {
-        // TODO Auto-generated method stub
         return null;
     }
 
     @Override
     public ChannelExtractor getChannelExtractor(ListLinkHandler linkHandler)
             throws ExtractionException {
-        return new PeertubeChannelExtractor(this, linkHandler);
+
+        if (linkHandler.getUrl().contains("/video-channels/")) {
+            return new PeertubeChannelExtractor(this, linkHandler);
+        } else {
+            return new PeertubeAccountExtractor(this, linkHandler);
+        }
     }
 
     @Override
     public PlaylistExtractor getPlaylistExtractor(ListLinkHandler linkHandler)
             throws ExtractionException {
-        // TODO Auto-generated method stub
-        return null;
+        return new PeertubePlaylistExtractor(this, linkHandler);
     }
 
     @Override

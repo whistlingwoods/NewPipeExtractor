@@ -8,6 +8,7 @@ import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor;
+import org.schabi.newpipe.extractor.stream.DeliveryFormat;
 import org.schabi.newpipe.extractor.stream.StreamInfoItemsCollector;
 import org.schabi.newpipe.extractor.stream.StreamType;
 import org.schabi.newpipe.extractor.stream.VideoStream;
@@ -102,7 +103,9 @@ public class YoutubeStreamExtractorLivestreamTest {
     @Test
     public void testGetVideoStreams() throws ExtractionException {
         for (VideoStream s : extractor.getVideoStreams()) {
-            assertIsSecureUrl(s.url);
+            if (s.getDeliveryFormat() instanceof DeliveryFormat.Direct) {
+                assertIsSecureUrl(((DeliveryFormat.Direct) s.getDeliveryFormat()).getUrl());
+            }
             assertTrue(s.resolution.length() > 0);
             assertTrue(Integer.toString(s.getFormatId()),
                     0 <= s.getFormatId() && s.getFormatId() <= 0x100);
@@ -116,8 +119,7 @@ public class YoutubeStreamExtractorLivestreamTest {
 
     @Test
     public void testGetDashMpd() throws ParsingException {
-        // we dont expect this particular video to have a DASH file. For this purpouse we use a different test class.
-        assertTrue(extractor.getDashMpdUrl(), extractor.getDashMpdUrl().isEmpty());
+        assertTrue(extractor.getDashMpdUrl().startsWith("https://manifest.googlevideo.com/api/manifest/dash/"));
     }
 
     @Test

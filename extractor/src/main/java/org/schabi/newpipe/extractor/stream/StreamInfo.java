@@ -5,15 +5,17 @@ import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.exceptions.ContentNotAvailableException;
+import org.schabi.newpipe.extractor.exceptions.ContentNotSupportedException;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.localization.DateWrapper;
-import org.schabi.newpipe.extractor.utils.DashMpdParser;
 import org.schabi.newpipe.extractor.utils.ExtractorHelper;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
+import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 
 /*
  * Created by Christian Schabesberger on 26.08.15.
@@ -47,7 +49,7 @@ public class StreamInfo extends Info {
     }
 
     public StreamInfo(int serviceId, String url, String originalUrl, StreamType streamType, String id, String name,
-            int ageLimit) {
+                      int ageLimit) {
         super(serviceId, id, url, originalUrl, name);
         this.streamType = streamType;
         this.ageLimit = ageLimit;
@@ -102,7 +104,7 @@ public class StreamInfo extends Info {
         String name = extractor.getName();
         int ageLimit = extractor.getAgeLimit();
 
-        if ((streamType == StreamType.NONE) || (url == null || url.isEmpty()) || (id == null || id.isEmpty())
+        if ((streamType == StreamType.NONE) || isNullOrEmpty(url) || (isNullOrEmpty(id))
                 || (name == null /* streamInfo.title can be empty of course */) || (ageLimit == -1)) {
             throw new ExtractionException("Some important stream information was not given.");
         }
@@ -131,6 +133,8 @@ public class StreamInfo extends Info {
         /* Load and extract audio */
         try {
             streamInfo.setAudioStreams(extractor.getAudioStreams());
+        } catch (ContentNotSupportedException e) {
+            throw e;
         } catch (Exception e) {
             streamInfo.addError(new ExtractionException("Couldn't get audio streams", e));
         }
@@ -155,37 +159,9 @@ public class StreamInfo extends Info {
         if (streamInfo.getAudioStreams() == null)
             streamInfo.setAudioStreams(new ArrayList<AudioStream>());
 
-        Exception dashMpdError = null;
-        if (streamInfo.getDashMpdUrl() != null && !streamInfo.getDashMpdUrl().isEmpty()) {
-            try {
-                DashMpdParser.ParserResult result = DashMpdParser.getStreams(streamInfo);
-                streamInfo.getVideoOnlyStreams().addAll(result.getVideoOnlyStreams());
-                streamInfo.getAudioStreams().addAll(result.getAudioStreams());
-                streamInfo.getVideoStreams().addAll(result.getVideoStreams());
-                streamInfo.segmentedVideoOnlyStreams = result.getSegmentedVideoOnlyStreams();
-                streamInfo.segmentedAudioStreams = result.getSegmentedAudioStreams();
-                streamInfo.segmentedVideoStreams = result.getSegmentedVideoStreams();
-            } catch (Exception e) {
-                // Sometimes we receive 403 (forbidden) error when trying to download the
-                // manifest (similar to what happens with youtube-dl),
-                // just skip the exception (but store it somewhere), as we later check if we
-                // have streams anyway.
-                dashMpdError = e;
-            }
-        }
-
         // Either audio or video has to be available, otherwise we didn't get a stream
         // (since videoOnly are optional, they don't count).
         if ((streamInfo.videoStreams.isEmpty()) && (streamInfo.audioStreams.isEmpty())) {
-
-            if (dashMpdError != null) {
-                // If we don't have any video or audio and the dashMpd 'errored', add it to the
-                // error list
-                // (it's optional and it don't get added automatically, but it's good to have
-                // some additional error context)
-                streamInfo.addError(dashMpdError);
-            }
-
             throw new StreamExtractException("Could not get any stream. See error variable to get further details.");
         }
 
@@ -221,6 +197,28 @@ public class StreamInfo extends Info {
             streamInfo.addError(e);
         }
         try {
+            streamInfo.setUploaderAvatarUrl(extractor.getUploaderAvatarUrl());
+        } catch (Exception e) {
+            streamInfo.addError(e);
+        }
+
+        try {
+            streamInfo.setSubChannelName(extractor.getSubChannelName());
+        } catch (Exception e) {
+            streamInfo.addError(e);
+        }
+        try {
+            streamInfo.setSubChannelUrl(extractor.getSubChannelUrl());
+        } catch (Exception e) {
+            streamInfo.addError(e);
+        }
+        try {
+            streamInfo.setSubChannelAvatarUrl(extractor.getSubChannelAvatarUrl());
+        } catch (Exception e) {
+            streamInfo.addError(e);
+        }
+
+        try {
             streamInfo.setDescription(extractor.getDescription());
         } catch (Exception e) {
             streamInfo.addError(e);
@@ -237,11 +235,6 @@ public class StreamInfo extends Info {
         }
         try {
             streamInfo.setUploadDate(extractor.getUploadDate());
-        } catch (Exception e) {
-            streamInfo.addError(e);
-        }
-        try {
-            streamInfo.setUploaderAvatarUrl(extractor.getUploaderAvatarUrl());
         } catch (Exception e) {
             streamInfo.addError(e);
         }
@@ -328,6 +321,10 @@ public class StreamInfo extends Info {
     private String uploaderName = "";
     private String uploaderUrl = "";
     private String uploaderAvatarUrl = "";
+
+    private String subChannelName = "";
+    private String subChannelUrl = "";
+    private String subChannelAvatarUrl = "";
 
     private List<VideoStream> videoStreams = new ArrayList<>();
     private List<AudioStream> audioStreams = new ArrayList<>();
@@ -483,6 +480,30 @@ public class StreamInfo extends Info {
         this.uploaderAvatarUrl = uploaderAvatarUrl;
     }
 
+    public String getSubChannelName() {
+        return subChannelName;
+    }
+
+    public void setSubChannelName(String subChannelName) {
+        this.subChannelName = subChannelName;
+    }
+
+    public String getSubChannelUrl() {
+        return subChannelUrl;
+    }
+
+    public void setSubChannelUrl(String subChannelUrl) {
+        this.subChannelUrl = subChannelUrl;
+    }
+
+    public String getSubChannelAvatarUrl() {
+        return subChannelAvatarUrl;
+    }
+
+    public void setSubChannelAvatarUrl(String subChannelAvatarUrl) {
+        this.subChannelAvatarUrl = subChannelAvatarUrl;
+    }
+
     public List<VideoStream> getVideoStreams() {
         return videoStreams;
     }
@@ -513,30 +534,6 @@ public class StreamInfo extends Info {
 
     public void setDashMpdUrl(String dashMpdUrl) {
         this.dashMpdUrl = dashMpdUrl;
-    }
-
-    public List<VideoStream> getSegmentedVideoStreams() {
-        return segmentedVideoStreams;
-    }
-
-    public void setSegmentedVideoStreams(List<VideoStream> segmentedVideoStreams) {
-        this.segmentedVideoStreams = segmentedVideoStreams;
-    }
-
-    public List<AudioStream> getSegmentedAudioStreams() {
-        return segmentedAudioStreams;
-    }
-
-    public void setSegmentedAudioStreams(List<AudioStream> segmentedAudioStreams) {
-        this.segmentedAudioStreams = segmentedAudioStreams;
-    }
-
-    public List<VideoStream> getSegmentedVideoOnlyStreams() {
-        return segmentedVideoOnlyStreams;
-    }
-
-    public void setSegmentedVideoOnlyStreams(List<VideoStream> segmentedVideoOnlyStreams) {
-        this.segmentedVideoOnlyStreams = segmentedVideoOnlyStreams;
     }
 
     public String getHlsUrl() {
