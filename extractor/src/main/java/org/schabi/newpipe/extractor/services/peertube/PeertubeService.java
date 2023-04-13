@@ -1,14 +1,13 @@
 package org.schabi.newpipe.extractor.services.peertube;
 
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.COMMENTS;
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.VIDEO;
-import static java.util.Arrays.asList;
-
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
+import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.kiosk.KioskList;
+import org.schabi.newpipe.extractor.linkhandler.ChannelTabs;
 import org.schabi.newpipe.extractor.linkhandler.LinkHandler;
 import org.schabi.newpipe.extractor.linkhandler.LinkHandlerFactory;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
@@ -18,7 +17,9 @@ import org.schabi.newpipe.extractor.linkhandler.SearchQueryHandlerFactory;
 import org.schabi.newpipe.extractor.playlist.PlaylistExtractor;
 import org.schabi.newpipe.extractor.search.SearchExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeAccountExtractor;
+import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeAccountTabExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeChannelExtractor;
+import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeChannelTabExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeCommentsExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubePlaylistExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeSearchExtractor;
@@ -26,6 +27,7 @@ import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeStreamE
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeSuggestionExtractor;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeTrendingExtractor;
 import org.schabi.newpipe.extractor.services.peertube.linkHandler.PeertubeChannelLinkHandlerFactory;
+import org.schabi.newpipe.extractor.services.peertube.linkHandler.PeertubeChannelTabLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.peertube.linkHandler.PeertubeCommentsLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.peertube.linkHandler.PeertubePlaylistLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.peertube.linkHandler.PeertubeSearchQueryHandlerFactory;
@@ -36,6 +38,10 @@ import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
 import org.schabi.newpipe.extractor.suggestion.SuggestionExtractor;
 
 import java.util.List;
+
+import static java.util.Arrays.asList;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.COMMENTS;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.VIDEO;
 
 public class PeertubeService extends StreamingService {
 
@@ -58,6 +64,11 @@ public class PeertubeService extends StreamingService {
     @Override
     public ListLinkHandlerFactory getChannelLHFactory() {
         return PeertubeChannelLinkHandlerFactory.getInstance();
+    }
+
+    @Override
+    public ListLinkHandlerFactory getChannelTabLHFactory() {
+        return PeertubeChannelTabLinkHandlerFactory.getInstance();
     }
 
     @Override
@@ -101,6 +112,19 @@ public class PeertubeService extends StreamingService {
         } else {
             return new PeertubeAccountExtractor(this, linkHandler);
         }
+    }
+
+    @Override
+    public ChannelTabExtractor getChannelTabExtractor(final ListLinkHandler linkHandler)
+            throws ExtractionException {
+        final String tab = linkHandler.getContentFilters().get(0);
+        switch (tab) {
+            case ChannelTabs.CHANNELS:
+                return new PeertubeAccountTabExtractor(this, linkHandler);
+            case ChannelTabs.PLAYLISTS:
+                return new PeertubeChannelTabExtractor(this, linkHandler);
+        }
+        throw new ParsingException("tab " + tab + " not supported");
     }
 
     @Override

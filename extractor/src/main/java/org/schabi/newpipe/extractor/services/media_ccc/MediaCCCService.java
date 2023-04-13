@@ -1,11 +1,8 @@
 package org.schabi.newpipe.extractor.services.media_ccc;
 
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.AUDIO;
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.VIDEO;
-import static java.util.Arrays.asList;
-
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.kiosk.KioskList;
@@ -35,6 +32,10 @@ import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
 import org.schabi.newpipe.extractor.suggestion.SuggestionExtractor;
 
+import static java.util.Arrays.asList;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.AUDIO;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.VIDEO;
+
 public class MediaCCCService extends StreamingService {
     public MediaCCCService(final int id) {
         super(id, "media.ccc.de", asList(AUDIO, VIDEO));
@@ -53,6 +54,11 @@ public class MediaCCCService extends StreamingService {
     @Override
     public ListLinkHandlerFactory getChannelLHFactory() {
         return new MediaCCCConferenceLinkHandlerFactory();
+    }
+
+    @Override
+    public ListLinkHandlerFactory getChannelTabLHFactory() {
+        return null;
     }
 
     @Override
@@ -76,6 +82,12 @@ public class MediaCCCService extends StreamingService {
     @Override
     public ChannelExtractor getChannelExtractor(final ListLinkHandler linkHandler) {
         return new MediaCCCConferenceExtractor(this, linkHandler);
+    }
+
+    @Override
+    public ChannelTabExtractor getChannelTabExtractor(final ListLinkHandler linkHandler)
+            throws ExtractionException {
+        return null;
     }
 
     @Override

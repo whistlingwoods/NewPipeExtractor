@@ -2,16 +2,9 @@
 
 package org.schabi.newpipe.extractor.services.bandcamp;
 
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.AUDIO;
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.COMMENTS;
-import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampExtractorHelper.BASE_URL;
-import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampFeaturedExtractor.FEATURED_API_URL;
-import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampFeaturedExtractor.KIOSK_FEATURED;
-import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampRadioExtractor.KIOSK_RADIO;
-import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampRadioExtractor.RADIO_API_URL;
-
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.kiosk.KioskList;
@@ -24,6 +17,7 @@ import org.schabi.newpipe.extractor.linkhandler.SearchQueryHandlerFactory;
 import org.schabi.newpipe.extractor.playlist.PlaylistExtractor;
 import org.schabi.newpipe.extractor.search.SearchExtractor;
 import org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampChannelExtractor;
+import org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampChannelTabExtractor;
 import org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampCommentsExtractor;
 import org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampExtractorHelper;
 import org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampFeaturedExtractor;
@@ -34,6 +28,7 @@ import org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampSearchE
 import org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampStreamExtractor;
 import org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampSuggestionExtractor;
 import org.schabi.newpipe.extractor.services.bandcamp.linkHandler.BandcampChannelLinkHandlerFactory;
+import org.schabi.newpipe.extractor.services.bandcamp.linkHandler.BandcampChannelTabLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.bandcamp.linkHandler.BandcampCommentsLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.bandcamp.linkHandler.BandcampFeaturedLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.bandcamp.linkHandler.BandcampPlaylistLinkHandlerFactory;
@@ -44,6 +39,14 @@ import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
 import org.schabi.newpipe.extractor.suggestion.SuggestionExtractor;
 
 import java.util.Arrays;
+
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.AUDIO;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.COMMENTS;
+import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampExtractorHelper.BASE_URL;
+import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampFeaturedExtractor.FEATURED_API_URL;
+import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampFeaturedExtractor.KIOSK_FEATURED;
+import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampRadioExtractor.KIOSK_RADIO;
+import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampRadioExtractor.RADIO_API_URL;
 
 public class BandcampService extends StreamingService {
 
@@ -63,7 +66,12 @@ public class BandcampService extends StreamingService {
 
     @Override
     public ListLinkHandlerFactory getChannelLHFactory() {
-        return new BandcampChannelLinkHandlerFactory();
+        return BandcampChannelLinkHandlerFactory.getInstance();
+    }
+
+    @Override
+    public ListLinkHandlerFactory getChannelTabLHFactory() {
+        return BandcampChannelTabLinkHandlerFactory.getInstance();
     }
 
     @Override
@@ -134,6 +142,11 @@ public class BandcampService extends StreamingService {
     @Override
     public ChannelExtractor getChannelExtractor(final ListLinkHandler linkHandler) {
         return new BandcampChannelExtractor(this, linkHandler);
+    }
+
+    @Override
+    public ChannelTabExtractor getChannelTabExtractor(final ListLinkHandler linkHandler) {
+        return new BandcampChannelTabExtractor(this, linkHandler);
     }
 
     @Override

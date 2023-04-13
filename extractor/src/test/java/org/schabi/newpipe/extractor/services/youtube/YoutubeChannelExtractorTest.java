@@ -1,17 +1,5 @@
 package org.schabi.newpipe.extractor.services.youtube;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.schabi.newpipe.extractor.ExtractorAsserts.assertContains;
-import static org.schabi.newpipe.extractor.ExtractorAsserts.assertIsSecureUrl;
-import static org.schabi.newpipe.extractor.ServiceList.YouTube;
-import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestGetPageInNewExtractor;
-import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestMoreItems;
-import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestRelatedItems;
-
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.downloader.DownloaderFactory;
@@ -23,10 +11,19 @@ import org.schabi.newpipe.extractor.exceptions.AccountTerminatedException;
 import org.schabi.newpipe.extractor.exceptions.ContentNotAvailableException;
 import org.schabi.newpipe.extractor.exceptions.ContentNotSupportedException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
+import org.schabi.newpipe.extractor.linkhandler.ChannelTabs;
 import org.schabi.newpipe.extractor.services.BaseChannelExtractorTest;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeChannelExtractor;
 
 import java.io.IOException;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.schabi.newpipe.extractor.ExtractorAsserts.assertContains;
+import static org.schabi.newpipe.extractor.ExtractorAsserts.assertIsSecureUrl;
+import static org.schabi.newpipe.extractor.ServiceList.YouTube;
+import static org.schabi.newpipe.extractor.services.DefaultTests.*;
 
 /**
  * Test for {@link ChannelExtractor}
@@ -235,11 +232,19 @@ public class YoutubeChannelExtractorTest {
             ExtractorAsserts.assertGreaterOrEqual(4_900_000, extractor.getSubscriberCount());
         }
 
-        @Override
+        @Test
         public void testVerified() throws Exception {
             assertTrue(extractor.isVerified());
         }
 
+        @Test
+        public void testTabs() throws Exception {
+            Set<String> tabs = extractor.getTabs().stream()
+                    .map(linkHandler -> linkHandler.getContentFilters().get(0)).collect(Collectors.toSet());
+            assertTrue(tabs.contains(ChannelTabs.LIVESTREAMS));
+            assertTrue(tabs.contains(ChannelTabs.PLAYLISTS));
+            assertTrue(tabs.contains(ChannelTabs.CHANNELS));
+        }
     }
 
     // Youtube RED/Premium ad blocking test
@@ -336,6 +341,15 @@ public class YoutubeChannelExtractorTest {
             assertTrue(extractor.isVerified());
         }
 
+        @Test
+        public void testTabs() throws Exception {
+            Set<String> tabs = extractor.getTabs().stream()
+                    .map(linkHandler -> linkHandler.getContentFilters().get(0)).collect(Collectors.toSet());
+            assertTrue(tabs.contains(ChannelTabs.SHORTS));
+            assertTrue(tabs.contains(ChannelTabs.LIVESTREAMS));
+            assertTrue(tabs.contains(ChannelTabs.PLAYLISTS));
+            assertTrue(tabs.contains(ChannelTabs.CHANNELS));
+        }
     }
 
     public static class Kurzgesagt implements BaseChannelExtractorTest {
@@ -432,6 +446,14 @@ public class YoutubeChannelExtractorTest {
         @Test
         public void testVerified() throws Exception {
             assertTrue(extractor.isVerified());
+        }
+
+        @Test
+        public void testTabs() throws Exception {
+            Set<String> tabs = extractor.getTabs().stream()
+                    .map(linkHandler -> linkHandler.getContentFilters().get(0)).collect(Collectors.toSet());
+            assertTrue(tabs.contains(ChannelTabs.PLAYLISTS));
+            assertTrue(tabs.contains(ChannelTabs.CHANNELS));
         }
     }
 
@@ -547,6 +569,14 @@ public class YoutubeChannelExtractorTest {
         public void testVerified() throws Exception {
             assertTrue(extractor.isVerified());
         }
+
+        @Test
+        public void testTabs() throws Exception {
+            Set<String> tabs = extractor.getTabs().stream()
+                    .map(linkHandler -> linkHandler.getContentFilters().get(0)).collect(Collectors.toSet());
+            assertTrue(tabs.contains(ChannelTabs.PLAYLISTS));
+            assertTrue(tabs.contains(ChannelTabs.CHANNELS));
+        }
     }
 
     public static class RandomChannel implements BaseChannelExtractorTest {
@@ -646,6 +676,14 @@ public class YoutubeChannelExtractorTest {
         @Test
         public void testVerified() throws Exception {
             assertFalse(extractor.isVerified());
+        }
+
+        @Test
+        public void testTabs() throws Exception {
+            Set<String> tabs = extractor.getTabs().stream()
+                    .map(linkHandler -> linkHandler.getContentFilters().get(0)).collect(Collectors.toSet());
+            assertTrue(tabs.contains(ChannelTabs.PLAYLISTS));
+            assertTrue(tabs.contains(ChannelTabs.CHANNELS));
         }
     }
 }

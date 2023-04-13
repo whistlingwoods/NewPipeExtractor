@@ -274,6 +274,12 @@ public final class YoutubeParsingHelper {
      */
     private static boolean consentAccepted = false;
 
+    /**
+     * Attach YouTube visitor data (session token) to all requests made with the desktop client.
+     * Used for testing to reproduce A/B tests.
+     */
+    private static String visitorData = null;
+
     private static boolean isGoogleURL(final String url) {
         final String cachedUrl = extractCachedUrlIfNeeded(url);
         try {
@@ -1231,8 +1237,17 @@ public final class YoutubeParsingHelper {
             @Nonnull final Localization localization,
             @Nonnull final ContentCountry contentCountry)
             throws IOException, ExtractionException {
+        return prepareDesktopJsonBuilder(localization, contentCountry, null);
+    }
+
+    @Nonnull
+    public static JsonBuilder<JsonObject> prepareDesktopJsonBuilder(
+            @Nonnull final Localization localization,
+            @Nonnull final ContentCountry contentCountry,
+            @Nullable final String vstData)
+            throws IOException, ExtractionException {
         // @formatter:off
-        return JsonObject.builder()
+        final JsonBuilder<JsonObject> builder = JsonObject.builder()
                 .object("context")
                     .object("client")
                         .value("hl", localization.getLocalizationCode())
@@ -1240,8 +1255,15 @@ public final class YoutubeParsingHelper {
                         .value("clientName", "WEB")
                         .value("clientVersion", getClientVersion())
                         .value("originalUrl", "https://www.youtube.com")
-                        .value("platform", "DESKTOP")
-                    .end()
+                        .value("platform", "DESKTOP");
+
+        if (visitorData != null) {
+            builder.value("visitorData", visitorData);
+        } else if (vstData != null) {
+            builder.value("visitorData", vstData);
+        }
+
+        builder.end()
                     .object("request")
                         .array("internalExperimentFlags")
                         .end()
@@ -1254,6 +1276,8 @@ public final class YoutubeParsingHelper {
                     .end()
                 .end();
         // @formatter:on
+
+        return builder;
     }
 
     @Nonnull
@@ -1845,6 +1869,17 @@ public final class YoutubeParsingHelper {
                 return AudioTrackType.DESCRIPTIVE;
             default:
                 return null;
+        }
+    }
+
+    /**
+     * @see #visitorData
+     */
+    public static void setVisitorData(@Nullable final String visitorData) {
+        if (visitorData == null || visitorData.isEmpty()) {
+            YoutubeParsingHelper.visitorData = null;
+        } else {
+            YoutubeParsingHelper.visitorData = visitorData;
         }
     }
 }

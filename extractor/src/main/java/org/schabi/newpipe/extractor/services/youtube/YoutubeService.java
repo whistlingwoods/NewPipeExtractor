@@ -1,13 +1,8 @@
 package org.schabi.newpipe.extractor.services.youtube;
 
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.AUDIO;
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.COMMENTS;
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.LIVE;
-import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.VIDEO;
-import static java.util.Arrays.asList;
-
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.feed.FeedExtractor;
@@ -23,6 +18,7 @@ import org.schabi.newpipe.extractor.localization.Localization;
 import org.schabi.newpipe.extractor.playlist.PlaylistExtractor;
 import org.schabi.newpipe.extractor.search.SearchExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeChannelExtractor;
+import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeChannelTabExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeCommentsExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeFeedExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeMixPlaylistExtractor;
@@ -34,6 +30,7 @@ import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeSubscript
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeSuggestionExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeTrendingExtractor;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeChannelLinkHandlerFactory;
+import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeChannelTabLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeCommentsLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubePlaylistLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory;
@@ -43,9 +40,14 @@ import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
 import org.schabi.newpipe.extractor.suggestion.SuggestionExtractor;
 
+import javax.annotation.Nonnull;
 import java.util.List;
 
-import javax.annotation.Nonnull;
+import static java.util.Arrays.asList;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.AUDIO;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.COMMENTS;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.LIVE;
+import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.VIDEO;
 
 /*
  * Created by Christian Schabesberger on 23.08.15.
@@ -89,6 +91,11 @@ public class YoutubeService extends StreamingService {
     }
 
     @Override
+    public ListLinkHandlerFactory getChannelTabLHFactory() {
+        return YoutubeChannelTabLinkHandlerFactory.getInstance();
+    }
+
+    @Override
     public ListLinkHandlerFactory getPlaylistLHFactory() {
         return YoutubePlaylistLinkHandlerFactory.getInstance();
     }
@@ -106,6 +113,11 @@ public class YoutubeService extends StreamingService {
     @Override
     public ChannelExtractor getChannelExtractor(final ListLinkHandler linkHandler) {
         return new YoutubeChannelExtractor(this, linkHandler);
+    }
+
+    @Override
+    public ChannelTabExtractor getChannelTabExtractor(final ListLinkHandler linkHandler) {
+        return new YoutubeChannelTabExtractor(this, linkHandler);
     }
 
     @Override

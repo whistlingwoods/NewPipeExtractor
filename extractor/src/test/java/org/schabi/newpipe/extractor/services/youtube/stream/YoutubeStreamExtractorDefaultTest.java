@@ -52,6 +52,7 @@ import org.schabi.newpipe.extractor.stream.StreamSegment;
 import org.schabi.newpipe.extractor.stream.StreamType;
 import org.schabi.newpipe.extractor.utils.LocaleCompat;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -60,8 +61,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-
-import javax.annotation.Nullable;
 
 public class YoutubeStreamExtractorDefaultTest {
     private static final String RESOURCE_PATH = DownloaderFactory.RESOURCE_PATH + "services/youtube/extractor/stream/";

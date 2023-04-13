@@ -18,6 +18,8 @@ import org.schabi.newpipe.extractor.stream.StreamInfoItemsCollector;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 public class MediaCCCConferenceExtractor extends ChannelExtractor {
     private JsonObject conferenceData;
@@ -70,6 +72,12 @@ public class MediaCCCConferenceExtractor extends ChannelExtractor {
     @Override
     public boolean isVerified() {
         return false;
+    }
+
+    @Nonnull
+    @Override
+    public List<ListLinkHandler> getTabs() {
+        return Collections.emptyList();
     }
 
     @Nonnull

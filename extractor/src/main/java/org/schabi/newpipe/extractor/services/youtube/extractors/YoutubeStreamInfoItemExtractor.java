@@ -124,10 +124,16 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
 
     @Override
     public String getName() throws ParsingException {
-        final String name = getTextFromObject(videoInfo.getObject("title"));
+        String name = getTextFromObject(videoInfo.getObject("title"));
         if (!isNullOrEmpty(name)) {
             return name;
         }
+
+        name = getTextFromObject(videoInfo.getObject("headline"));
+        if (!isNullOrEmpty(name)) {
+            return name;
+        }
+
         throw new ParsingException("Could not get name");
     }
 
@@ -165,6 +171,21 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
                     // Premieres can be livestreams, so the duration is not available in this
                     // case
                     return -1;
+                }
+
+                // Duration of short videos in channel tab
+                // example: "simple is best - 49 seconds - play video"
+                final String accessibilityLabel = videoInfo.getObject("accessibility")
+                        .getObject("accessibilityData").getString("label");
+                if (accessibilityLabel == null || timeAgoParser == null) {
+                    return 0;
+                }
+
+                final String[] labelParts = accessibilityLabel.split(" \u2013 ");
+
+                if (labelParts.length > 2) {
+                    final String textualDuration = labelParts[labelParts.length - 2];
+                    return timeAgoParser.parseDuration(textualDuration);
                 }
 
                 throw new ParsingException("Could not get duration");
@@ -260,6 +281,17 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
                     .getString("text");
         }
 
+        if (isNullOrEmpty(publishedTimeText)) {
+            publishedTimeText = getTextFromObject(videoInfo
+                    .getObject("navigationEndpoint")
+                    .getObject("reelWatchEndpoint").getObject("overlay")
+                    .getObject("reelPlayerOverlayRenderer")
+                    .getObject("reelPlayerHeaderSupportedRenderers")
+                    .getObject("reelPlayerHeaderRenderer")
+                    .getObject("timestampText")
+            );
+        }
+
         return isNullOrEmpty(publishedTimeText) ? null : publishedTimeText;
     }
 
@@ -295,9 +327,11 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
         // found in this case
 
         final String viewCountText = getTextFromObject(videoInfo.getObject("viewCountText"));
+        final boolean isReelItem =
+                videoInfo.getString("videoType", "").startsWith("REEL_");
         if (!isNullOrEmpty(viewCountText)) {
             try {
-                return getViewCountFromViewCountText(viewCountText, false);
+                return getViewCountFromViewCountText(viewCountText, isReelItem);
             } catch (final Exception ignored) {
             }
         }

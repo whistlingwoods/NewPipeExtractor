@@ -10,7 +10,10 @@ import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.extractor.utils.ExtractorHelper;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 /*
  * Created by Christian Schabesberger on 31.07.16.
@@ -130,6 +133,17 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
             info.addError(e);
         }
 
+        try {
+            info.setTabs(extractor.getTabs());
+        } catch (final Exception e) {
+            info.addError(e);
+        }
+        try {
+            info.setTags(extractor.getTags());
+        } catch (final Exception e) {
+            info.addError(e);
+        }
+
         return info;
     }
 
@@ -143,6 +157,10 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
     private String description;
     private String[] donationLinks;
     private boolean verified;
+
+    private List<ListLinkHandler> tabs = Collections.emptyList();
+
+    private List<String> tags = Collections.emptyList();
 
     public String getParentChannelName() {
         return parentChannelName;
@@ -222,5 +240,23 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
 
     public void setVerified(final boolean verified) {
         this.verified = verified;
+    }
+
+    @Nonnull
+    public List<ListLinkHandler> getTabs() {
+        return tabs;
+    }
+
+    public void setTabs(@Nonnull final List<ListLinkHandler> tabs) {
+        this.tabs = tabs;
+    }
+
+    @Nonnull
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(@Nonnull final List<String> tags) {
+        this.tags = tags;
     }
 }

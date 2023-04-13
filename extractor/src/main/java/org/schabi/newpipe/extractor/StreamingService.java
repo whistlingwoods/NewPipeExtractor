@@ -1,6 +1,7 @@
 package org.schabi.newpipe.extractor;
 
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
@@ -57,7 +58,8 @@ public abstract class StreamingService {
 
         /**
          * Creates a new instance of a ServiceInfo
-         * @param name the name of the service
+         *
+         * @param name              the name of the service
          * @param mediaCapabilities the type of media this service can handle
          */
         public ServiceInfo(final String name, final List<MediaCapability> mediaCapabilities) {
@@ -97,8 +99,9 @@ public abstract class StreamingService {
      * If you Implement one do not set id within your implementation of this extractor, instead
      * set the id when you put the extractor into {@link ServiceList}
      * All other parameters can be set directly from the overriding constructor.
-     * @param id the number of the service to identify him within the NewPipe frontend
-     * @param name the name of the service
+     *
+     * @param id           the number of the service to identify him within the NewPipe frontend
+     * @param name         the name of the service
      * @param capabilities the type of media this service can handle
      */
     public StreamingService(final int id,
@@ -129,6 +132,7 @@ public abstract class StreamingService {
 
     /**
      * Must return a new instance of an implementation of LinkHandlerFactory for streams.
+     *
      * @return an instance of a LinkHandlerFactory for streams
      */
     public abstract LinkHandlerFactory getStreamLHFactory();
@@ -136,22 +140,34 @@ public abstract class StreamingService {
     /**
      * Must return a new instance of an implementation of ListLinkHandlerFactory for channels.
      * If support for channels is not given null must be returned.
+     *
      * @return an instance of a ListLinkHandlerFactory for channels or null
      */
     public abstract ListLinkHandlerFactory getChannelLHFactory();
 
     /**
+     * Must return a new instance of an implementation of ListLinkHandlerFactory for channel tabs.
+     * If support for channel tabs is not given null must be returned.
+     *
+     * @return an instance of a ListLinkHandlerFactory for channels or null
+     */
+    public abstract ListLinkHandlerFactory getChannelTabLHFactory();
+
+    /**
      * Must return a new instance of an implementation of ListLinkHandlerFactory for playlists.
      * If support for playlists is not given null must be returned.
+     *
      * @return an instance of a ListLinkHandlerFactory for playlists or null
      */
     public abstract ListLinkHandlerFactory getPlaylistLHFactory();
 
     /**
      * Must return an instance of an implementation of SearchQueryHandlerFactory.
+     *
      * @return an instance of a SearchQueryHandlerFactory
      */
     public abstract SearchQueryHandlerFactory getSearchQHFactory();
+
     public abstract ListLinkHandlerFactory getCommentsLHFactory();
 
     /*//////////////////////////////////////////////////////////////////////////
@@ -160,6 +176,7 @@ public abstract class StreamingService {
 
     /**
      * Must create a new instance of a SearchExtractor implementation.
+     *
      * @param queryHandler specifies the keyword lock for, and the filters which should be applied.
      * @return a new SearchExtractor instance
      */
@@ -167,12 +184,14 @@ public abstract class StreamingService {
 
     /**
      * Must create a new instance of a SuggestionExtractor implementation.
+     *
      * @return a new SuggestionExtractor instance
      */
     public abstract SuggestionExtractor getSuggestionExtractor();
 
     /**
      * Outdated or obsolete. null can be returned.
+     *
      * @return just null
      */
     public abstract SubscriptionExtractor getSubscriptionExtractor();
@@ -192,12 +211,14 @@ public abstract class StreamingService {
 
     /**
      * Must create a new instance of a KioskList implementation.
+     *
      * @return a new KioskList instance
      */
     public abstract KioskList getKioskList() throws ExtractionException;
 
     /**
      * Must create a new instance of a ChannelExtractor implementation.
+     *
      * @param linkHandler is pointing to the channel which should be handled by this new instance.
      * @return a new ChannelExtractor
      */
@@ -205,7 +226,17 @@ public abstract class StreamingService {
             throws ExtractionException;
 
     /**
+     * Must create a new instance of a ChannelTabExtractor implementation.
+     *
+     * @param linkHandler is pointing to the channel which should be handled by this new instance.
+     * @return a new ChannelTabExtractor
+     */
+    public abstract ChannelTabExtractor getChannelTabExtractor(ListLinkHandler linkHandler)
+            throws ExtractionException;
+
+    /**
      * Must crete a new instance of a PlaylistExtractor implementation.
+     *
      * @param linkHandler is pointing to the playlist which should be handled by this new instance.
      * @return a new PlaylistExtractor
      */
@@ -214,6 +245,7 @@ public abstract class StreamingService {
 
     /**
      * Must create a new instance of a StreamExtractor implementation.
+     *
      * @param linkHandler is pointing to the stream which should be handled by this new instance.
      * @return a new StreamExtractor
      */
@@ -240,6 +272,19 @@ public abstract class StreamingService {
             throws ExtractionException {
         return getChannelExtractor(getChannelLHFactory()
                 .fromQuery(id, contentFilter, sortFilter));
+    }
+
+    public ChannelTabExtractor getChannelTabExtractorFromId(final String id, final String tab)
+            throws ExtractionException {
+        return getChannelTabExtractor(getChannelTabLHFactory().fromQuery(
+                id, Collections.singletonList(tab), ""));
+    }
+
+    public ChannelTabExtractor getChannelTabExtractorFromId(final String id, final String tab,
+                                                            final String baseUrl)
+            throws ExtractionException {
+        return getChannelTabExtractor(getChannelTabLHFactory().fromQuery(
+                id, Collections.singletonList(tab), "", baseUrl));
     }
 
     public PlaylistExtractor getPlaylistExtractor(final String id,
@@ -284,6 +329,7 @@ public abstract class StreamingService {
 
     /**
      * Figures out where the link is pointing to (a channel, a video, a playlist, etc.)
+     *
      * @param url the url on which it should be decided of which link type it is
      * @return the link type of url
      */
