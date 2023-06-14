@@ -337,33 +337,89 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     @Override
     public long getLikeCount() throws ParsingException {
         assertPageFetched();
-        String likesString = null;
+
+        // If ratings are not allowed, there is no like count available
+        if (!playerResponse.getObject("videoDetails").getBoolean("allowRatings")) {
+            return -1;
+        }
+
+        String likesString = "";
+
         try {
-            likesString = getVideoPrimaryInfoRenderer().getObject("sentimentBar")
-                    .getObject("sentimentBarRenderer").getString("tooltip");
-            if (likesString != null && likesString.contains("/")) {
-                likesString = likesString.split("/")[0];
-            } else {
-                likesString = getVideoPrimaryInfoRenderer()
-                        .getObject("videoActions")
-                        .getObject("menuRenderer")
-                        .getArray("topLevelButtons")
-                        .getObject(0)
-                        .getObject("toggleButtonRenderer")
-                        .getObject("defaultText")
+            final JsonArray topLevelButtons = getVideoPrimaryInfoRenderer()
+                    .getObject("videoActions")
+                    .getObject("menuRenderer")
+                    .getArray("topLevelButtons");
+
+            // Try first with the new video actions buttons data structure
+            JsonObject likeToggleButtonRenderer = topLevelButtons.stream()
+                    .filter(JsonObject.class::isInstance)
+                    .map(JsonObject.class::cast)
+                    .map(button -> button.getObject("segmentedLikeDislikeButtonRenderer")
+                            .getObject("likeButton")
+                            .getObject("toggleButtonRenderer"))
+                    .filter(toggleButtonRenderer -> !isNullOrEmpty(toggleButtonRenderer))
+                    .findFirst()
+                    .orElse(null);
+
+            // Use the old video actions buttons data structure if the new one isn't returned
+            if (likeToggleButtonRenderer == null) {
+                /*
+                In the old video actions buttons data structure, there are 3 ways to detect whether
+                a button is the like button, using its toggleButtonRenderer:
+                - checking whether toggleButtonRenderer.targetId is equal to watch-like;
+                - checking whether toggleButtonRenderer.defaultIcon.iconType is equal to LIKE;
+                - checking whether
+                  toggleButtonRenderer.toggleButtonSupportedData.toggleButtonIdData.id
+                  is equal to TOGGLE_BUTTON_ID_TYPE_LIKE.
+                */
+                likeToggleButtonRenderer = topLevelButtons.stream()
+                        .filter(JsonObject.class::isInstance)
+                        .map(JsonObject.class::cast)
+                        .map(topLevelButton -> topLevelButton.getObject("toggleButtonRenderer"))
+                        .filter(toggleButtonRenderer -> toggleButtonRenderer.getString("targetId")
+                                .equalsIgnoreCase("watch-like")
+                                || toggleButtonRenderer.getObject("defaultIcon")
+                                .getString("iconType")
+                                .equalsIgnoreCase("LIKE")
+                                || toggleButtonRenderer.getObject("toggleButtonSupportedData")
+                                .getObject("toggleButtonIdData")
+                                .getString("id")
+                                .equalsIgnoreCase("TOGGLE_BUTTON_ID_TYPE_LIKE"))
+                        .findFirst()
+                        .orElseThrow(() -> new ParsingException(
+                                "The like button is missing even though ratings are enabled"));
+            }
+
+            // Use one of the accessibility strings available (this one has the same path as the
+            // one used for comments' like count extraction)
+            likesString = likeToggleButtonRenderer.getObject("accessibilityData")
+                    .getObject("accessibilityData")
+                    .getString("label");
+
+            // Use the other accessibility string available which contains the exact like count
+
+            if (likesString == null) {
+                likesString = likeToggleButtonRenderer.getObject("accessibility")
+                        .getString("label");
+            }
+
+            // Last method: use the defaultText's accessibility data, which contains the exact like
+            // count too, except when it is equal to 0, where a localized string is returned instead
+            if (likesString == null) {
+                likesString = likeToggleButtonRenderer.getObject("defaultText")
                         .getObject("accessibility")
                         .getObject("accessibilityData")
                         .getString("label");
             }
 
+            // If ratings are allowed and the likes string is null, it means that we couldn't
+            // extract the (real) like count from accessibility data
             if (likesString == null) {
-                // If this kicks in our button has no content and therefore ratings must be disabled
-                if (playerResponse.getObject("videoDetails").getBoolean("allowRatings")) {
-                    throw new ParsingException("Ratings are enabled even though the like button is missing");
-                }
-                return -1;
+                throw new ParsingException("Could not get like count from accessibility data");
             }
 
+            // This check only works with English localizations!
             if (likesString.toLowerCase().contains("no likes")) {
                 return 0;
             }
@@ -378,34 +434,6 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             }
             return -1;
         }
-    }
-
-    @Override
-    public long getDislikeCount() throws ParsingException {
-        assertPageFetched();
-
-        try {
-            String dislikesString = getVideoPrimaryInfoRenderer().getObject("sentimentBar")
-                    .getObject("sentimentBarRenderer").getString("tooltip");
-            if (dislikesString != null && dislikesString.contains("/")) {
-                dislikesString = dislikesString.split("/")[1];
-                return Integer.parseInt(Utils.removeNonDigitCharacters(dislikesString));
-            } else {
-                // Calculate dislike with average rating and like count
-                long likes = getLikeCount();
-                double averageRating = playerResponse.getObject("videoDetails").getDouble("averageRating");
-
-                if (likes != -1 && averageRating > 1) {
-                    // If averageRating can't be gathered, it will be 0,
-                    // but we also can't divide by 0 so we need > 1
-                    return Math.round(likes * ((5 - averageRating) / (averageRating - 1)));
-                }
-            }
-        } catch (final Exception e) {
-        }
-        // Silently fail as YouTube is "gradually rolling out" removing dislike count
-        // https://blog.youtube/news-and-events/update-to-youtube/
-        return -1;
     }
 
     @Nonnull
