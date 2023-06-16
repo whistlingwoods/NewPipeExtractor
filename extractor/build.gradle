@@ -10,9 +10,12 @@ dependencies {
 
     implementation "com.github.TeamNewPipe:nanojson:$nanojsonVersion"
     implementation 'org.jsoup:jsoup:1.14.2'
-    implementation 'org.mozilla:rhino:1.7.13'
     implementation "com.github.spotbugs:spotbugs-annotations:$spotbugsVersion"
     implementation 'org.nibor.autolink:autolink:0.10.0'
+
+    // do not upgrade to 1.7.14, since in 1.7.14 Rhino uses the `SourceVersion` class, which is not
+    // available on Android (even when using desugaring), and `NoClassDefFoundError` is thrown
+    implementation 'org.mozilla:rhino:1.7.13'
 
     testImplementation "junit:junit:$junitVersion"
     testImplementation "com.squareup.okhttp3:okhttp:3.12.13"
