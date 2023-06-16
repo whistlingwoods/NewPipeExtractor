@@ -8,10 +8,9 @@ on:
     branches:
       - dev
       - master
+      - new-legacy
+      - legacy-extractor
   pull_request:
-
-permissions:
-  contents: read
 
 jobs:
   build-and-test:
@@ -24,6 +23,7 @@ jobs:
         with:
           java-version: '8'
           distribution: 'temurin'
+          
 
       - name: Cache Gradle dependencies
         uses: actions/cache@v3
@@ -42,10 +42,3 @@ jobs:
             echo running with mock downloader
             ./gradlew check --stacktrace -Ddownloader=MOCK
           fi
-
-      - name: Upload test reports when failure occurs
-        uses: actions/upload-artifact@v3
-        if: failure()
-        with:
-          name: NewPipeExtractor-test-reports
-          path: extractor/build/reports/tests/test/**
