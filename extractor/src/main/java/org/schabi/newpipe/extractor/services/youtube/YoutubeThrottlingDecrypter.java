@@ -50,7 +50,7 @@ public final class YoutubeThrottlingDecrypter {
 
     private static final String DECRYPT_FUNCTION_ARRAY_OBJECT_TYPE_DECLARATION_REGEX = "var ";
     private static final String FUNCTION_NAMES_IN_DECRYPT_ARRAY_REGEX = "\\s*=\\s*\\[(.+?)][;,]";
-    
+
     private static final Map<String, String> N_PARAMS_CACHE = new HashMap<>();
     private static String decryptFunction;
     private static String decryptFunctionName;
