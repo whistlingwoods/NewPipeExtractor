@@ -436,6 +436,34 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         }
     }
 
+    @Override
+    public long getDislikeCount() throws ParsingException {
+        assertPageFetched();
+
+        try {
+            String dislikesString = getVideoPrimaryInfoRenderer().getObject("sentimentBar")
+                    .getObject("sentimentBarRenderer").getString("tooltip");
+            if (dislikesString != null && dislikesString.contains("/")) {
+                dislikesString = dislikesString.split("/")[1];
+                return Integer.parseInt(Utils.removeNonDigitCharacters(dislikesString));
+            } else {
+                // Calculate dislike with average rating and like count
+                long likes = getLikeCount();
+                double averageRating = playerResponse.getObject("videoDetails").getDouble("averageRating");
+
+                if (likes != -1 && averageRating > 1) {
+                    // If averageRating can't be gathered, it will be 0,
+                    // but we also can't divide by 0 so we need > 1
+                    return Math.round(likes * ((5 - averageRating) / (averageRating - 1)));
+                }
+            }
+        } catch (final Exception e) {
+        }
+        // Silently fail as YouTube is "gradually rolling out" removing dislike count
+        // https://blog.youtube/news-and-events/update-to-youtube/
+        return -1;
+    }
+
     @Nonnull
     @Override
     public String getUploaderUrl() throws ParsingException {
