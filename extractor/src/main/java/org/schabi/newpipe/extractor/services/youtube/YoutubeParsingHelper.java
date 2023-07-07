@@ -556,7 +556,7 @@ public class YoutubeParsingHelper {
             return youtubeMusicKey = HARDCODED_YOUTUBE_MUSIC_KEY;
         }
 
-        final String url = "https://music.youtube.com/";
+        final String url = "https://music.youtube.com/?ucbcb=1";
         final Map<String, List<String>> headers = new HashMap<>();
         addCookieHeader(headers);
         final String html = getDownloader().get(url, headers).responseBody();
