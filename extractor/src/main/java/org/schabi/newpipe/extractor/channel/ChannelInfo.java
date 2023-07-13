@@ -1,15 +1,13 @@
 package org.schabi.newpipe.extractor.channel;
 
-import org.schabi.newpipe.extractor.ListExtractor.InfoItemsPage;
-import org.schabi.newpipe.extractor.ListInfo;
+import org.schabi.newpipe.extractor.Info;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
-import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
-import org.schabi.newpipe.extractor.stream.StreamInfoItem;
-import org.schabi.newpipe.extractor.utils.ExtractorHelper;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 /*
  * Created by Christian Schabesberger on 31.07.16.
@@ -31,10 +29,9 @@ import java.io.IOException;
  * along with NewPipe.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-public class ChannelInfo extends ListInfo<StreamInfoItem> {
-
-    public ChannelInfo(int serviceId, String id, String url, String originalUrl, String name, ListLinkHandler listLinkHandler) {
-        super(serviceId, id, url, originalUrl, name, listLinkHandler.getContentFilters(), listLinkHandler.getSortFilter());
+public class ChannelInfo extends Info {
+    public ChannelInfo(int serviceId, String id, String url, String originalUrl, String name) {
+        super(serviceId, id, url, originalUrl, name);
     }
 
     public static ChannelInfo getInfo(String url) throws IOException, ExtractionException {
@@ -47,13 +44,7 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
         return getInfo(extractor);
     }
 
-    public static InfoItemsPage<StreamInfoItem> getMoreItems(StreamingService service,
-                                                             String url,
-                                                             String pageUrl) throws IOException, ExtractionException {
-        return service.getChannelExtractor(url).getPage(pageUrl);
-    }
-
-    public static ChannelInfo getInfo(ChannelExtractor extractor) throws IOException, ExtractionException {
+    public static ChannelInfo getInfo(ChannelExtractor extractor) throws ExtractionException {
 
         final int serviceId = extractor.getServiceId();
         final String id = extractor.getId();
@@ -61,7 +52,7 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
         final String originalUrl = extractor.getOriginalUrl();
         final String name = extractor.getName();
 
-        final ChannelInfo info = new ChannelInfo(serviceId, id, url, originalUrl, name, extractor.getLinkHandler());
+        final ChannelInfo info = new ChannelInfo(serviceId, id, url, originalUrl, name);
 
         try {
             info.setAvatarUrl(extractor.getAvatarUrl());
@@ -79,10 +70,6 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
             info.addError(e);
         }
 
-        final InfoItemsPage<StreamInfoItem> itemsPage = ExtractorHelper.getItemsPageOrLogError(info, extractor);
-        info.setRelatedItems(itemsPage.getItems());
-        info.setNextPageUrl(itemsPage.getNextPageUrl());
-
         try {
             info.setSubscriberCount(extractor.getSubscriberCount());
         } catch (Exception e) {
@@ -94,6 +81,26 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
             info.addError(e);
         }
 
+        final List<ChannelTabInfo> tabs = new ArrayList<>();
+        final String defaultTabId = NewPipe.getService(serviceId).getChannelTabExtractorFactory().defaultTabId();
+
+        for (int i = 0; i < extractor.getTabs().size(); i++) {
+            try {
+                final ChannelTabExtractor tabExtractor = extractor.getTabs().get(i);
+                final boolean isDefaultTab = tabExtractor.getId().equals(defaultTabId);
+
+                if (tabExtractor instanceof PlaceholderChannelTabExtractor) {
+                    final PlaceholderChannelTabExtractor placeholderTabExtractor = (PlaceholderChannelTabExtractor) tabExtractor;
+                    tabs.add(PlaceholderChannelTabInfo.getPlaceHolder(placeholderTabExtractor, isDefaultTab));
+                } else {
+                    tabs.add(ChannelTabInfo.getInfo(tabExtractor, isDefaultTab));
+                }
+            } catch (Exception e) {
+                info.addError(e);
+            }
+        }
+        info.setTabs(tabs);
+
         return info;
     }
 
@@ -103,6 +110,7 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
     private long subscriberCount = -1;
     private String description;
     private String[] donationLinks;
+    private List<ChannelTabInfo> tabs;
 
     public String getAvatarUrl() {
         return avatarUrl;
@@ -150,5 +158,13 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
 
     public void setDonationLinks(String[] donationLinks) {
         this.donationLinks = donationLinks;
+    }
+
+    public void setTabs(List<ChannelTabInfo> tabs) {
+        this.tabs = tabs;
+    }
+
+    public List<ChannelTabInfo> getTabs() {
+        return tabs;
     }
 }

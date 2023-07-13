@@ -2,6 +2,8 @@ package org.schabi.newpipe.extractor.services.media_ccc;
 
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractorFactory;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.kiosk.KioskExtractor;
@@ -9,10 +11,7 @@ import org.schabi.newpipe.extractor.kiosk.KioskList;
 import org.schabi.newpipe.extractor.linkhandler.*;
 import org.schabi.newpipe.extractor.playlist.PlaylistExtractor;
 import org.schabi.newpipe.extractor.search.SearchExtractor;
-import org.schabi.newpipe.extractor.services.media_ccc.extractors.MediaCCCConferenceExtractor;
-import org.schabi.newpipe.extractor.services.media_ccc.extractors.MediaCCCConferenceKiosk;
-import org.schabi.newpipe.extractor.services.media_ccc.extractors.MediaCCCSearchExtractor;
-import org.schabi.newpipe.extractor.services.media_ccc.extractors.MediaCCCStreamExtractor;
+import org.schabi.newpipe.extractor.services.media_ccc.extractors.*;
 import org.schabi.newpipe.extractor.services.media_ccc.linkHandler.MediaCCCConferenceLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.media_ccc.linkHandler.MediaCCCConferencesListLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.media_ccc.linkHandler.MediaCCCSearchQueryHandlerFactory;
@@ -21,11 +20,15 @@ import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
 import org.schabi.newpipe.extractor.suggestion.SuggestionExtractor;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.List;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.AUDIO;
 import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.VIDEO;
+import static org.schabi.newpipe.extractor.services.media_ccc.extractors.MediaCCCConferenceExtractor.EVENTS_TAB;
 
 public class MediaCCCService extends StreamingService {
     public MediaCCCService(int id) {
@@ -114,6 +117,33 @@ public class MediaCCCService extends StreamingService {
     public CommentsExtractor getCommentsExtractor(ListLinkHandler linkHandler)
             throws ExtractionException {
         return null;
+    }
+
+    private final ChannelTabExtractorFactory channelTabExtractorFactory = new ChannelTabExtractorFactory() {
+        @Nonnull
+        @Override
+        public List<String> availableTabIdList() {
+            return singletonList(EVENTS_TAB);
+        }
+
+        @Override
+        public String defaultTabId() {
+            return EVENTS_TAB;
+        }
+
+        @Override
+        protected ChannelTabExtractor instantiateTabExtractor(String tabId, ListLinkHandler channelLinkHandler) {
+            if (tabId.equals(EVENTS_TAB)) {
+                return new MediaCCCConferenceEventsExtractor(MediaCCCService.this, channelLinkHandler, null);
+            }
+
+            return null;
+        }
+    };
+
+    @Override
+    public ChannelTabExtractorFactory getChannelTabExtractorFactory() {
+        return channelTabExtractorFactory;
     }
 
     @Override

@@ -2,6 +2,8 @@ package org.schabi.newpipe.extractor.services.youtube;
 
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractorFactory;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.feed.FeedExtractor;
@@ -23,6 +25,8 @@ import java.util.List;
 
 import static java.util.Arrays.asList;
 import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.*;
+import static org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeChannelExtractor.PLAYLISTS_TAB;
+import static org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeChannelExtractor.VIDEOS_TAB;
 
 /*
  * Created by Christian Schabesberger on 23.08.15.
@@ -144,6 +148,40 @@ public class YoutubeService extends StreamingService {
     public CommentsExtractor getCommentsExtractor(ListLinkHandler urlIdHandler)
             throws ExtractionException {
         return new YoutubeCommentsExtractor(this, urlIdHandler);
+    }
+
+    private final ChannelTabExtractorFactory channelTabExtractorFactory = new ChannelTabExtractorFactory() {
+        @Nonnull
+        @Override
+        public List<String> availableTabIdList() {
+            return asList(VIDEOS_TAB, PLAYLISTS_TAB);
+        }
+
+        @Override
+        public String defaultTabId() {
+            return VIDEOS_TAB;
+        }
+
+        @Override
+        protected ChannelTabExtractor instantiateTabExtractor(String tabId, ListLinkHandler channelLinkHandler) {
+            ChannelTabExtractor extractor = null;
+
+            switch (tabId) {
+                case VIDEOS_TAB:
+                    extractor = new YoutubeChannelVideosExtractor(YoutubeService.this, channelLinkHandler, null, null);
+                    break;
+                case PLAYLISTS_TAB:
+                    extractor = new YoutubeChannelPlaylistsExtractor(YoutubeService.this, channelLinkHandler);
+                    break;
+            }
+
+            return extractor;
+        }
+    };
+
+    @Override
+    public ChannelTabExtractorFactory getChannelTabExtractorFactory() {
+        return channelTabExtractorFactory;
     }
 
     /*//////////////////////////////////////////////////////////////////////////

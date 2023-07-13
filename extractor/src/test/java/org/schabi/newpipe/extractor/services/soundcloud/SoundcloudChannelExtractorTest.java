@@ -5,10 +5,13 @@ import org.junit.Test;
 import org.schabi.newpipe.DownloaderTestImpl;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.services.BaseChannelExtractorTest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.schabi.newpipe.extractor.ExtractorAsserts.assertEmpty;
 import static org.schabi.newpipe.extractor.ExtractorAsserts.assertIsSecureUrl;
 import static org.schabi.newpipe.extractor.ServiceList.SoundCloud;
@@ -59,20 +62,6 @@ public class SoundcloudChannelExtractorTest {
         }
 
         /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            defaultTestRelatedItems(extractor);
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-            defaultTestMoreItems(extractor);
-        }
-
-        /*//////////////////////////////////////////////////////////////////////////
         // ChannelExtractor
         //////////////////////////////////////////////////////////////////////////*/
 
@@ -100,6 +89,11 @@ public class SoundcloudChannelExtractorTest {
         public void testSubscriberCount() {
             assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 1e6);
         }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
+        }
     }
 
     public static class DubMatix implements BaseChannelExtractorTest {
@@ -120,7 +114,17 @@ public class SoundcloudChannelExtractorTest {
         @Test
         public void testGetPageInNewExtractor() throws Exception {
             final ChannelExtractor newExtractor = SoundCloud.getChannelExtractor(extractor.getUrl());
-            defaultTestGetPageInNewExtractor(extractor, newExtractor);
+            newExtractor.fetchPage();
+
+            for (int i = 0; i < extractor.getTabs().size(); i++) {
+                ChannelTabExtractor extractorTab = extractor.getTabs().get(i);
+                extractorTab.fetchPage();
+
+                ChannelTabExtractor newExtractorTab = extractor.getTabs().get(i);
+                newExtractorTab.fetchPage();
+
+                defaultTestGetPageInNewExtractor(extractorTab, newExtractorTab);
+            }
         }
 
         /*//////////////////////////////////////////////////////////////////////////
@@ -153,20 +157,6 @@ public class SoundcloudChannelExtractorTest {
         }
 
         /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            defaultTestRelatedItems(extractor);
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-            defaultTestMoreItems(extractor);
-        }
-
-        /*//////////////////////////////////////////////////////////////////////////
         // ChannelExtractor
         //////////////////////////////////////////////////////////////////////////*/
 
@@ -193,6 +183,11 @@ public class SoundcloudChannelExtractorTest {
         @Test
         public void testSubscriberCount() {
             assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 2e6);
+        }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
         }
     }
 }

@@ -190,8 +190,14 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
         StreamInfoItemsCollector collector = new StreamInfoItemsCollector(getServiceId());
         final JsonArray ajaxJson = getJsonResponse(pageUrl, getExtractorLocalization());
 
+        if (ajaxJson.getObject(1).getObject("response").getObject("continuationContents") == null)
+            return new InfoItemsPage<>(collector, null);
+
         JsonObject sectionListContinuation = ajaxJson.getObject(1).getObject("response")
                 .getObject("continuationContents").getObject("playlistVideoListContinuation");
+
+        if (sectionListContinuation.getArray("contents") == null)
+            return new InfoItemsPage<>(collector, null);
 
         collectStreamsFrom(collector, sectionListContinuation.getArray("contents"));
 
@@ -211,8 +217,6 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
     }
 
     private void collectStreamsFrom(StreamInfoItemsCollector collector, JsonArray videos) {
-        collector.reset();
-
         final TimeAgoParser timeAgoParser = getTimeAgoParser();
 
         for (Object video : videos) {

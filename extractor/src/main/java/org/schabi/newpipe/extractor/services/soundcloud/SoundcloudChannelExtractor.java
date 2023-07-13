@@ -6,23 +6,28 @@ import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.PlaceholderChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
-import org.schabi.newpipe.extractor.stream.StreamInfoItem;
-import org.schabi.newpipe.extractor.stream.StreamInfoItemsCollector;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 @SuppressWarnings("WeakerAccess")
 public class SoundcloudChannelExtractor extends ChannelExtractor {
+    public static final String TRACKS_TAB = "tracks";
+    public static final String POPULAR_TRACKS_TAB = "popular_tracks";
+    public static final String ALBUMS_TAB = "albums";
+    public static final String PLAYLISTS_TAB = "playlists";
+    public static final String REPOSTS_TAB = "reposts";
+
     private String userId;
     private JsonObject user;
-
-    private StreamInfoItemsCollector streamInfoItemsCollector = null;
-    private String nextPageUrl = null;
 
     public SoundcloudChannelExtractor(StreamingService service, ListLinkHandler linkHandler) {
         super(service, linkHandler);
@@ -83,47 +88,16 @@ public class SoundcloudChannelExtractor extends ChannelExtractor {
         return user.getString("description", "");
     }
 
-    @Nonnull
     @Override
-    public InfoItemsPage<StreamInfoItem> getInitialPage() throws ExtractionException {
-        if (streamInfoItemsCollector == null) {
-            computeNextPageAndGetStreams();
-        }
-        return new InfoItemsPage<>(streamInfoItemsCollector, getNextPageUrl());
-    }
+    public List<ChannelTabExtractor> getTabs() {
+        List<ChannelTabExtractor> tabs = new ArrayList<>();
 
-    @Override
-    public String getNextPageUrl() throws ExtractionException {
-        if (nextPageUrl == null) {
-            computeNextPageAndGetStreams();
-        }
-        return nextPageUrl;
-    }
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), TRACKS_TAB, (ListLinkHandler) getLinkHandler()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), POPULAR_TRACKS_TAB, (ListLinkHandler) getLinkHandler()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), ALBUMS_TAB, (ListLinkHandler) getLinkHandler()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), PLAYLISTS_TAB, (ListLinkHandler) getLinkHandler()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), REPOSTS_TAB, (ListLinkHandler) getLinkHandler()));
 
-    private void computeNextPageAndGetStreams() throws ExtractionException {
-        try {
-            streamInfoItemsCollector = new StreamInfoItemsCollector(getServiceId());
-
-            String apiUrl = "https://api-v2.soundcloud.com/users/" + getId() + "/tracks"
-                    + "?client_id=" + SoundcloudParsingHelper.clientId()
-                    + "&limit=20"
-                    + "&linked_partitioning=1";
-
-            nextPageUrl = SoundcloudParsingHelper.getStreamsFromApiMinItems(15, streamInfoItemsCollector, apiUrl);
-        } catch (Exception e) {
-            throw new ExtractionException("Could not get next page", e);
-        }
-    }
-
-    @Override
-    public InfoItemsPage<StreamInfoItem> getPage(final String pageUrl) throws IOException, ExtractionException {
-        if (pageUrl == null || pageUrl.isEmpty()) {
-            throw new ExtractionException(new IllegalArgumentException("Page url is empty or null"));
-        }
-
-        StreamInfoItemsCollector collector = new StreamInfoItemsCollector(getServiceId());
-        String nextPageUrl = SoundcloudParsingHelper.getStreamsFromApiMinItems(15, collector, pageUrl);
-
-        return new InfoItemsPage<>(collector, nextPageUrl);
+        return tabs;
     }
 }

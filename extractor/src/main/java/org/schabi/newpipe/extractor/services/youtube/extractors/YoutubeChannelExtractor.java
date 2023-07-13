@@ -2,27 +2,24 @@ package org.schabi.newpipe.extractor.services.youtube.extractors;
 
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
-
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.PlaceholderChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
-import org.schabi.newpipe.extractor.localization.TimeAgoParser;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeChannelLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper;
-import org.schabi.newpipe.extractor.stream.StreamInfoItem;
-import org.schabi.newpipe.extractor.stream.StreamInfoItemsCollector;
 import org.schabi.newpipe.extractor.utils.Utils;
 
-import java.io.IOException;
-
 import javax.annotation.Nonnull;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.fixThumbnailUrl;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.getJsonResponse;
-import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.getTextFromObject;
+import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeParsingHelper.*;
 
 /*
  * Created by Christian Schabesberger on 25.07.16.
@@ -46,8 +43,10 @@ import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeP
 
 @SuppressWarnings("WeakerAccess")
 public class YoutubeChannelExtractor extends ChannelExtractor {
+    public static final String VIDEOS_TAB = "videos";
+    public static final String PLAYLISTS_TAB = "playlists";
+
     private JsonObject initialData;
-    private JsonObject videoTab;
 
     public YoutubeChannelExtractor(StreamingService service, ListLinkHandler linkHandler) {
         super(service, linkHandler);
@@ -60,15 +59,6 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
         final JsonArray ajaxJson = getJsonResponse(url, getExtractorLocalization());
         initialData = ajaxJson.getObject(1).getObject("response");
         YoutubeParsingHelper.defaultAlertsCheck(initialData);
-    }
-
-
-    @Override
-    public String getNextPageUrl() throws ExtractionException {
-        if (getVideoTab() == null) return "";
-        return getNextPageUrlFrom(getVideoTab().getObject("content").getObject("sectionListRenderer")
-                .getArray("contents").getObject(0).getObject("itemSectionRenderer")
-                .getArray("contents").getObject(0).getObject("gridRenderer").getArray("continuations"));
     }
 
     @Nonnull
@@ -168,107 +158,40 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
         }
     }
 
-    @Nonnull
     @Override
-    public InfoItemsPage<StreamInfoItem> getInitialPage() throws ExtractionException {
-        StreamInfoItemsCollector collector = new StreamInfoItemsCollector(getServiceId());
+    public List<ChannelTabExtractor> getTabs() throws ParsingException {
+        final List<ChannelTabExtractor> tabs = new ArrayList<>();
+        final ListLinkHandler listLinkHandler = (ListLinkHandler) getLinkHandler();
 
-        if (getVideoTab() != null) {
-            JsonArray videos = getVideoTab().getObject("content").getObject("sectionListRenderer").getArray("contents")
-                    .getObject(0).getObject("itemSectionRenderer").getArray("contents").getObject(0)
-                    .getObject("gridRenderer").getArray("items");
-            collectStreamsFrom(collector, videos);
-        }
+        tabs.add(new YoutubeChannelVideosExtractor(getService(), listLinkHandler, getTab("videos"), getName()));
+        tabs.add(new PlaceholderChannelTabExtractor(getService(), PLAYLISTS_TAB, listLinkHandler));
 
-        return new InfoItemsPage<>(collector, getNextPageUrl());
+        return tabs;
     }
 
-    @Override
-    public InfoItemsPage<StreamInfoItem> getPage(String pageUrl) throws IOException, ExtractionException {
-        if (pageUrl == null || pageUrl.isEmpty()) {
-            throw new ExtractionException(new IllegalArgumentException("Page url is empty or null"));
-        }
-
-        // Unfortunately, we have to fetch the page even if we are only getting next streams,
-        // as they don't deliver enough information on their own (the channel name, for example).
-        fetchPage();
-
-        StreamInfoItemsCollector collector = new StreamInfoItemsCollector(getServiceId());
-        final JsonArray ajaxJson = getJsonResponse(pageUrl, getExtractorLocalization());
-
-        JsonObject sectionListContinuation = ajaxJson.getObject(1).getObject("response")
-                .getObject("continuationContents").getObject("gridContinuation");
-
-        collectStreamsFrom(collector, sectionListContinuation.getArray("items"));
-
-        return new InfoItemsPage<>(collector, getNextPageUrlFrom(sectionListContinuation.getArray("continuations")));
-    }
-
-
-    private String getNextPageUrlFrom(JsonArray continuations) {
-        if (continuations == null) return "";
-
-        JsonObject nextContinuationData = continuations.getObject(0).getObject("nextContinuationData");
-        String continuation = nextContinuationData.getString("continuation");
-        String clickTrackingParams = nextContinuationData.getString("clickTrackingParams");
-        return "https://www.youtube.com/browse_ajax?ctoken=" + continuation + "&continuation=" + continuation
-                + "&itct=" + clickTrackingParams;
-    }
-
-    private void collectStreamsFrom(StreamInfoItemsCollector collector, JsonArray videos) throws ParsingException {
-        collector.reset();
-
-        final String uploaderName = getName();
-        final String uploaderUrl = getUrl();
-        final TimeAgoParser timeAgoParser = getTimeAgoParser();
-
-        for (Object video : videos) {
-            if (((JsonObject) video).getObject("gridVideoRenderer") != null) {
-                collector.commit(new YoutubeStreamInfoItemExtractor(
-                        ((JsonObject) video).getObject("gridVideoRenderer"), timeAgoParser) {
-                    @Override
-                    public String getUploaderName() {
-                        return uploaderName;
-                    }
-
-                    @Override
-                    public String getUploaderUrl() {
-                        return uploaderUrl;
-                    }
-                });
-            }
-        }
-    }
-
-    private JsonObject getVideoTab() throws ParsingException {
-        if (this.videoTab != null) return this.videoTab;
-
+    private JsonObject getTab(String tabName) {
         JsonArray tabs = initialData.getObject("contents").getObject("twoColumnBrowseResultsRenderer")
                 .getArray("tabs");
         JsonObject videoTab = null;
 
         for (Object tab : tabs) {
             if (((JsonObject) tab).getObject("tabRenderer") != null) {
-                if (((JsonObject) tab).getObject("tabRenderer").getString("title").equals("Videos")) {
+                if (((JsonObject) tab).getObject("tabRenderer").getObject("endpoint").getObject("commandMetadata")
+                        .getObject("webCommandMetadata").getString("url").endsWith(tabName)) {
                     videoTab = ((JsonObject) tab).getObject("tabRenderer");
                     break;
                 }
             }
         }
 
-        if (videoTab == null) {
-            throw new ParsingException("Could not find Videos tab");
-        }
-
         try {
             if (getTextFromObject(videoTab.getObject("content").getObject("sectionListRenderer")
                     .getArray("contents").getObject(0).getObject("itemSectionRenderer")
                     .getArray("contents").getObject(0).getObject("messageRenderer")
-                    .getObject("text")).equals("This channel has no videos."))
+                    .getObject("text")).startsWith("This channel has no "))
                 return null;
         } catch (Exception ignored) {}
 
-        this.videoTab = videoTab;
         return videoTab;
     }
 }

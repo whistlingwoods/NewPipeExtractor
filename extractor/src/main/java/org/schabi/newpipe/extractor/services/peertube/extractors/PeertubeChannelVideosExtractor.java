@@ -5,24 +5,22 @@ import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import org.jsoup.helper.StringUtil;
 import org.schabi.newpipe.extractor.InfoItem;
-import org.schabi.newpipe.extractor.InfoItemExtractor;
-import org.schabi.newpipe.extractor.InfoItemsCollector;
+import org.schabi.newpipe.extractor.MixedInfoItemsCollector;
 import org.schabi.newpipe.extractor.StreamingService;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.downloader.Response;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
-import org.schabi.newpipe.extractor.linkhandler.SearchQueryHandler;
-import org.schabi.newpipe.extractor.MixedInfoItemsCollector;
-import org.schabi.newpipe.extractor.search.SearchExtractor;
+import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
+import org.schabi.newpipe.extractor.services.peertube.PeertubeParsingHelper;
 import org.schabi.newpipe.extractor.utils.JsonUtils;
 import org.schabi.newpipe.extractor.utils.Parser;
-import org.schabi.newpipe.extractor.utils.Parser.RegexException;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 
-public class PeertubeSearchExtractor extends SearchExtractor {
-
+public class PeertubeChannelVideosExtractor extends ChannelTabExtractor {
     private static final String START_KEY = "start";
     private static final String COUNT_KEY = "count";
     private static final int ITEMS_PER_PAGE = 12;
@@ -31,13 +29,8 @@ public class PeertubeSearchExtractor extends SearchExtractor {
     private InfoItemsPage<InfoItem> initPage;
     private long total;
 
-    public PeertubeSearchExtractor(StreamingService service, SearchQueryHandler linkHandler) {
-        super(service, linkHandler);
-    }
-
-    @Override
-    public String getSearchSuggestion() throws ParsingException {
-        return null;
+    public PeertubeChannelVideosExtractor(StreamingService service, ListLinkHandler linkHandler) {
+        super(service, PeertubeChannelExtractor.VIDEOS_TAB, linkHandler);
     }
 
     @Override
@@ -46,27 +39,27 @@ public class PeertubeSearchExtractor extends SearchExtractor {
         return initPage;
     }
 
-    private InfoItemsCollector<InfoItem, InfoItemExtractor> collectStreamsFrom(JsonObject json) throws ParsingException {
+    @Override
+    public void onFetchPage(@Nonnull Downloader downloader) throws IOException, ExtractionException {
+        String pageUrl = getUrl() + "/videos?" + START_KEY + "=0&" + COUNT_KEY + "=" + ITEMS_PER_PAGE;
+        this.initPage = getPage(pageUrl);
+    }
 
-        final MixedInfoItemsCollector collector = getInfoItemSearchCollector();
-
+    private void collectStreamsFrom(MixedInfoItemsCollector collector, JsonObject json, String pageUrl) throws ParsingException {
         JsonArray contents;
         try {
             contents = (JsonArray) JsonUtils.getValue(json, "data");
         } catch (Exception e) {
-            throw new ParsingException("unable to extract search info", e);
+            throw new ParsingException("unable to extract channel streams", e);
         }
 
-        String baseUrl = getBaseUrl();
         for (Object c : contents) {
             if (c instanceof JsonObject) {
                 final JsonObject item = (JsonObject) c;
-                PeertubeStreamInfoItemExtractor extractor = new PeertubeStreamInfoItemExtractor(item, baseUrl);
+                PeertubeStreamInfoItemExtractor extractor = new PeertubeStreamInfoItemExtractor(item, getBaseUrl());
                 collector.commit(extractor);
             }
         }
-
-        return collector;
 
     }
 
@@ -84,30 +77,28 @@ public class PeertubeSearchExtractor extends SearchExtractor {
             try {
                 json = JsonParser.object().from(response.responseBody());
             } catch (Exception e) {
-                throw new ParsingException("Could not parse json data for search info", e);
+                throw new ParsingException("Could not parse json data for kiosk info", e);
             }
         }
 
+        MixedInfoItemsCollector collector = new MixedInfoItemsCollector(getServiceId());
         if (json != null) {
+            PeertubeParsingHelper.validate(json);
             Number number = JsonUtils.getNumber(json, "total");
             if (number != null) this.total = number.longValue();
-            return new InfoItemsPage<>(collectStreamsFrom(json), getNextPageUrl(pageUrl));
+            collectStreamsFrom(collector, json, pageUrl);
         } else {
-            throw new ExtractionException("Unable to get peertube search info");
+            throw new ExtractionException("Unable to get PeerTube kiosk info");
         }
+        return new InfoItemsPage<>(collector, getNextPageUrl(pageUrl));
     }
 
-    @Override
-    public void onFetchPage(Downloader downloader) throws IOException, ExtractionException {
-        String pageUrl = getUrl() + "&" + START_KEY + "=0&" + COUNT_KEY + "=" + ITEMS_PER_PAGE;
-        this.initPage = getPage(pageUrl);
-    }
 
     private String getNextPageUrl(String prevPageUrl) {
         String prevStart;
         try {
             prevStart = Parser.matchGroup1(START_PATTERN, prevPageUrl);
-        } catch (RegexException e) {
+        } catch (Parser.RegexException e) {
             return "";
         }
         if (StringUtil.isBlank(prevStart)) return "";
@@ -124,6 +115,4 @@ public class PeertubeSearchExtractor extends SearchExtractor {
             return prevPageUrl.replace(START_KEY + "=" + prevStart, START_KEY + "=" + String.valueOf(nextStart));
         }
     }
-
-
 }

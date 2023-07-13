@@ -1,16 +1,25 @@
 package org.schabi.newpipe.extractor.services.youtube;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.schabi.newpipe.DownloaderTestImpl;
+import org.schabi.newpipe.extractor.InfoItem;
+import org.schabi.newpipe.extractor.ListExtractor;
 import org.schabi.newpipe.extractor.NewPipe;
-import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.*;
 import org.schabi.newpipe.extractor.exceptions.ContentNotAvailableException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
+import org.schabi.newpipe.extractor.kiosk.KioskExtractor;
+import org.schabi.newpipe.extractor.kiosk.KioskInfo;
 import org.schabi.newpipe.extractor.services.BaseChannelExtractorTest;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeChannelExtractor;
+import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 
-import static org.junit.Assert.*;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.schabi.newpipe.extractor.ExtractorAsserts.assertIsSecureUrl;
 import static org.schabi.newpipe.extractor.ServiceList.YouTube;
 import static org.schabi.newpipe.extractor.services.DefaultTests.*;
@@ -19,6 +28,78 @@ import static org.schabi.newpipe.extractor.services.DefaultTests.*;
  * Test for {@link ChannelExtractor}
  */
 public class YoutubeChannelExtractorTest {
+    @Ignore
+    @Test
+    public void test() throws Exception {
+        NewPipe.init(DownloaderTestImpl.getInstance());
+        final ChannelExtractor extractor = YouTube.getChannelExtractor("https://www.youtube.com/channel/UCsXVk37bltHxD1rDPwtNM8Q");
+//        final ChannelExtractor extractor = YouTube.getChannelExtractor("https://www.youtube.com/channel/UCUBS9NUzSohYP_uZQlg7HUA");
+        extractor.fetchPage();
+
+        final ChannelInfo info = ChannelInfo.getInfo(extractor);
+
+        for (ChannelTabInfo tab : info.getTabs()) {
+            System.out.println("tab = " + tab);
+
+            final ChannelTabInfo completeTab;
+            if (tab instanceof PlaceholderChannelTabInfo) {
+                System.out.println("Fetching complete tab info...");
+                completeTab = ChannelTabInfo.getInfo((PlaceholderChannelTabInfo) tab);
+                System.out.println("completeTab = " + completeTab);
+            } else {
+                completeTab = tab;
+            }
+
+            defaultTestListOfItems(YouTube, completeTab.getRelatedItems(), completeTab.getErrors());
+            for (InfoItem relatedItem : completeTab.getRelatedItems()) {
+                System.out.println("    relatedItem = " + relatedItem);
+            }
+
+            if (completeTab.hasNextPage()) {
+                System.out.println("Getting More...");
+                final ListExtractor.InfoItemsPage<InfoItem> moreItems =
+                        ChannelTabInfo.getMoreItems(NewPipe.getService(tab.getServiceId()),
+                                tab.getId(), tab.getUrl(), tab.getNextPageUrl());
+                defaultTestListOfItems(YouTube, moreItems.getItems(), moreItems.getErrors());
+                for (InfoItem relatedItem : moreItems.getItems()) {
+                    System.out.println("    relatedItem = " + relatedItem);
+                }
+            }
+            System.out.println("=================================");
+        }
+    }
+
+    @Ignore
+    @Test
+    public void foundChannelsWithNextPageAvailablePlaylistsTab() throws Exception {
+        NewPipe.init(DownloaderTestImpl.getInstance());
+
+        final KioskExtractor kioskExtractor = YouTube.getKioskList().getDefaultKioskExtractor();
+        kioskExtractor.fetchPage();
+        final KioskInfo kioskInfo = KioskInfo.getInfo(kioskExtractor);
+        for (StreamInfoItem relatedItem : kioskInfo.getRelatedItems()) {
+
+//            System.out.println("Fetching \"" + relatedItem.getUploaderName() + "\" " + relatedItem.getUploaderUrl() + "...");
+            final ChannelInfo channelInfo = ChannelInfo.getInfo(relatedItem.getUploaderUrl());
+            final List<ChannelTabInfo> tabs = channelInfo.getTabs();
+//            System.out.println("Got " + tabs.size() + " tabs (" + tabs + ")");
+
+            for (ChannelTabInfo tab : tabs) {
+                if (!tab.getId().equals(YoutubeChannelExtractor.PLAYLISTS_TAB)) {
+                    continue;
+                }
+
+                if (tab instanceof PlaceholderChannelTabInfo) {
+                    tab = ChannelTabInfo.getInfo((PlaceholderChannelTabInfo) tab);
+                }
+
+                final boolean hasNextPage = tab.hasNextPage();
+                if (hasNextPage) {
+                    System.out.println("Tab \"playlists\" has next page for channel \"" + relatedItem.getUploaderName() + "\" = " + tab.getUrl());
+                }
+            }
+        }
+    }
 
     public static class NotAvailable {
         @BeforeClass
@@ -81,20 +162,6 @@ public class YoutubeChannelExtractorTest {
             assertEquals("http://www.youtube.com/user/Gronkh", extractor.getOriginalUrl());
         }
 
-        /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            defaultTestRelatedItems(extractor);
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-            defaultTestMoreItems(extractor);
-        }
-
          /*//////////////////////////////////////////////////////////////////////////
          // ChannelExtractor
          //////////////////////////////////////////////////////////////////////////*/
@@ -128,6 +195,11 @@ public class YoutubeChannelExtractorTest {
             assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 0);
             assertTrue("Subscriber count too small", extractor.getSubscriberCount() >= 4e6);
         }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
+        }
     }
 
     // Youtube RED/Premium ad blocking test
@@ -140,6 +212,26 @@ public class YoutubeChannelExtractorTest {
             extractor = (YoutubeChannelExtractor) YouTube
                     .getChannelExtractor("https://www.youtube.com/user/Vsauce");
             extractor.fetchPage();
+        }
+
+        /*//////////////////////////////////////////////////////////////////////////
+        // Additional Testing
+        //////////////////////////////////////////////////////////////////////////*/
+
+        @Test
+        public void testGetPageInNewExtractor() throws Exception {
+            final ChannelExtractor newExtractor = YouTube.getChannelExtractor(extractor.getUrl());
+            newExtractor.fetchPage();
+
+            for (int i = 0; i < extractor.getTabs().size(); i++) {
+                ChannelTabExtractor extractorTab = extractor.getTabs().get(i);
+                extractorTab.fetchPage();
+
+                ChannelTabExtractor newExtractorTab = extractor.getTabs().get(i);
+                newExtractorTab.fetchPage();
+
+                defaultTestGetPageInNewExtractor(extractorTab, newExtractorTab);
+            }
         }
 
         /*//////////////////////////////////////////////////////////////////////////
@@ -169,20 +261,6 @@ public class YoutubeChannelExtractorTest {
         @Test
         public void testOriginalUrl() throws ParsingException {
             assertEquals("https://www.youtube.com/user/Vsauce", extractor.getOriginalUrl());
-        }
-
-        /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            defaultTestRelatedItems(extractor);
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-            defaultTestMoreItems(extractor);
         }
 
          /*//////////////////////////////////////////////////////////////////////////
@@ -220,6 +298,10 @@ public class YoutubeChannelExtractorTest {
             assertTrue("Subscriber count too small", extractor.getSubscriberCount() >= 10e6);
         }
 
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
+        }
     }
 
     public static class Kurzgesagt implements BaseChannelExtractorTest {
@@ -231,16 +313,6 @@ public class YoutubeChannelExtractorTest {
             extractor = (YoutubeChannelExtractor) YouTube
                     .getChannelExtractor("https://www.youtube.com/channel/UCsXVk37bltHxD1rDPwtNM8Q");
             extractor.fetchPage();
-        }
-
-        /*//////////////////////////////////////////////////////////////////////////
-        // Additional Testing
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testGetPageInNewExtractor() throws Exception {
-            final ChannelExtractor newExtractor = YouTube.getChannelExtractor(extractor.getUrl());
-            defaultTestGetPageInNewExtractor(extractor, newExtractor);
         }
 
         /*//////////////////////////////////////////////////////////////////////////
@@ -271,20 +343,6 @@ public class YoutubeChannelExtractorTest {
         @Test
         public void testOriginalUrl() throws ParsingException {
             assertEquals("https://www.youtube.com/channel/UCsXVk37bltHxD1rDPwtNM8Q", extractor.getOriginalUrl());
-        }
-
-        /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            defaultTestRelatedItems(extractor);
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-            defaultTestMoreItems(extractor);
         }
 
          /*//////////////////////////////////////////////////////////////////////////
@@ -321,6 +379,11 @@ public class YoutubeChannelExtractorTest {
         @Test
         public void testSubscriberCount() throws Exception {
             assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 5e6);
+        }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
         }
     }
 
@@ -364,20 +427,6 @@ public class YoutubeChannelExtractorTest {
             assertEquals("https://www.youtube.com/user/CaptainDisillusion/videos", extractor.getOriginalUrl());
         }
 
-        /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            defaultTestRelatedItems(extractor);
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-            defaultTestMoreItems(extractor);
-        }
-
          /*//////////////////////////////////////////////////////////////////////////
          // ChannelExtractor
          //////////////////////////////////////////////////////////////////////////*/
@@ -410,6 +459,11 @@ public class YoutubeChannelExtractorTest {
         @Test
         public void testSubscriberCount() throws Exception {
             assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 5e5);
+        }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
         }
     }
 
@@ -454,20 +508,6 @@ public class YoutubeChannelExtractorTest {
             assertEquals("https://www.youtube.com/user/EminemVEVO/", extractor.getOriginalUrl());
         }
 
-        /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            defaultTestRelatedItems(extractor);
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-            defaultTestMoreItems(extractor);
-        }
-
          /*//////////////////////////////////////////////////////////////////////////
          // ChannelExtractor
          //////////////////////////////////////////////////////////////////////////*/
@@ -502,6 +542,11 @@ public class YoutubeChannelExtractorTest {
             // there is no "Subscribe" button
             long subscribers = extractor.getSubscriberCount();
             assertEquals("Wrong subscriber count", -1, subscribers);
+        }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
         }
     }
 
@@ -550,21 +595,22 @@ public class YoutubeChannelExtractorTest {
         // ListExtractor
         //////////////////////////////////////////////////////////////////////////*/
 
-        @Test
-        public void testRelatedItems() throws Exception {
-            defaultTestRelatedItems(extractor);
-        }
-
-        @Test
-        public void testMoreRelatedItems() {
-            try {
-                defaultTestMoreItems(extractor);
-            } catch (Throwable ignored) {
-                return;
-            }
-
-            fail("This channel doesn't have more items, it should throw an error");
-        }
+//        @Test
+//        public void testRelatedItems() throws Exception {
+//            for (ChannelTabExtractor tab : extractor.getTabs()) {
+//                defaultTestRelatedAndMoreItemsTab(tab);
+//            }
+//        }
+//
+//        @Test
+//        public void testMoreRelatedItems() throws Exception {
+//            for (ChannelTabExtractor tab : extractor.getTabs()) {
+//                if (tab.getId().equals(YoutubeChannelExtractor.VIDEOS_TAB)) {
+//                    if (defaultTestMoreItems(tab) != null)
+//                        fail("This channel doesn't have more items, it should throw an error");
+//                }
+//            }
+//        }
 
          /*//////////////////////////////////////////////////////////////////////////
          // ChannelExtractor
@@ -600,6 +646,10 @@ public class YoutubeChannelExtractorTest {
             long subscribers = extractor.getSubscriberCount();
             assertTrue("Wrong subscriber count: " + subscribers, subscribers >= 50);
         }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
+        }
     }
 }
-

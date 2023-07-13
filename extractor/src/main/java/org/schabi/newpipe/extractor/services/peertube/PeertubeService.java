@@ -2,6 +2,8 @@ package org.schabi.newpipe.extractor.services.peertube;
 
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractorFactory;
 import org.schabi.newpipe.extractor.comments.CommentsExtractor;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.kiosk.KioskExtractor;
@@ -15,9 +17,14 @@ import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
 import org.schabi.newpipe.extractor.suggestion.SuggestionExtractor;
 
+import javax.annotation.Nonnull;
+import java.util.Collections;
+import java.util.List;
+
 import static java.util.Arrays.asList;
 import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.COMMENTS;
 import static org.schabi.newpipe.extractor.StreamingService.ServiceInfo.MediaCapability.VIDEO;
+import static org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeChannelExtractor.VIDEOS_TAB;
 
 public class PeertubeService extends StreamingService {
 
@@ -97,6 +104,33 @@ public class PeertubeService extends StreamingService {
     public CommentsExtractor getCommentsExtractor(ListLinkHandler linkHandler)
             throws ExtractionException {
         return new PeertubeCommentsExtractor(this, linkHandler);
+    }
+
+    private final ChannelTabExtractorFactory channelTabExtractorFactory = new ChannelTabExtractorFactory() {
+        @Nonnull
+        @Override
+        public List<String> availableTabIdList() {
+            return Collections.singletonList(VIDEOS_TAB);
+        }
+
+        @Override
+        public String defaultTabId() {
+            return VIDEOS_TAB;
+        }
+
+        @Override
+        protected ChannelTabExtractor instantiateTabExtractor(String tabId, ListLinkHandler channelLinkHandler) {
+            if (tabId.equals(VIDEOS_TAB)) {
+                return new PeertubeChannelVideosExtractor(PeertubeService.this, channelLinkHandler);
+            }
+
+            return null;
+        }
+    };
+
+    @Override
+    public ChannelTabExtractorFactory getChannelTabExtractorFactory() {
+        return channelTabExtractorFactory;
     }
 
     @Override

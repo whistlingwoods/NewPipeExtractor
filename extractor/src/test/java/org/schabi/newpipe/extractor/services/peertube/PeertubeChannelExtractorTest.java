@@ -6,6 +6,7 @@ import org.junit.Test;
 import org.schabi.newpipe.DownloaderTestImpl;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelTabExtractor;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.services.BaseChannelExtractorTest;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeChannelExtractor;
@@ -63,20 +64,6 @@ public class PeertubeChannelExtractorTest {
         }
 
         /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            defaultTestRelatedItems(extractor);
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-            defaultTestMoreItems(extractor);
-        }
-
-        /*//////////////////////////////////////////////////////////////////////////
         // ChannelExtractor
         //////////////////////////////////////////////////////////////////////////*/
 
@@ -105,6 +92,11 @@ public class PeertubeChannelExtractorTest {
         public void testSubscriberCount() throws ParsingException {
             assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 5);
         }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
+        }
     }
 
     public static class Booteille implements BaseChannelExtractorTest {
@@ -127,7 +119,17 @@ public class PeertubeChannelExtractorTest {
         @Test
         public void testGetPageInNewExtractor() throws Exception {
             final ChannelExtractor newExtractor = PeerTube.getChannelExtractor(extractor.getUrl());
-            defaultTestGetPageInNewExtractor(extractor, newExtractor);
+            newExtractor.fetchPage();
+
+            for (int i = 0; i < extractor.getTabs().size(); i++) {
+                ChannelTabExtractor extractorTab = extractor.getTabs().get(i);
+                extractorTab.fetchPage();
+
+                ChannelTabExtractor newExtractorTab = extractor.getTabs().get(i);
+                newExtractorTab.fetchPage();
+
+                defaultTestGetPageInNewExtractor(extractorTab, newExtractorTab);
+            }
         }
 
         /*//////////////////////////////////////////////////////////////////////////
@@ -160,20 +162,6 @@ public class PeertubeChannelExtractorTest {
         }
 
         /*//////////////////////////////////////////////////////////////////////////
-        // ListExtractor
-        //////////////////////////////////////////////////////////////////////////*/
-
-        @Test
-        public void testRelatedItems() throws Exception {
-            defaultTestRelatedItems(extractor);
-        }
-
-        @Test
-        public void testMoreRelatedItems() throws Exception {
-            defaultTestMoreItems(extractor);
-        }
-
-        /*//////////////////////////////////////////////////////////////////////////
         // ChannelExtractor
         //////////////////////////////////////////////////////////////////////////*/
 
@@ -201,6 +189,11 @@ public class PeertubeChannelExtractorTest {
         @Test
         public void testSubscriberCount() throws ParsingException {
             assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 1);
+        }
+
+        @Test
+        public void testTabs() throws Exception {
+            defaultTestChannelTabs(extractor);
         }
     }
 }
