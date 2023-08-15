@@ -7,9 +7,6 @@ import org.schabi.newpipe.extractor.utils.Parser;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -54,7 +51,7 @@ public class TimeAgoParser {
                 final String caseText = caseMapToAmountEntry.getKey();
                 final Integer caseAmount = caseMapToAmountEntry.getValue();
 
-                if (textualDate.contains(caseText)) {
+                if (textualDateMatches(textualDate, caseText)) {
                     return getResultFor(caseAmount, chronoUnit);
                 }
             }
@@ -74,79 +71,38 @@ public class TimeAgoParser {
     }
 
     private ChronoUnit parseChronoUnit(final String textualDate) throws ParsingException {
-
-        if (patternsHolder.wordSeparator().isEmpty()) {
-            return patternsHolder.asMap().entrySet().stream().filter(e -> e.getValue().stream()
-                .anyMatch(agoPhrase -> textualDate.contains(agoPhrase)))
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElseThrow(() ->
-                        new ParsingException("Unable to parse the date: " + textualDate));
-        }
-
-        String date = textualDate.toLowerCase();
-        List<String> words = new ArrayList<>();
-        String word = getNextWord(date);
-        while (!word.isEmpty()) {
-            words.add(word);
-            date = date.substring(word.length());
-            word = getNextWord(date);
-        }
-
         return patternsHolder.asMap().entrySet().stream()
                 .filter(e -> e.getValue().stream()
-                        .anyMatch(agoPhrase -> textualDateMatches(words, agoPhrase) || textualDate.equals(agoPhrase)))
+                        .anyMatch(agoPhrase -> textualDateMatches(textualDate, agoPhrase)))
                 .map(Map.Entry::getKey)
                 .findFirst()
                 .orElseThrow(() ->
                         new ParsingException("Unable to parse the date: " + textualDate));
     }
 
-    public static int getNextNonBlankIndex(final String s){
-        int left = 0;
-        final int len = s.length();
-        // Includes numbers...
-        final int[] spaces = {9, 32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 160, 5760, 6158, 8192, 8193, 8194, 8195, 8196, 8197, 8198, 8199, 8200, 8201, 8202, 8239, 8287, 12288};
-        while (left < len){
-            int c = (int) s.charAt(left);
-            if (Arrays.binarySearch(spaces, c) < 0)
-                break;
-            left++;
+    private boolean textualDateMatches(final String textualDate, final String agoPhrase) {
+        if (textualDate.equals(agoPhrase)) {
+            return true;
         }
-        return left;
-    }
 
-    public static int getNextBlankIndex(final String s){
-        int left = 0;
-        final int len = s.length();
-        // Includes numbers...
-        final int[] spaces = {9, 32, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 160, 5760, 6158, 8192, 8193, 8194, 8195, 8196, 8197, 8198, 8199, 8200, 8201, 8202, 8239, 8287, 12288};
-        while (left < len){
-            int c = (int) s.charAt(left);
-            if (Arrays.binarySearch(spaces, c) >= 0)
-                break;
-            left++;
+        if (patternsHolder.wordSeparator().isEmpty()) {
+            return textualDate.toLowerCase().contains(agoPhrase.toLowerCase());
         }
-        return left;
-    }
 
-    public static String getNextWord(final String s){
-        final int len = s.length();
-        final int left = getNextNonBlankIndex(s);
-        if (left == len)
-            return "";
-        if (left + 1 == len)
-            return "" + s.charAt(left);
-        final int right = getNextBlankIndex(s.substring(left+1)) + left + 1;
-        return s.substring(left, right);
-    }
+        final String escapedPhrase = Pattern.quote(agoPhrase.toLowerCase());
+        final String escapedSeparator = patternsHolder.wordSeparator().equals(" ")
+                // From JDK8 → \h - Treat horizontal spaces as a normal one
+                // (non-breaking space, thin space, etc.)
+                // Also split the string on numbers to be able to parse strings like "2wk"
+                ? "[ \\t\\xA0\\u1680\\u180e\\u2000-\\u200a\\u202f\\u205f\\u3000\\d]"
+                : Pattern.quote(patternsHolder.wordSeparator());
 
-    private boolean textualDateMatches(final List<String> words, final String agoPhrase) {
-        for (String word : words){
-            if (agoPhrase.equals(word))
-                return true;
-        }
-        return false;
+        // (^|separator)pattern($|separator)
+        // Check if the pattern is surrounded by separators or start/end of the string.
+        final String pattern =
+                "(^|" + escapedSeparator + ")" + escapedPhrase + "($|" + escapedSeparator + ")";
+
+        return Parser.isMatch(pattern, textualDate.toLowerCase());
     }
 
     private DateWrapper getResultFor(final int timeAgoAmount, final ChronoUnit chronoUnit) {
