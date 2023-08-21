@@ -1,13 +1,12 @@
 name: CI
 
 on:
-  schedule:
-      # once per day
-    - cron: 0 0 * * *
+  workflow_dispatch:
   push:
     branches:
       - dev
       - master
+      - ify
       - new-legacy
       - legacy-extractor
   pull_request:
