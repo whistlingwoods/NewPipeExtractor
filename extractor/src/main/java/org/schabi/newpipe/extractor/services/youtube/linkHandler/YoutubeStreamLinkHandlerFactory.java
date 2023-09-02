@@ -49,7 +49,7 @@ public final class YoutubeStreamLinkHandlerFactory extends LinkHandlerFactory {
     private static final YoutubeStreamLinkHandlerFactory INSTANCE
             = new YoutubeStreamLinkHandlerFactory();
     private static final List<String> SUBPATHS
-            = Arrays.asList("embed/", "shorts/", "watch/", "v/", "w/");
+            = Arrays.asList("embed/", "live/", "shorts/", "watch/", "v/", "w/");
 
     private YoutubeStreamLinkHandlerFactory() {
     }
@@ -154,7 +154,7 @@ public final class YoutubeStreamLinkHandlerFactory extends LinkHandlerFactory {
 
                     final URL decodedURL;
                     try {
-                        decodedURL = Utils.stringToURL("http://www.youtube.com" + uQueryValue);
+                        decodedURL = Utils.stringToURL("https://www.youtube.com" + uQueryValue);
                     } catch (final MalformedURLException e) {
                         throw new ParsingException("Error no suitable url: " + urlString);
                     }
