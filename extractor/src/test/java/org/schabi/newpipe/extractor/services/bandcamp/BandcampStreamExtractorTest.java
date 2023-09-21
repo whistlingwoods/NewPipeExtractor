@@ -35,7 +35,7 @@ public class BandcampStreamExtractorTest extends DefaultStreamExtractorTest {
         NewPipe.init(DownloaderTestImpl.getInstance());
 
         extractor = (BandcampStreamExtractor) Bandcamp
-                .getStreamExtractor("https://teaganbear.bandcamp.com/track/just-for-the-halibut");
+                .getStreamExtractor("https://teaganbear.bandcamp.com/track/just-for-the-halibut-creative-commons-attribution");
         extractor.fetchPage();
     }
 
@@ -51,22 +51,22 @@ public class BandcampStreamExtractorTest extends DefaultStreamExtractorTest {
 
     @Override
     public String expectedName() {
-        return "Just for the Halibut";
+        return "Just for the Halibut [Creative Commons: Attribution]";
     }
 
     @Override
     public String expectedId() {
-        return "https://teaganbear.bandcamp.com/track/just-for-the-halibut";
+        return "https://teaganbear.bandcamp.com/track/just-for-the-halibut-creative-commons-attribution";
     }
 
     @Override
     public String expectedUrlContains() {
-        return "https://teaganbear.bandcamp.com/track/just-for-the-halibut";
+        return "https://teaganbear.bandcamp.com/track/just-for-the-halibut-creative-commons-attribution";
     }
 
     @Override
     public String expectedOriginalUrlContains() {
-        return "https://teaganbear.bandcamp.com/track/just-for-the-halibut";
+        return "https://teaganbear.bandcamp.com/track/just-for-the-halibut-creative-commons-attribution";
     }
 
     @Override
@@ -159,7 +159,7 @@ public class BandcampStreamExtractorTest extends DefaultStreamExtractorTest {
     public void testTranslateIdsToUrl() throws ParsingException {
         // To add tests: look at website's source, search for `band_id` and `item_id`
         assertEquals(
-                "https://teaganbear.bandcamp.com/track/just-for-the-halibut",
+                "https://teaganbear.bandcamp.com/track/just-for-the-halibut-creative-commons-attribution",
                 BandcampExtractorHelper.getStreamUrlFromIds(3877364987L, 3486455278L, "track")
         );
     }
