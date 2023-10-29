@@ -593,7 +593,6 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
 
                 if (tabContents.has("richGridRenderer")) {
                     items.addAll(parseHeaderItems(tabContents
-                            .getObject("content")
                             .getObject("richGridRenderer")
                             .getObject("header")
                             .getObject("feedFilterChipBarRenderer")
