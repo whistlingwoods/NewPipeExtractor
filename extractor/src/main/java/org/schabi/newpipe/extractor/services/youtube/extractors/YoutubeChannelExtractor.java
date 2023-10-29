@@ -587,16 +587,17 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
         for (int i = 0; i < array.size(); i++) {
             JsonObject json = array.getObject(i);
             if (json.has("tabRenderer")) {
-                JsonObject tabRenderer = json.getObject("tabRenderer");
-                if (tabRenderer.toString().contains("continuationCommand")) {
-                    JsonArray contents = tabRenderer
+                JsonObject tabContents = json
+                        .getObject("tabRenderer")
+                        .getObject("content");
+
+                if (tabContents.has("richGridRenderer")) {
+                    items.addAll(parseHeaderItems(tabContents
                             .getObject("content")
                             .getObject("richGridRenderer")
                             .getObject("header")
                             .getObject("feedFilterChipBarRenderer")
-                            .getArray("contents");
-
-                    items.addAll(parseHeaderItems(contents));
+                            .getArray("contents")));
                 }
             }
         }
@@ -605,17 +606,17 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
     }
 
     private List<ChannelHeaderItem> parseHeaderItems(JsonArray array) {
-        List<ChannelHeaderItem> items = new ArrayList<>();
+        final List<ChannelHeaderItem> items = new ArrayList<>();
         for (int i = 0; i < array.size(); i++) {
-            JsonObject chipRenderer = array
+            final JsonObject chipRenderer = array
                     .getObject(i)
                     .getObject("chipCloudChipRenderer");
 
-            items.add(new ChannelHeaderItem(
-                    chipRenderer.getObject("text").getString("simpleText"),
-                    chipRenderer.getObject("navigationEndpoint").getObject("continuationCommand").getString("token"),
-                    chipRenderer.getBoolean("isSelected", Boolean.FALSE)
-            ));
+            final String simpleText = chipRenderer.getObject("text").getString("simpleText");
+            final String token = chipRenderer.getObject("navigationEndpoint")
+                    .getObject("continuationCommand").getString("token");
+            final boolean isSelected = chipRenderer.getBoolean("isSelected", Boolean.FALSE);
+            items.add(new ChannelHeaderItem(simpleText, token, isSelected));
         }
         return items;
     }
