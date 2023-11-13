@@ -1,20 +1,45 @@
+plugins {
+    id 'checkstyle'
+}
+
 test {
-//  Pass on downloader type to tests for different CI jobs. See DownloaderFactory.java and ci.yml
+    // Pass on downloader type to tests for different CI jobs. See DownloaderFactory.java and ci.yml
     if (System.properties.containsKey('downloader')) {
         systemProperty('downloader', System.getProperty('downloader'))
     }
+    useJUnitPlatform()
+    dependsOn checkstyleMain // run checkstyle when testing
+}
+
+checkstyle {
+    getConfigDirectory().set(rootProject.file("checkstyle"))
+    ignoreFailures false
+    showViolations true
+    toolVersion checkstyleVersion
+}
+
+checkstyleTest {
+    enabled false // do not checkstyle test files
 }
 
 dependencies {
     implementation project(':timeago-parser')
 
-    implementation 'com.github.TeamNewPipe:nanojson:1d9e1aea9049fc9f85e68b43ba39fe7be1c1f751'
-    implementation 'org.jsoup:jsoup:1.13.1'
-    implementation 'org.mozilla:rhino:1.7.13'
-    implementation 'com.github.spotbugs:spotbugs-annotations:4.2.3'
-    implementation 'org.nibor.autolink:autolink:0.10.0'
+    implementation "com.github.TeamNewPipe:nanojson:$nanojsonVersion"
+    implementation 'org.jsoup:jsoup:1.16.1'
+    implementation "com.github.spotbugs:spotbugs-annotations:$spotbugsVersion"
 
-    testImplementation 'junit:junit:4.13.2'
+    // do not upgrade to 1.7.14, since in 1.7.14 Rhino uses the `SourceVersion` class, which is not
+    // available on Android (even when using desugaring), and `NoClassDefFoundError` is thrown
+    implementation 'org.mozilla:rhino:1.7.13'
+
+    checkstyle "com.puppycrawl.tools:checkstyle:$checkstyleVersion"
+
+    testImplementation platform("org.junit:junit-bom:$junitVersion")
+    testImplementation 'org.junit.jupiter:junit-jupiter-api'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testImplementation 'org.junit.jupiter:junit-jupiter-params'
+
     testImplementation "com.squareup.okhttp3:okhttp:3.12.13"
-    testImplementation 'com.google.code.gson:gson:2.8.7'
+    testImplementation 'com.google.code.gson:gson:2.10.1'
 }

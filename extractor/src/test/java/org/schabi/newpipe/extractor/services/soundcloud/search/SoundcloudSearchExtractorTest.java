@@ -1,8 +1,15 @@
 package org.schabi.newpipe.extractor.services.soundcloud.search;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.schabi.newpipe.extractor.ServiceList.SoundCloud;
+import static org.schabi.newpipe.extractor.services.DefaultTests.assertNoDuplicatedItems;
+import static org.schabi.newpipe.extractor.services.soundcloud.linkHandler.SoundcloudSearchQueryHandlerFactory.PLAYLISTS;
+import static org.schabi.newpipe.extractor.services.soundcloud.linkHandler.SoundcloudSearchQueryHandlerFactory.TRACKS;
+import static org.schabi.newpipe.extractor.services.soundcloud.linkHandler.SoundcloudSearchQueryHandlerFactory.USERS;
+import static java.util.Collections.singletonList;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.downloader.DownloaderTestImpl;
 import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.ListExtractor.InfoItemsPage;
@@ -12,19 +19,13 @@ import org.schabi.newpipe.extractor.channel.ChannelInfoItem;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.search.SearchExtractor;
 import org.schabi.newpipe.extractor.services.DefaultSearchExtractorTest;
+import org.schabi.newpipe.extractor.utils.Utils;
 
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.List;
 
-import static java.util.Collections.singletonList;
-import static org.junit.Assert.assertTrue;
-import static org.schabi.newpipe.extractor.ServiceList.SoundCloud;
-import static org.schabi.newpipe.extractor.services.DefaultTests.assertNoDuplicatedItems;
-import static org.schabi.newpipe.extractor.services.soundcloud.linkHandler.SoundcloudSearchQueryHandlerFactory.*;
-import static org.schabi.newpipe.extractor.utils.Utils.UTF_8;
+import javax.annotation.Nullable;
 
 public class SoundcloudSearchExtractorTest {
 
@@ -32,7 +33,7 @@ public class SoundcloudSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "lill uzi vert";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = SoundCloud.getSearchExtractor(QUERY);
@@ -55,7 +56,7 @@ public class SoundcloudSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "lill uzi vert";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = SoundCloud.getSearchExtractor(QUERY, singletonList(TRACKS), "");
@@ -79,7 +80,7 @@ public class SoundcloudSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "lill uzi vert";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = SoundCloud.getSearchExtractor(QUERY, singletonList(USERS), "");
@@ -103,7 +104,7 @@ public class SoundcloudSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "lill uzi vert";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = SoundCloud.getSearchExtractor(QUERY, singletonList(PLAYLISTS), "");
@@ -139,7 +140,7 @@ public class SoundcloudSearchExtractorTest {
 
     private static String urlEncode(String value) {
         try {
-            return URLEncoder.encode(value, UTF_8);
+            return Utils.encodeUrlUtf8(value);
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
@@ -149,7 +150,7 @@ public class SoundcloudSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "David Guetta";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = SoundCloud.getSearchExtractor(QUERY, singletonList(USERS), "");
@@ -168,7 +169,7 @@ public class SoundcloudSearchExtractorTest {
         @Override public InfoItem.InfoType expectedInfoItemType() { return InfoItem.InfoType.CHANNEL; }
 
         @Test
-        public void testIsVerified() throws IOException, ExtractionException {
+        void testIsVerified() throws IOException, ExtractionException {
             final List<InfoItem> items = extractor.getInitialPage().getItems();
             boolean verified = false;
             for (InfoItem item : items) {

@@ -2,8 +2,11 @@
 
 package org.schabi.newpipe.extractor.services.bandcamp.extractors;
 
+import static org.schabi.newpipe.extractor.utils.Utils.replaceHttpWithHttps;
+
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
+
 import org.jsoup.Jsoup;
 import org.schabi.newpipe.extractor.Page;
 import org.schabi.newpipe.extractor.StreamingService;
@@ -17,20 +20,26 @@ import org.schabi.newpipe.extractor.services.bandcamp.extractors.streaminfoitem.
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.extractor.stream.StreamInfoItemsCollector;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+import javax.annotation.Nonnull;
 
 public class BandcampChannelExtractor extends ChannelExtractor {
 
     private JsonObject channelInfo;
 
-    public BandcampChannelExtractor(final StreamingService service, final ListLinkHandler linkHandler) {
+    public BandcampChannelExtractor(final StreamingService service,
+                                    final ListLinkHandler linkHandler) {
         super(service, linkHandler);
     }
 
     @Override
     public String getAvatarUrl() {
-        if (channelInfo.getLong("bio_image_id") == 0) return "";
+        if (channelInfo.getLong("bio_image_id") == 0) {
+            return "";
+        }
 
         return BandcampExtractorHelper.getImageUrl(channelInfo.getLong("bio_image_id"), false);
     }
@@ -43,20 +52,18 @@ public class BandcampChannelExtractor extends ChannelExtractor {
          */
         try {
             final String html = getDownloader()
-                            .get(channelInfo.getString("bandcamp_url").replace("http://", "https://"))
+                            .get(replaceHttpWithHttps(channelInfo.getString("bandcamp_url")))
                             .responseBody();
 
-            return Jsoup.parse(html)
-                    .getElementById("customHeader")
-                    .getElementsByTag("img")
-                    .first()
-                    .attr("src");
+            return Stream.of(Jsoup.parse(html).getElementById("customHeader"))
+                    .filter(Objects::nonNull)
+                    .flatMap(element -> element.getElementsByTag("img").stream())
+                    .map(element -> element.attr("src"))
+                    .findFirst()
+                    .orElse(""); // no banner available
 
         } catch (final IOException | ReCaptchaException e) {
             throw new ParsingException("Could not download artist web site", e);
-        } catch (final NullPointerException e) {
-            // No banner available
-            return "";
         }
     }
 
@@ -110,7 +117,9 @@ public class BandcampChannelExtractor extends ChannelExtractor {
             // A discograph is as an item appears in a discography
             final JsonObject discograph = discography.getObject(i);
 
-            if (!discograph.getString("item_type").equals("track")) continue;
+            if (!discograph.getString("item_type").equals("track")) {
+                continue;
+            }
 
             collector.commit(new BandcampDiscographStreamInfoItemExtractor(discograph, getUrl()));
         }
@@ -119,12 +128,13 @@ public class BandcampChannelExtractor extends ChannelExtractor {
     }
 
     @Override
-    public InfoItemsPage<StreamInfoItem> getPage(Page page) {
+    public InfoItemsPage<StreamInfoItem> getPage(final Page page) {
         return null;
     }
 
     @Override
-    public void onFetchPage(@Nonnull Downloader downloader) throws IOException, ExtractionException {
+    public void onFetchPage(@Nonnull final Downloader downloader)
+            throws IOException, ExtractionException {
         channelInfo = BandcampExtractorHelper.getArtistDetails(getId());
     }
 

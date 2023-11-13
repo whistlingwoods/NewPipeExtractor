@@ -4,7 +4,6 @@ import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
-
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.Page;
 import org.schabi.newpipe.extractor.StreamingService;
@@ -16,14 +15,13 @@ import org.schabi.newpipe.extractor.playlist.PlaylistExtractor;
 import org.schabi.newpipe.extractor.services.soundcloud.SoundcloudParsingHelper;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.extractor.stream.StreamInfoItemsCollector;
-import org.schabi.newpipe.extractor.utils.Utils;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 
 import static org.schabi.newpipe.extractor.services.soundcloud.SoundcloudParsingHelper.SOUNDCLOUD_API_V2_URL;
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
@@ -67,7 +65,7 @@ public class SoundcloudPlaylistExtractor extends PlaylistExtractor {
         return playlist.getString("title");
     }
 
-    @Nullable
+    @Nonnull
     @Override
     public String getThumbnailUrl() {
         String artworkUrl = playlist.getString("artwork_url");
@@ -80,22 +78,19 @@ public class SoundcloudPlaylistExtractor extends PlaylistExtractor {
 
                 for (final StreamInfoItem item : infoItems.getItems()) {
                     artworkUrl = item.getThumbnailUrl();
-                    if (!isNullOrEmpty(artworkUrl)) break;
+                    if (!isNullOrEmpty(artworkUrl)) {
+                        break;
+                    }
                 }
             } catch (final Exception ignored) {
             }
 
             if (artworkUrl == null) {
-                return null;
+                return "";
             }
         }
 
         return artworkUrl.replace("large.jpg", "crop.jpg");
-    }
-
-    @Override
-    public String getBannerUrl() {
-        return null;
     }
 
     @Override
@@ -125,42 +120,26 @@ public class SoundcloudPlaylistExtractor extends PlaylistExtractor {
 
     @Nonnull
     @Override
-    public String getSubChannelName() {
-        return "";
-    }
-
-    @Nonnull
-    @Override
-    public String getSubChannelUrl() {
-        return "";
-    }
-
-    @Nonnull
-    @Override
-    public String getSubChannelAvatarUrl() {
-        return "";
-    }
-
-    @Nonnull
-    @Override
     public InfoItemsPage<StreamInfoItem> getInitialPage() {
         final StreamInfoItemsCollector streamInfoItemsCollector =
                 new StreamInfoItemsCollector(getServiceId());
         final List<String> ids = new ArrayList<>();
 
-        final JsonArray tracks = playlist.getArray("tracks");
-        for (final Object o : tracks) {
-            if (o instanceof JsonObject) {
-                final JsonObject track = (JsonObject) o;
-                if (track.has("title")) { // i.e. if full info is available
-                    streamInfoItemsCollector.commit(new SoundcloudStreamInfoItemExtractor(track));
-                } else {
-                    // %09d would be enough, but a 0 before the number does not create problems, so
-                    // let's be sure
-                    ids.add(String.format("%010d", track.getInt("id")));
-                }
-            }
-        }
+        playlist.getArray("tracks")
+                .stream()
+                .filter(JsonObject.class::isInstance)
+                .map(JsonObject.class::cast)
+                .forEachOrdered(track -> {
+                    // i.e. if full info is available
+                    if (track.has("title")) {
+                        streamInfoItemsCollector.commit(
+                                new SoundcloudStreamInfoItemExtractor(track));
+                    } else {
+                        // %09d would be enough, but a 0 before the number does not create
+                        // problems, so let's be sure
+                        ids.add(String.format("%010d", track.getInt("id")));
+                    }
+                });
 
         return new InfoItemsPage<>(streamInfoItemsCollector, new Page(ids));
     }
@@ -184,7 +163,7 @@ public class SoundcloudPlaylistExtractor extends PlaylistExtractor {
         }
 
         final String currentPageUrl = SOUNDCLOUD_API_V2_URL + "tracks?client_id="
-                + SoundcloudParsingHelper.clientId() + "&ids=" + Utils.join(",", currentIds);
+                + SoundcloudParsingHelper.clientId() + "&ids=" + String.join(",", currentIds);
 
         final StreamInfoItemsCollector collector = new StreamInfoItemsCollector(getServiceId());
         final String response = NewPipe.getDownloader().get(currentPageUrl,
@@ -192,9 +171,26 @@ public class SoundcloudPlaylistExtractor extends PlaylistExtractor {
 
         try {
             final JsonArray tracks = JsonParser.array().from(response);
+            // Response may not contain tracks in the same order as currentIds.
+            // The streams are displayed in the order which is used in currentIds on SoundCloud.
+            final HashMap<Integer, JsonObject> idToTrack = new HashMap<>();
             for (final Object track : tracks) {
                 if (track instanceof JsonObject) {
-                    collector.commit(new SoundcloudStreamInfoItemExtractor((JsonObject) track));
+                    final JsonObject o = (JsonObject) track;
+                    idToTrack.put(o.getInt("id"), o);
+                }
+            }
+            for (final String strId : currentIds) {
+                final int id = Integer.parseInt(strId);
+                try {
+                    collector.commit(new SoundcloudStreamInfoItemExtractor(
+                        Objects.requireNonNull(
+                                idToTrack.get(id),
+                        "no track with id " + id + " in response"
+                        )
+                    ));
+                } catch (final NullPointerException e) {
+                    throw new ParsingException("Could not parse json response", e);
                 }
             }
         } catch (final JsonParserException e) {

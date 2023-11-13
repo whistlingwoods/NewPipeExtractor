@@ -1,9 +1,14 @@
 package org.schabi.newpipe.extractor.services.soundcloud;
 
+import static org.schabi.newpipe.extractor.ServiceList.SoundCloud;
+import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
+import static org.schabi.newpipe.extractor.utils.Utils.replaceHttpWithHttps;
+
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -23,25 +28,19 @@ import org.schabi.newpipe.extractor.utils.Parser;
 import org.schabi.newpipe.extractor.utils.Parser.RegexException;
 import org.schabi.newpipe.extractor.utils.Utils;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import static java.util.Collections.singletonList;
-import static org.schabi.newpipe.extractor.ServiceList.SoundCloud;
-import static org.schabi.newpipe.extractor.utils.Utils.*;
+import javax.annotation.Nonnull;
 
-public class SoundcloudParsingHelper {
-    private static final String HARDCODED_CLIENT_ID =
-            "PMAVSQ46tClLDGzoNT3kfsNW6lrhXo05"; // Updated on 18/06/21
+public final class SoundcloudParsingHelper {
     private static String clientId;
     public static final String SOUNDCLOUD_API_V2_URL = "https://api-v2.soundcloud.com/";
 
@@ -49,15 +48,11 @@ public class SoundcloudParsingHelper {
     }
 
     public static synchronized String clientId() throws ExtractionException, IOException {
-        if (!isNullOrEmpty(clientId)) return clientId;
+        if (!isNullOrEmpty(clientId)) {
+            return clientId;
+        }
 
         final Downloader dl = NewPipe.getDownloader();
-        clientId = HARDCODED_CLIENT_ID;
-        if (checkIfHardcodedClientIdIsValid()) {
-            return clientId;
-        } else {
-            clientId = null;
-        }
 
         final Response download = dl.get("https://soundcloud.com");
         final String responseBody = download.responseBody();
@@ -69,8 +64,7 @@ public class SoundcloudParsingHelper {
         // The one containing the client id will likely be the last one
         Collections.reverse(possibleScripts);
 
-        final HashMap<String, List<String>> headers = new HashMap<>();
-        headers.put("Range", singletonList("bytes=0-50000"));
+        final var headers = Map.of("Range", List.of("bytes=0-50000"));
 
         for (final Element element : possibleScripts) {
             final String srcUrl = element.attr("src");
@@ -87,14 +81,6 @@ public class SoundcloudParsingHelper {
 
         // Officially give up
         throw new ExtractionException("Couldn't extract client id");
-    }
-
-    static boolean checkIfHardcodedClientIdIsValid() throws IOException, ReCaptchaException {
-        final int responseCode = NewPipe.getDownloader().get(SOUNDCLOUD_API_V2_URL + "?client_id="
-                + HARDCODED_CLIENT_ID).responseCode();
-        // If the response code is 404, it means that the client_id is valid; otherwise,
-        // it should be not valid
-        return responseCode == 404;
     }
 
     public static OffsetDateTime parseDateFrom(final String textualUploadDate)
@@ -120,7 +106,7 @@ public class SoundcloudParsingHelper {
     public static JsonObject resolveFor(@Nonnull final Downloader downloader, final String url)
             throws IOException, ExtractionException {
         final String apiUrl = SOUNDCLOUD_API_V2_URL + "resolve"
-                + "?url=" + URLEncoder.encode(url, UTF_8) 
+                + "?url=" + Utils.encodeUrlUtf8(url)
                 + "&client_id=" + clientId();
 
         try {
@@ -142,7 +128,7 @@ public class SoundcloudParsingHelper {
             ReCaptchaException {
 
         final String response = NewPipe.getDownloader().get("https://w.soundcloud.com/player/?url="
-                + URLEncoder.encode(apiUrl, UTF_8), SoundCloud.getLocalization()).responseBody();
+                + Utils.encodeUrlUtf8(apiUrl), SoundCloud.getLocalization()).responseBody();
 
         return Jsoup.parse(response).select("link[rel=\"canonical\"]").first()
                 .attr("abs:href");
@@ -153,25 +139,27 @@ public class SoundcloudParsingHelper {
      *
      * @return the resolved id
      */
-    public static String resolveIdWithWidgetApi(String urlString) throws IOException,
+    public static String resolveIdWithWidgetApi(final String urlString) throws IOException,
             ParsingException {
         // Remove the tailing slash from URLs due to issues with the SoundCloud API
-        if (urlString.charAt(urlString.length() - 1) == '/') urlString = urlString.substring(0,
-                urlString.length() - 1);
+        String fixedUrl = urlString;
+        if (fixedUrl.charAt(fixedUrl.length() - 1) == '/') {
+            fixedUrl = fixedUrl.substring(0, fixedUrl.length() - 1);
+        }
         // Make URL lower case and remove m. and www. if it exists.
         // Without doing this, the widget API does not recognize the URL.
-        urlString = Utils.removeMAndWWWFromUrl(urlString.toLowerCase());
+        fixedUrl = Utils.removeMAndWWWFromUrl(fixedUrl.toLowerCase());
 
         final URL url;
         try {
-            url = Utils.stringToURL(urlString);
+            url = Utils.stringToURL(fixedUrl);
         } catch (final MalformedURLException e) {
             throw new IllegalArgumentException("The given URL is not valid");
         }
 
         try {
             final String widgetUrl = "https://api-widget.soundcloud.com/resolve?url="
-                    + URLEncoder.encode(url.toString(), UTF_8)
+                    + Utils.encodeUrlUtf8(url.toString())
                     + "&format=json&client_id=" + SoundcloudParsingHelper.clientId();
             final String response = NewPipe.getDownloader().get(widgetUrl,
                     SoundCloud.getLocalization()).responseBody();
@@ -236,8 +224,9 @@ public class SoundcloudParsingHelper {
         String nextPageUrl;
         try {
             nextPageUrl = responseObject.getString("next_href");
-            if (!nextPageUrl.contains("client_id=")) nextPageUrl += "&client_id="
-                    + SoundcloudParsingHelper.clientId();
+            if (!nextPageUrl.contains("client_id=")) {
+                nextPageUrl += "&client_id=" + SoundcloudParsingHelper.clientId();
+            }
         } catch (final Exception ignored) {
             nextPageUrl = "";
         }
@@ -302,8 +291,9 @@ public class SoundcloudParsingHelper {
         String nextPageUrl;
         try {
             nextPageUrl = responseObject.getString("next_href");
-            if (!nextPageUrl.contains("client_id=")) nextPageUrl += "&client_id="
-                    + SoundcloudParsingHelper.clientId();
+            if (!nextPageUrl.contains("client_id=")) {
+                nextPageUrl += "&client_id=" + SoundcloudParsingHelper.clientId();
+            }
         } catch (final Exception ignored) {
             nextPageUrl = "";
         }
@@ -319,17 +309,17 @@ public class SoundcloudParsingHelper {
 
     @Nonnull
     public static String getUploaderUrl(final JsonObject object) {
-        final String url = object.getObject("user").getString("permalink_url", EMPTY_STRING);
+        final String url = object.getObject("user").getString("permalink_url", "");
         return replaceHttpWithHttps(url);
     }
 
     @Nonnull
     public static String getAvatarUrl(final JsonObject object) {
-        final String url = object.getObject("user").getString("avatar_url", EMPTY_STRING);
+        final String url = object.getObject("user").getString("avatar_url", "");
         return replaceHttpWithHttps(url);
     }
 
     public static String getUploaderName(final JsonObject object) {
-        return object.getObject("user").getString("username", EMPTY_STRING);
+        return object.getObject("user").getString("username", "");
     }
 }

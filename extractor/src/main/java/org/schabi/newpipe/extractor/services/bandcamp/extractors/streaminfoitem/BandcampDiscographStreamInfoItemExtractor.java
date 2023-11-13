@@ -4,18 +4,26 @@ import com.grack.nanojson.JsonObject;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampExtractorHelper;
 
+import javax.annotation.Nullable;
+
 public class BandcampDiscographStreamInfoItemExtractor extends BandcampStreamInfoItemExtractor {
 
     private final JsonObject discograph;
-    public BandcampDiscographStreamInfoItemExtractor(final JsonObject discograph, final String uploaderUrl) {
+    public BandcampDiscographStreamInfoItemExtractor(final JsonObject discograph,
+                                                     final String uploaderUrl) {
         super(uploaderUrl);
-
         this.discograph = discograph;
     }
 
     @Override
     public String getUploaderName() {
         return discograph.getString("band_name");
+    }
+
+    @Nullable
+    @Override
+    public String getUploaderAvatarUrl() {
+        return null;
     }
 
     @Override

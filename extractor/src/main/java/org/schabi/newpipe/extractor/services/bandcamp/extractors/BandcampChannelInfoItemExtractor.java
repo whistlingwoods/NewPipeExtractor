@@ -8,7 +8,8 @@ import org.schabi.newpipe.extractor.exceptions.ParsingException;
 
 public class BandcampChannelInfoItemExtractor implements ChannelInfoItemExtractor {
 
-    private final Element resultInfo, searchResult;
+    private final Element resultInfo;
+    private final Element searchResult;
 
     public BandcampChannelInfoItemExtractor(final Element searchResult) {
         this.searchResult = searchResult;
@@ -27,13 +28,7 @@ public class BandcampChannelInfoItemExtractor implements ChannelInfoItemExtracto
 
     @Override
     public String getThumbnailUrl() throws ParsingException {
-        final Element img = searchResult.getElementsByClass("art").first()
-                .getElementsByTag("img").first();
-        if (img != null) {
-            return img.attr("src");
-        } else {
-            return null;
-        }
+        return BandcampExtractorHelper.getThumbnailUrlFromSearchResult(searchResult);
     }
 
     @Override

@@ -72,6 +72,15 @@ public interface StreamInfoItemExtractor extends InfoItemExtractor {
     String getUploaderUrl() throws ParsingException;
 
     /**
+     * Get the uploader's avatar
+     *
+     * @return The uploader's avatar url or {@code null} if not provided by the service.
+     * @throws ParsingException if there is an error in the extraction
+     */
+    @Nullable
+    String getUploaderAvatarUrl() throws ParsingException;
+
+    /**
      * Whether the uploader has been verified by the service's provider.
      * If there is no verification implemented, return <code>false</code>.
      *
@@ -107,4 +116,29 @@ public interface StreamInfoItemExtractor extends InfoItemExtractor {
     @Nullable
     DateWrapper getUploadDate() throws ParsingException;
 
+
+    /**
+     * Get the video's short description.
+     *
+     * @return The video's short description or {@code null} if not provided by the service.
+     * @throws ParsingException if there is an error in the extraction
+     */
+    @Nullable
+    default String getShortDescription() throws ParsingException {
+        return null;
+    }
+
+    /**
+     * Whether the stream is a short-form content.
+     *
+     * <p>
+     * Short-form contents are contents in the style of TikTok, YouTube Shorts, or Instagram Reels
+     * videos.
+     * </p>
+     *
+     * @return whether the stream is a short-form content
+     */
+    default boolean isShortFormContent() throws ParsingException {
+        return false;
+    }
 }

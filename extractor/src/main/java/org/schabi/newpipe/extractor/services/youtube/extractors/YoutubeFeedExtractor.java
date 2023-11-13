@@ -22,14 +22,17 @@ import java.io.IOException;
 import javax.annotation.Nonnull;
 
 public class YoutubeFeedExtractor extends FeedExtractor {
-    public YoutubeFeedExtractor(StreamingService service, ListLinkHandler linkHandler) {
+    private static final String WEBSITE_CHANNEL_BASE_URL = "https://www.youtube.com/channel/";
+
+    public YoutubeFeedExtractor(final StreamingService service, final ListLinkHandler linkHandler) {
         super(service, linkHandler);
     }
 
     private Document document;
 
     @Override
-    public void onFetchPage(@Nonnull Downloader downloader) throws IOException, ExtractionException {
+    public void onFetchPage(@Nonnull final Downloader downloader)
+            throws IOException, ExtractionException {
         final String channelIdOrUser = getLinkHandler().getId();
         final String feedUrl = YoutubeParsingHelper.getFeedUrlFrom(channelIdOrUser);
 
@@ -46,7 +49,7 @@ public class YoutubeFeedExtractor extends FeedExtractor {
         final Elements entries = document.select("feed > entry");
         final StreamInfoItemsCollector collector = new StreamInfoItemsCollector(getServiceId());
 
-        for (Element entryElement : entries) {
+        for (final Element entryElement : entries) {
             collector.commit(new YoutubeFeedInfoItemExtractor(entryElement));
         }
 
@@ -56,19 +59,40 @@ public class YoutubeFeedExtractor extends FeedExtractor {
     @Nonnull
     @Override
     public String getId() {
-        return document.getElementsByTag("yt:channelId").first().text();
+        return getUrl().replace(WEBSITE_CHANNEL_BASE_URL, "");
     }
 
     @Nonnull
     @Override
     public String getUrl() {
-        return document.select("feed > author > uri").first().text();
+        final Element authorUriElement = document.select("feed > author > uri")
+                .first();
+        if (authorUriElement != null) {
+            final String authorUriElementText = authorUriElement.text();
+            if (!authorUriElementText.equals("")) {
+                return authorUriElementText;
+            }
+        }
+
+        final Element linkElement = document.select("feed > link[rel*=alternate]")
+                .first();
+        if (linkElement != null) {
+            return linkElement.attr("href");
+        }
+
+        return "";
     }
 
     @Nonnull
     @Override
     public String getName() {
-        return document.select("feed > author > name").first().text();
+        final Element nameElement = document.select("feed > author > name")
+                .first();
+        if (nameElement == null) {
+            return "";
+        }
+
+        return nameElement.text();
     }
 
     @Override

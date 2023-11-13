@@ -1,23 +1,26 @@
 package org.schabi.newpipe.extractor.services.media_ccc;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.downloader.DownloaderTestImpl;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.StreamingService;
-import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.services.DefaultStreamExtractorTest;
 import org.schabi.newpipe.extractor.services.media_ccc.extractors.MediaCCCStreamExtractor;
+import org.schabi.newpipe.extractor.stream.AudioStream;
 import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.stream.StreamType;
+import org.schabi.newpipe.extractor.utils.LocaleCompat;
 
 import javax.annotation.Nullable;
-import java.util.ArrayList;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.schabi.newpipe.extractor.ServiceList.MediaCCC;
 
 /**
@@ -31,7 +34,7 @@ public class MediaCCCStreamExtractorTest {
         private static final String URL = BASE_URL + ID;
         private static StreamExtractor extractor;
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = MediaCCC.getStreamExtractor(URL);
@@ -62,7 +65,8 @@ public class MediaCCCStreamExtractorTest {
         @Override public Locale expectedLanguageInfo() { return new Locale("de"); }
 
         @Override
-        @Test public void testThumbnailUrl() throws Exception {
+        @Test
+        public void testThumbnailUrl() throws Exception {
             super.testThumbnailUrl();
             assertEquals("https://static.media.ccc.de/media/events/gpn/gpn18/105-hd.jpg", extractor.getThumbnailUrl());
         }
@@ -85,7 +89,11 @@ public class MediaCCCStreamExtractorTest {
         @Test
         public void testAudioStreams() throws Exception {
             super.testAudioStreams();
-            assertEquals(2, extractor.getAudioStreams().size());
+            final List<AudioStream> audioStreams = extractor.getAudioStreams();
+            assertEquals(2, audioStreams.size());
+            final Locale expectedLocale = LocaleCompat.forLanguageTag("deu");
+            assertTrue(audioStreams.stream().allMatch(audioStream ->
+                    Objects.equals(audioStream.getAudioLocale(), expectedLocale)));
         }
     }
 
@@ -94,7 +102,7 @@ public class MediaCCCStreamExtractorTest {
         private static final String URL = BASE_URL + ID;
         private static StreamExtractor extractor;
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = MediaCCC.getStreamExtractor(URL);
@@ -131,7 +139,8 @@ public class MediaCCCStreamExtractorTest {
         @Override public List<String> expectedTags() { return Arrays.asList("36c3", "10565", "2019", "Security", "Main"); }
 
         @Override
-        @Test public void testThumbnailUrl() throws Exception {
+        @Test
+        public void testThumbnailUrl() throws Exception {
             super.testThumbnailUrl();
             assertEquals("https://static.media.ccc.de/media/congress/2019/10565-hd.jpg", extractor.getThumbnailUrl());
         }
@@ -154,7 +163,11 @@ public class MediaCCCStreamExtractorTest {
         @Test
         public void testAudioStreams() throws Exception {
             super.testAudioStreams();
-            assertEquals(2, extractor.getAudioStreams().size());
+            final List<AudioStream> audioStreams = extractor.getAudioStreams();
+            assertEquals(2, audioStreams.size());
+            final Locale expectedLocale = LocaleCompat.forLanguageTag("eng");
+            assertTrue(audioStreams.stream().allMatch(audioStream ->
+                    Objects.equals(audioStream.getAudioLocale(), expectedLocale)));
         }
 
         @Override

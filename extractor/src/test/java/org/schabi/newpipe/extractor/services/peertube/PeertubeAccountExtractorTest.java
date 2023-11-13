@@ -1,19 +1,24 @@
 package org.schabi.newpipe.extractor.services.peertube;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.downloader.DownloaderTestImpl;
+import org.schabi.newpipe.extractor.ExtractorAsserts;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.services.BaseChannelExtractorTest;
 import org.schabi.newpipe.extractor.services.peertube.extractors.PeertubeAccountExtractor;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.schabi.newpipe.extractor.ExtractorAsserts.assertIsSecureUrl;
 import static org.schabi.newpipe.extractor.ServiceList.PeerTube;
-import static org.schabi.newpipe.extractor.services.DefaultTests.*;
+import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestGetPageInNewExtractor;
+import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestMoreItems;
+import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestRelatedItems;
 
 /**
  * Test for {@link PeertubeAccountExtractor}
@@ -23,7 +28,7 @@ public class PeertubeAccountExtractorTest {
     public static class Framasoft implements BaseChannelExtractorTest {
         private static PeertubeAccountExtractor extractor;
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             // setting instance might break test when running in parallel
@@ -82,7 +87,7 @@ public class PeertubeAccountExtractorTest {
 
         @Test
         public void testDescription() throws ParsingException {
-            assertNotNull(extractor.getDescription());
+            assertNull(extractor.getDescription());
         }
 
         @Test
@@ -102,7 +107,7 @@ public class PeertubeAccountExtractorTest {
 
         @Test
         public void testSubscriberCount() throws ParsingException {
-            assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 700);
+            ExtractorAsserts.assertGreaterOrEqual(700, extractor.getSubscriberCount());
         }
 
         @Override
@@ -114,7 +119,7 @@ public class PeertubeAccountExtractorTest {
     public static class FreeSoftwareFoundation implements BaseChannelExtractorTest {
         private static PeertubeAccountExtractor extractor;
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             // setting instance might break test when running in parallel
@@ -203,7 +208,7 @@ public class PeertubeAccountExtractorTest {
 
         @Test
         public void testSubscriberCount() throws ParsingException {
-            assertTrue("Wrong subscriber count", extractor.getSubscriberCount() >= 100);
+            ExtractorAsserts.assertGreaterOrEqual(100, extractor.getSubscriberCount());
         }
 
         @Override

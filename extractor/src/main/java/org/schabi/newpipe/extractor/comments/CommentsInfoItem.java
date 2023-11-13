@@ -1,14 +1,16 @@
 package org.schabi.newpipe.extractor.comments;
 
 import org.schabi.newpipe.extractor.InfoItem;
+import org.schabi.newpipe.extractor.Page;
 import org.schabi.newpipe.extractor.localization.DateWrapper;
+import org.schabi.newpipe.extractor.stream.Description;
 
 import javax.annotation.Nullable;
 
 public class CommentsInfoItem extends InfoItem {
 
     private String commentId;
-    private String commentText;
+    private Description commentText;
     private String uploaderName;
     private String uploaderAvatarUrl;
     private String uploaderUrl;
@@ -21,11 +23,16 @@ public class CommentsInfoItem extends InfoItem {
     private boolean heartedByUploader;
     private boolean pinned;
     private int streamPosition;
+    private int replyCount;
+    @Nullable
+    private Page replies;
 
     public static final int NO_LIKE_COUNT = -1;
     public static final int NO_STREAM_POSITION = -1;
 
-    public CommentsInfoItem(int serviceId, String url, String name) {
+    public static final int UNKNOWN_REPLY_COUNT = -1;
+
+    public CommentsInfoItem(final int serviceId, final String url, final String name) {
         super(InfoType.COMMENT, serviceId, url, name);
     }
 
@@ -33,15 +40,15 @@ public class CommentsInfoItem extends InfoItem {
         return commentId;
     }
 
-    public void setCommentId(String commentId) {
+    public void setCommentId(final String commentId) {
         this.commentId = commentId;
     }
 
-    public String getCommentText() {
+    public Description getCommentText() {
         return commentText;
     }
 
-    public void setCommentText(String commentText) {
+    public void setCommentText(final Description commentText) {
         this.commentText = commentText;
     }
 
@@ -49,7 +56,7 @@ public class CommentsInfoItem extends InfoItem {
         return uploaderName;
     }
 
-    public void setUploaderName(String uploaderName) {
+    public void setUploaderName(final String uploaderName) {
         this.uploaderName = uploaderName;
     }
 
@@ -57,7 +64,7 @@ public class CommentsInfoItem extends InfoItem {
         return uploaderAvatarUrl;
     }
 
-    public void setUploaderAvatarUrl(String uploaderAvatarUrl) {
+    public void setUploaderAvatarUrl(final String uploaderAvatarUrl) {
         this.uploaderAvatarUrl = uploaderAvatarUrl;
     }
 
@@ -65,7 +72,7 @@ public class CommentsInfoItem extends InfoItem {
         return uploaderUrl;
     }
 
-    public void setUploaderUrl(String uploaderUrl) {
+    public void setUploaderUrl(final String uploaderUrl) {
         this.uploaderUrl = uploaderUrl;
     }
 
@@ -73,7 +80,7 @@ public class CommentsInfoItem extends InfoItem {
         return textualUploadDate;
     }
 
-    public void setTextualUploadDate(String textualUploadDate) {
+    public void setTextualUploadDate(final String textualUploadDate) {
         this.textualUploadDate = textualUploadDate;
     }
 
@@ -82,19 +89,19 @@ public class CommentsInfoItem extends InfoItem {
         return uploadDate;
     }
 
-    public void setUploadDate(@Nullable DateWrapper uploadDate) {
+    public void setUploadDate(@Nullable final DateWrapper uploadDate) {
         this.uploadDate = uploadDate;
     }
 
     /**
      * @return the comment's like count
-     *         or {@link CommentsInfoItem#NO_LIKE_COUNT} if it is unavailable
+     * or {@link CommentsInfoItem#NO_LIKE_COUNT} if it is unavailable
      */
     public int getLikeCount() {
         return likeCount;
     }
 
-    public void setLikeCount(int likeCount) {
+    public void setLikeCount(final int likeCount) {
         this.likeCount = likeCount;
     }
 
@@ -102,11 +109,11 @@ public class CommentsInfoItem extends InfoItem {
         return textualLikeCount;
     }
 
-    public void setTextualLikeCount(String textualLikeCount) {
+    public void setTextualLikeCount(final String textualLikeCount) {
         this.textualLikeCount = textualLikeCount;
     }
 
-    public void setHeartedByUploader(boolean isHeartedByUploader) {
+    public void setHeartedByUploader(final boolean isHeartedByUploader) {
         this.heartedByUploader = isHeartedByUploader;
     }
 
@@ -118,11 +125,11 @@ public class CommentsInfoItem extends InfoItem {
         return pinned;
     }
 
-    public void setPinned(boolean pinned) {
+    public void setPinned(final boolean pinned) {
         this.pinned = pinned;
     }
 
-    public void setUploaderVerified(boolean uploaderVerified) {
+    public void setUploaderVerified(final boolean uploaderVerified) {
         this.uploaderVerified = uploaderVerified;
     }
 
@@ -137,9 +144,27 @@ public class CommentsInfoItem extends InfoItem {
     /**
      * Get the playback position of the stream to which this comment belongs.
      * This is not supported by all services.
+     *
      * @return the playback position in seconds or {@link #NO_STREAM_POSITION} if not available
      */
     public int getStreamPosition() {
         return streamPosition;
+    }
+
+    public void setReplyCount(final int replyCount) {
+        this.replyCount = replyCount;
+    }
+
+    public int getReplyCount() {
+        return replyCount;
+    }
+
+    public void setReplies(@Nullable final Page replies) {
+        this.replies = replies;
+    }
+
+    @Nullable
+    public Page getReplies() {
+        return this.replies;
     }
 }

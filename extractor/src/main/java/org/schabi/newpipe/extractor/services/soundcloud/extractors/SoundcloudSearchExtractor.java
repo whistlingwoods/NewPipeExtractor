@@ -1,32 +1,39 @@
 package org.schabi.newpipe.extractor.services.soundcloud.extractors;
 
+import static org.schabi.newpipe.extractor.services.soundcloud.linkHandler.SoundcloudSearchQueryHandlerFactory.ITEMS_PER_PAGE;
+import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
+
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
 import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
-import org.schabi.newpipe.extractor.*;
+
+import org.schabi.newpipe.extractor.InfoItem;
+import org.schabi.newpipe.extractor.InfoItemExtractor;
+import org.schabi.newpipe.extractor.InfoItemsCollector;
+import org.schabi.newpipe.extractor.MetaInfo;
+import org.schabi.newpipe.extractor.MultiInfoItemsCollector;
+import org.schabi.newpipe.extractor.Page;
+import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.linkhandler.SearchQueryHandler;
-import org.schabi.newpipe.extractor.search.InfoItemsSearchCollector;
 import org.schabi.newpipe.extractor.search.SearchExtractor;
 import org.schabi.newpipe.extractor.utils.Parser;
 
-import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.IntUnaryOperator;
 
-import static org.schabi.newpipe.extractor.services.soundcloud.linkHandler.SoundcloudSearchQueryHandlerFactory.ITEMS_PER_PAGE;
-import static org.schabi.newpipe.extractor.utils.Utils.EMPTY_STRING;
-import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
+import javax.annotation.Nonnull;
 
 public class SoundcloudSearchExtractor extends SearchExtractor {
-    private JsonArray searchCollection;
+    private JsonArray initialSearchCollection;
 
     public SoundcloudSearchExtractor(final StreamingService service,
                                      final SearchQueryHandler linkHandler) {
@@ -53,8 +60,9 @@ public class SoundcloudSearchExtractor extends SearchExtractor {
     @Nonnull
     @Override
     public InfoItemsPage<InfoItem> getInitialPage() throws IOException, ExtractionException {
-        return new InfoItemsPage<>(collectItems(searchCollection), getNextPageFromCurrentUrl(
-                getUrl()));
+        return new InfoItemsPage<>(
+                collectItems(initialSearchCollection),
+                getNextPageFromCurrentUrl(getUrl(), currentOffset -> ITEMS_PER_PAGE));
     }
 
     @Override
@@ -65,6 +73,7 @@ public class SoundcloudSearchExtractor extends SearchExtractor {
         }
 
         final Downloader dl = getDownloader();
+        final JsonArray searchCollection;
         try {
             final String response = dl.get(page.getUrl(), getExtractorLocalization())
                     .responseBody();
@@ -73,8 +82,9 @@ public class SoundcloudSearchExtractor extends SearchExtractor {
             throw new ParsingException("Could not parse json response", e);
         }
 
-        return new InfoItemsPage<>(collectItems(searchCollection), getNextPageFromCurrentUrl(page
-                .getUrl()));
+        return new InfoItemsPage<>(collectItems(searchCollection),
+                getNextPageFromCurrentUrl(page.getUrl(),
+                        currentOffset -> currentOffset + ITEMS_PER_PAGE));
     }
 
     @Override
@@ -84,24 +94,27 @@ public class SoundcloudSearchExtractor extends SearchExtractor {
         final String url = getUrl();
         try {
             final String response = dl.get(url, getExtractorLocalization()).responseBody();
-            searchCollection = JsonParser.object().from(response).getArray("collection");
+            initialSearchCollection = JsonParser.object().from(response).getArray("collection");
         } catch (final JsonParserException e) {
             throw new ParsingException("Could not parse json response", e);
         }
 
-        if (searchCollection.isEmpty()) {
+        if (initialSearchCollection.isEmpty()) {
             throw new SearchExtractor.NothingFoundException("Nothing found");
         }
     }
 
     private InfoItemsCollector<InfoItem, InfoItemExtractor> collectItems(
             final JsonArray searchCollection) {
-        final InfoItemsSearchCollector collector = new InfoItemsSearchCollector(getServiceId());
+        final MultiInfoItemsCollector collector = new MultiInfoItemsCollector(getServiceId());
 
         for (final Object result : searchCollection) {
-            if (!(result instanceof JsonObject)) continue;
+            if (!(result instanceof JsonObject)) {
+                continue;
+            }
+
             final JsonObject searchResult = (JsonObject) result;
-            final String kind = searchResult.getString("kind", EMPTY_STRING);
+            final String kind = searchResult.getString("kind", "");
             switch (kind) {
                 case "user":
                     collector.commit(new SoundcloudChannelInfoItemExtractor(searchResult));
@@ -118,12 +131,15 @@ public class SoundcloudSearchExtractor extends SearchExtractor {
         return collector;
     }
 
-    private Page getNextPageFromCurrentUrl(final String currentUrl)
+    private Page getNextPageFromCurrentUrl(final String currentUrl,
+                                           final IntUnaryOperator newPageOffsetCalculator)
             throws MalformedURLException, UnsupportedEncodingException {
-        final int pageOffset = Integer.parseInt(
-                Parser.compatParseMap(new URL(currentUrl).getQuery()).get("offset"));
+        final int currentPageOffset = Integer.parseInt(
+                    Parser.compatParseMap(new URL(currentUrl).getQuery()).get("offset"));
 
-        return new Page(currentUrl.replace("&offset=" + pageOffset, "&offset="
-                + (pageOffset + ITEMS_PER_PAGE)));
+        return new Page(
+                currentUrl.replace(
+                        "&offset=" + currentPageOffset,
+                        "&offset=" + newPageOffsetCalculator.applyAsInt(currentPageOffset)));
     }
 }

@@ -1,18 +1,27 @@
 package org.schabi.newpipe.extractor.stream;
 
+import java.io.Serializable;
 import java.util.List;
 
-public final class Frameset {
+public final class Frameset implements Serializable {
 
-    private List<String> urls;
-    private int frameWidth;
-    private int frameHeight;
-    private int totalCount;
-    private int durationPerFrame;
-    private int framesPerPageX;
-    private int framesPerPageY;
+    private final List<String> urls;
+    private final int frameWidth;
+    private final int frameHeight;
+    private final int totalCount;
+    private final int durationPerFrame;
+    private final int framesPerPageX;
+    private final int framesPerPageY;
 
-    public Frameset(List<String> urls, int frameWidth, int frameHeight, int totalCount, int durationPerFrame, int framesPerPageX, int framesPerPageY) {
+    public Frameset(
+            final List<String> urls,
+            final int frameWidth,
+            final int frameHeight,
+            final int totalCount,
+            final int durationPerFrame,
+            final int framesPerPageX,
+            final int framesPerPageY) {
+
         this.urls = urls;
         this.totalCount = totalCount;
         this.durationPerFrame = durationPerFrame;
@@ -75,8 +84,8 @@ public final class Frameset {
      * Returns the information for the frame at stream position.
      *
      * @param position Position in milliseconds
-     * @return An <code>int</code>-array containing the bounds and URL where the indexes are specified as
-     * followed:
+     * @return An <code>int</code>-array containing the bounds and URL where the indexes are
+     * specified as follows:
      *
      * <ul>
      *     <li><code>0</code>: Index of the URL</li>
@@ -86,10 +95,10 @@ public final class Frameset {
      *     <li><code>4</code>: Bottom bound</li>
      * </ul>
      */
-    public int[] getFrameBoundsAt(long position) {
-        if (position < 0 || position > ((totalCount + 1) * durationPerFrame)) {
+    public int[] getFrameBoundsAt(final long position) {
+        if (position < 0 || position > ((long) (totalCount + 1) * durationPerFrame)) {
             // Return the first frame as fallback
-            return new int[] { 0, 0, 0, frameWidth, frameHeight };
+            return new int[] {0, 0, 0, frameWidth, frameHeight};
         }
 
         final int framesPerStoryboard = framesPerPageX * framesPerPageY;

@@ -1,6 +1,10 @@
 package org.schabi.newpipe.extractor.services.youtube;
 
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.schabi.newpipe.extractor.ServiceList.YouTube;
+import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestRelatedItems;
+
+import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.downloader.DownloaderFactory;
 import org.schabi.newpipe.extractor.ListExtractor;
 import org.schabi.newpipe.extractor.NewPipe;
@@ -14,11 +18,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
-
-import static org.junit.Assert.fail;
-import static org.schabi.newpipe.extractor.ServiceList.YouTube;
-import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestRelatedItems;
 
 /**
  * A class that tests multiple channels and ranges of "time ago".
@@ -30,9 +29,8 @@ public class YoutubeChannelLocalizationTest {
 
     @Test
     public void testAllSupportedLocalizations() throws Exception {
-        YoutubeParsingHelper.resetClientVersionAndKey();
-        YoutubeParsingHelper.setNumberGenerator(new Random(1));
-        NewPipe.init(new DownloaderFactory().getDownloader(RESOURCE_PATH + "localization"));
+        YoutubeTestsUtils.ensureStateless();
+        NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "localization"));
 
         testLocalizationsFor("https://www.youtube.com/user/NBCNews");
         testLocalizationsFor("https://www.youtube.com/channel/UCcmpeVbSSQlZRvHfdC-CRwg/videos");
@@ -40,10 +38,10 @@ public class YoutubeChannelLocalizationTest {
         testLocalizationsFor("https://www.youtube.com/channel/UCEOXxzW2vU0P-0THehuIIeg");
     }
 
-    private void testLocalizationsFor(String channelUrl) throws Exception {
+    private void testLocalizationsFor(final String channelUrl) throws Exception {
 
         final List<Localization> supportedLocalizations = YouTube.getSupportedLocalizations();
-//        final List<Localization> supportedLocalizations = Arrays.asList(Localization.DEFAULT, new Localization("sr"));
+        // final List<Localization> supportedLocalizations = Arrays.asList(Localization.DEFAULT, new Localization("sr"));
         final Map<Localization, List<StreamInfoItem>> results = new LinkedHashMap<>();
 
         for (Localization currentLocalization : supportedLocalizations) {
@@ -55,7 +53,7 @@ public class YoutubeChannelLocalizationTest {
                 extractor.forceLocalization(currentLocalization);
                 extractor.fetchPage();
                 itemsPage = defaultTestRelatedItems(extractor);
-            } catch (Throwable e) {
+            } catch (final Throwable e) {
                 System.out.println("[!] " + currentLocalization + " → failed");
                 throw e;
             }

@@ -6,9 +6,10 @@ import org.schabi.newpipe.extractor.playlist.PlaylistInfoItemExtractor;
 import javax.annotation.Nonnull;
 
 public class BandcampPlaylistInfoItemExtractor implements PlaylistInfoItemExtractor {
-    private final Element searchResult, resultInfo;
+    private final Element searchResult;
+    private final Element resultInfo;
 
-    public BandcampPlaylistInfoItemExtractor(@Nonnull Element searchResult) {
+    public BandcampPlaylistInfoItemExtractor(@Nonnull final Element searchResult) {
         this.searchResult = searchResult;
         resultInfo = searchResult.getElementsByClass("result-info").first();
     }
@@ -17,6 +18,16 @@ public class BandcampPlaylistInfoItemExtractor implements PlaylistInfoItemExtrac
     public String getUploaderName() {
         return resultInfo.getElementsByClass("subhead").text()
                 .split(" by")[0];
+    }
+
+    @Override
+    public String getUploaderUrl() {
+        return null;
+    }
+
+    @Override
+    public boolean isUploaderVerified() {
+        return false;
     }
 
     @Override
@@ -37,10 +48,6 @@ public class BandcampPlaylistInfoItemExtractor implements PlaylistInfoItemExtrac
 
     @Override
     public String getThumbnailUrl() {
-        final Element img = searchResult.getElementsByClass("art").first()
-                .getElementsByTag("img").first();
-        if (img != null) {
-            return img.attr("src");
-        } else return null;
+        return BandcampExtractorHelper.getThumbnailUrlFromSearchResult(searchResult);
     }
 }

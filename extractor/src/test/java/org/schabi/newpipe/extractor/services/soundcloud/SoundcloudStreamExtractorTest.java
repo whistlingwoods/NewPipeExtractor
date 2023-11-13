@@ -1,9 +1,10 @@
 package org.schabi.newpipe.extractor.services.soundcloud;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.downloader.DownloaderTestImpl;
+import org.schabi.newpipe.extractor.ExtractorAsserts;
 import org.schabi.newpipe.extractor.MediaFormat;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.StreamingService;
@@ -11,6 +12,7 @@ import org.schabi.newpipe.extractor.exceptions.GeographicRestrictionException;
 import org.schabi.newpipe.extractor.exceptions.SoundCloudGoPlusContentException;
 import org.schabi.newpipe.extractor.services.DefaultStreamExtractorTest;
 import org.schabi.newpipe.extractor.stream.AudioStream;
+import org.schabi.newpipe.extractor.stream.DeliveryMethod;
 import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.stream.StreamType;
 
@@ -20,9 +22,8 @@ import java.util.List;
 
 import javax.annotation.Nullable;
 
-import static junit.framework.TestCase.assertEquals;
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.schabi.newpipe.extractor.ServiceList.SoundCloud;
 
 public class SoundcloudStreamExtractorTest {
@@ -35,7 +36,7 @@ public class SoundcloudStreamExtractorTest {
         private static final String URL = UPLOADER + "/" + ID + "#t=" + TIMESTAMP;
         private static StreamExtractor extractor;
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = SoundCloud.getStreamExtractor(URL);
@@ -64,16 +65,22 @@ public class SoundcloudStreamExtractorTest {
         @Override public long expectedViewCountAtLeast() { return 43000; }
         @Nullable @Override public String expectedUploadDate() { return "2019-05-16 16:28:45.000"; }
         @Nullable @Override public String expectedTextualUploadDate() { return "2019-05-16 16:28:45"; }
-        @Override public long expectedLikeCountAtLeast() { return -1; }
+        @Override public long expectedLikeCountAtLeast() { return 600; }
         @Override public long expectedDislikeCountAtLeast() { return -1; }
         @Override public boolean expectedHasAudioStreams() { return false; }
         @Override public boolean expectedHasVideoStreams() { return false; }
         @Override public boolean expectedHasSubtitles() { return false; }
         @Override public boolean expectedHasFrames() { return false; }
         @Override public int expectedStreamSegmentsCount() { return 0; }
-        @Override public boolean expectedHasRelatedItems() { return false; }
         @Override public String expectedLicence() { return "all-rights-reserved"; }
         @Override public String expectedCategory() { return "Pop"; }
+
+        @Test
+        @Override
+        @Disabled("Unreliable, sometimes it has related items, sometimes it does not")
+        public void testRelatedItems() throws Exception {
+            super.testRelatedItems();
+        }
     }
 
     public static class SoundcloudGoPlusTrack extends DefaultStreamExtractorTest {
@@ -83,7 +90,7 @@ public class SoundcloudStreamExtractorTest {
         private static final String URL = UPLOADER + "/" + ID + "#t=" + TIMESTAMP;
         private static StreamExtractor extractor;
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = SoundCloud.getStreamExtractor(URL);
@@ -96,7 +103,7 @@ public class SoundcloudStreamExtractorTest {
 
         @Override
         @Test
-        @Ignore("Unreliable, sometimes it has related items, sometimes it does not. See " +
+        @Disabled("Unreliable, sometimes it has related items, sometimes it does not. See " +
                 "https://github.com/TeamNewPipe/NewPipeExtractor/runs/2280013723#step:5:263 " +
                 "https://github.com/TeamNewPipe/NewPipeExtractor/pull/601")
         public void testRelatedItems() throws Exception {
@@ -121,7 +128,7 @@ public class SoundcloudStreamExtractorTest {
         @Override public long expectedViewCountAtLeast() { return 386000; }
         @Nullable @Override public String expectedUploadDate() { return "2016-11-11 01:16:37.000"; }
         @Nullable @Override public String expectedTextualUploadDate() { return "2016-11-11 01:16:37"; }
-        @Override public long expectedLikeCountAtLeast() { return -1; }
+        @Override public long expectedLikeCountAtLeast() { return 7350; }
         @Override public long expectedDislikeCountAtLeast() { return -1; }
         @Override public boolean expectedHasAudioStreams() { return false; }
         @Override public boolean expectedHasVideoStreams() { return false; }
@@ -140,7 +147,7 @@ public class SoundcloudStreamExtractorTest {
         private static final String URL = UPLOADER + "/" + ID + "#t=" + TIMESTAMP;
         private static StreamExtractor extractor;
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = SoundCloud.getStreamExtractor(URL);
@@ -164,7 +171,7 @@ public class SoundcloudStreamExtractorTest {
         @Override public long expectedViewCountAtLeast() { return 27000; }
         @Nullable @Override public String expectedUploadDate() { return "2019-03-28 13:36:18.000"; }
         @Nullable @Override public String expectedTextualUploadDate() { return "2019-03-28 13:36:18"; }
-        @Override public long expectedLikeCountAtLeast() { return -1; }
+        @Override public long expectedLikeCountAtLeast() { return 25; }
         @Override public long expectedDislikeCountAtLeast() { return -1; }
         @Override public boolean expectedHasVideoStreams() { return false; }
         @Override public boolean expectedHasSubtitles() { return false; }
@@ -182,18 +189,27 @@ public class SoundcloudStreamExtractorTest {
             super.testAudioStreams();
             final List<AudioStream> audioStreams = extractor.getAudioStreams();
             assertEquals(2, audioStreams.size());
-            for (final AudioStream audioStream : audioStreams) {
-                final String mediaUrl = audioStream.getUrl();
+            audioStreams.forEach(audioStream -> {
+                final DeliveryMethod deliveryMethod = audioStream.getDeliveryMethod();
+                final String mediaUrl = audioStream.getContent();
                 if (audioStream.getFormat() == MediaFormat.OPUS) {
-                    // assert that it's an OPUS 64 kbps media URL with a single range which comes from an HLS SoundCloud CDN
-                    assertThat(mediaUrl, containsString("-hls-opus-media.sndcdn.com"));
-                    assertThat(mediaUrl, containsString(".64.opus"));
+                    // Assert that it's an OPUS 64 kbps media URL with a single range which comes
+                    // from an HLS SoundCloud CDN
+                    ExtractorAsserts.assertContains("-hls-opus-media.sndcdn.com", mediaUrl);
+                    ExtractorAsserts.assertContains(".64.opus", mediaUrl);
+                    assertSame(DeliveryMethod.HLS, deliveryMethod,
+                            "Wrong delivery method for stream " + audioStream.getId() + ": "
+                                    + deliveryMethod);
+                } else if (audioStream.getFormat() == MediaFormat.MP3) {
+                    // Assert that it's a MP3 128 kbps media URL which comes from a progressive
+                    // SoundCloud CDN
+                    ExtractorAsserts.assertContains("-media.sndcdn.com/bKOA7Pwbut93.128.mp3",
+                            mediaUrl);
+                    assertSame(DeliveryMethod.PROGRESSIVE_HTTP, deliveryMethod,
+                            "Wrong delivery method for stream " + audioStream.getId() + ": "
+                                    + deliveryMethod);
                 }
-                if (audioStream.getFormat() == MediaFormat.MP3) {
-                    // assert that it's a MP3 128 kbps media URL which comes from a progressive SoundCloud CDN
-                    assertThat(mediaUrl, containsString("-media.sndcdn.com/bKOA7Pwbut93.128.mp3"));
-                }
-            }
+            });
         }
     }
 }

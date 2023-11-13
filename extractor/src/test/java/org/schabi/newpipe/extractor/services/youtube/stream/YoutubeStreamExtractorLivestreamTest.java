@@ -1,43 +1,39 @@
 package org.schabi.newpipe.extractor.services.youtube.stream;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.schabi.newpipe.extractor.ServiceList.YouTube;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.downloader.DownloaderFactory;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.services.DefaultStreamExtractorTest;
-import org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper;
+import org.schabi.newpipe.extractor.services.youtube.YoutubeTestsUtils;
 import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.stream.StreamType;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import javax.annotation.Nullable;
 
-import static org.schabi.newpipe.extractor.ServiceList.YouTube;
-
 public class YoutubeStreamExtractorLivestreamTest extends DefaultStreamExtractorTest {
     private static final String RESOURCE_PATH = DownloaderFactory.RESOURCE_PATH + "services/youtube/extractor/stream/";
-    private static final String ID = "5qap5aO4i9A";
+    private static final String ID = "jfKfPfyJRdk";
     private static final int TIMESTAMP = 1737;
     private static final String URL = YoutubeStreamExtractorDefaultTest.BASE_URL + ID + "&t=" + TIMESTAMP;
     private static StreamExtractor extractor;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() throws Exception {
-        YoutubeParsingHelper.resetClientVersionAndKey();
-        YoutubeParsingHelper.setNumberGenerator(new Random(1));
-        NewPipe.init(new DownloaderFactory().getDownloader(RESOURCE_PATH + "live"));
+        YoutubeTestsUtils.ensureStateless();
+        NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "live"));
         extractor = YouTube.getStreamExtractor(URL);
         extractor.fetchPage();
     }
 
     @Override
     @Test
-    @Ignore("When visiting website it shows 'Lofi Girl', unknown why it's different in tests")
     public void testUploaderName() throws Exception {
         super.testUploaderName();
     }
@@ -52,18 +48,19 @@ public class YoutubeStreamExtractorLivestreamTest extends DefaultStreamExtractor
     @Override public StreamType expectedStreamType() { return StreamType.LIVE_STREAM; }
     @Override public String expectedUploaderName() { return "Lofi Girl"; }
     @Override public String expectedUploaderUrl() { return "https://www.youtube.com/channel/UCSJ4gkVC6NrvII8umztf0Ow"; }
+    @Override public long expectedUploaderSubscriberCountAtLeast() { return 9_800_000; }
     @Override public List<String> expectedDescriptionContains() {
-        return Arrays.asList("https://bit.ly/lofigirI-merch",
+        return Arrays.asList("Lofi Girl merch",
                 "Thank you for listening, I hope you will have a good time here");
     }
     @Override public boolean expectedUploaderVerified() { return true; }
     @Override public long expectedLength() { return 0; }
     @Override public long expectedTimestamp() { return TIMESTAMP; }
     @Override public long expectedViewCountAtLeast() { return 0; }
-    @Nullable @Override public String expectedUploadDate() { return "2020-02-22 00:00:00.000"; }
-    @Nullable @Override public String expectedTextualUploadDate() { return "2020-02-22"; }
-    @Override public long expectedLikeCountAtLeast() { return 825000; }
-    @Override public long expectedDislikeCountAtLeast() { return 15600; }
+    @Nullable @Override public String expectedUploadDate() { return "2022-07-12 00:00:00.000"; }
+    @Nullable @Override public String expectedTextualUploadDate() { return "2022-07-12"; }
+    @Override public long expectedLikeCountAtLeast() { return 340_000; }
+    @Override public long expectedDislikeCountAtLeast() { return -1; }
     @Override public boolean expectedHasSubtitles() { return false; }
     @Nullable @Override public String expectedDashMpdUrlContains() { return "https://manifest.googlevideo.com/api/manifest/dash/"; }
     @Override public boolean expectedHasFrames() { return false; }

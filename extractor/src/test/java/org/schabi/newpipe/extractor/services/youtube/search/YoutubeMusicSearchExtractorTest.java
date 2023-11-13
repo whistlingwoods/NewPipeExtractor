@@ -1,7 +1,10 @@
 package org.schabi.newpipe.extractor.services.youtube.search;
 
-import org.junit.BeforeClass;
-import org.junit.Ignore;
+import static org.schabi.newpipe.extractor.ServiceList.YouTube;
+import static java.util.Collections.singletonList;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.schabi.newpipe.downloader.DownloaderTestImpl;
 import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.NewPipe;
@@ -14,16 +17,13 @@ import java.net.URLEncoder;
 
 import javax.annotation.Nullable;
 
-import static java.util.Collections.singletonList;
-import static org.schabi.newpipe.extractor.ServiceList.YouTube;
-
-// Doesn't work with mocks. Makes request with different `dataToSend` i think
+// Doesn't work with mocks. Makes request with different `dataToSend` I think
 public class YoutubeMusicSearchExtractorTest {
     public static class MusicSongs extends DefaultSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "mocromaniac";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = YouTube.getSearchExtractor(QUERY, singletonList(YoutubeSearchQueryHandlerFactory.MUSIC_SONGS), "");
@@ -45,7 +45,7 @@ public class YoutubeMusicSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "fresku";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = YouTube.getSearchExtractor(QUERY, singletonList(YoutubeSearchQueryHandlerFactory.MUSIC_VIDEOS), "");
@@ -67,7 +67,7 @@ public class YoutubeMusicSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "johnny sellah";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = YouTube.getSearchExtractor(QUERY, singletonList(YoutubeSearchQueryHandlerFactory.MUSIC_ALBUMS), "");
@@ -89,7 +89,7 @@ public class YoutubeMusicSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "louivos";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = YouTube.getSearchExtractor(QUERY, singletonList(YoutubeSearchQueryHandlerFactory.MUSIC_PLAYLISTS), "");
@@ -107,12 +107,12 @@ public class YoutubeMusicSearchExtractorTest {
         @Override public InfoItem.InfoType expectedInfoItemType() { return InfoItem.InfoType.PLAYLIST; }
     }
 
-    @Ignore
+    @Disabled
     public static class MusicArtists extends DefaultSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "kevin";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = YouTube.getSearchExtractor(QUERY, singletonList(YoutubeSearchQueryHandlerFactory.MUSIC_ARTISTS), "");
@@ -130,11 +130,13 @@ public class YoutubeMusicSearchExtractorTest {
         @Override public InfoItem.InfoType expectedInfoItemType() { return InfoItem.InfoType.CHANNEL; }
     }
 
+    @Disabled("Currently constantly switching between \"Did you mean\" and \"Showing results for ...\" occurs")
     public static class Suggestion extends DefaultSearchExtractorTest {
         private static SearchExtractor extractor;
         private static final String QUERY = "megaman x3";
+        private static final boolean CORRECTED = true;
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = YouTube.getSearchExtractor(QUERY, singletonList(YoutubeSearchQueryHandlerFactory.MUSIC_SONGS), "");
@@ -150,14 +152,15 @@ public class YoutubeMusicSearchExtractorTest {
         @Override public String expectedSearchString() { return QUERY; }
         @Nullable @Override public String expectedSearchSuggestion() { return "mega man x3"; }
         @Override public InfoItem.InfoType expectedInfoItemType() { return InfoItem.InfoType.STREAM; }
+        @Override public boolean isCorrectedSearch() { return CORRECTED; }
     }
 
     public static class CorrectedSearch extends DefaultSearchExtractorTest {
         private static SearchExtractor extractor;
-        private static final String QUERY = "nocopyrigh sounds";
-        private static final String EXPECTED_SUGGESTION = "nocopyrightsounds";
+        private static final String QUERY = "no copyrigh sounds";
+        private static final String EXPECTED_SUGGESTION = "no copyright sounds";
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
             NewPipe.init(DownloaderTestImpl.getInstance());
             extractor = YouTube.getSearchExtractor(QUERY, singletonList(YoutubeSearchQueryHandlerFactory.MUSIC_SONGS), "");

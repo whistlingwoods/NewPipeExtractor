@@ -3,19 +3,17 @@ package org.schabi.newpipe.extractor.stream;
 import java.io.Serializable;
 import java.util.Objects;
 
-import static org.schabi.newpipe.extractor.utils.Utils.EMPTY_STRING;
-
 public class Description implements Serializable {
 
     public static final int HTML = 1;
     public static final int MARKDOWN = 2;
     public static final int PLAIN_TEXT = 3;
-    public static final Description emptyDescription = new Description(EMPTY_STRING, PLAIN_TEXT);
+    public static final Description EMPTY_DESCRIPTION = new Description("", PLAIN_TEXT);
 
-    private String content;
-    private int type;
+    private final String content;
+    private final int type;
 
-    public Description(String content, int type) {
+    public Description(final String content, final int type) {
         this.type = type;
         if (content == null) {
             this.content = "";
@@ -33,10 +31,14 @@ public class Description implements Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Description that = (Description) o;
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        final Description that = (Description) o;
         return type == that.type && Objects.equals(content, that.content);
     }
 

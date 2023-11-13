@@ -1,7 +1,14 @@
 package org.schabi.newpipe.extractor.services.youtube;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.schabi.newpipe.extractor.ServiceList.YouTube;
+import static org.schabi.newpipe.extractor.services.DefaultTests.assertNoMoreItems;
+import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestRelatedItems;
+
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.downloader.DownloaderFactory;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.exceptions.ContentNotAvailableException;
@@ -10,13 +17,6 @@ import org.schabi.newpipe.extractor.services.BaseListExtractorTest;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeFeedExtractor;
 
 import java.io.IOException;
-import java.util.Random;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.schabi.newpipe.extractor.ServiceList.YouTube;
-import static org.schabi.newpipe.extractor.services.DefaultTests.assertNoMoreItems;
-import static org.schabi.newpipe.extractor.services.DefaultTests.defaultTestRelatedItems;
 
 public class YoutubeFeedExtractorTest {
 
@@ -25,11 +25,10 @@ public class YoutubeFeedExtractorTest {
     public static class Kurzgesagt implements BaseListExtractorTest {
         private static YoutubeFeedExtractor extractor;
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws Exception {
-            YoutubeParsingHelper.resetClientVersionAndKey();
-            YoutubeParsingHelper.setNumberGenerator(new Random(1));
-            NewPipe.init(new DownloaderFactory().getDownloader(RESOURCE_PATH));
+            YoutubeTestsUtils.ensureStateless();
+            NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH));
             extractor = (YoutubeFeedExtractor) YouTube
                     .getFeedExtractor("https://www.youtube.com/user/Kurzgesagt");
             extractor.fetchPage();
@@ -46,8 +45,7 @@ public class YoutubeFeedExtractorTest {
 
         @Test
         public void testName() {
-            String name = extractor.getName();
-            assertTrue(name, name.startsWith("Kurzgesagt"));
+            assertTrue(extractor.getName().startsWith("Kurzgesagt"));
         }
 
         @Test
@@ -82,17 +80,16 @@ public class YoutubeFeedExtractorTest {
 
     public static class NotAvailable {
 
-        @BeforeClass
+        @BeforeAll
         public static void setUp() throws IOException {
-            NewPipe.init(new DownloaderFactory().getDownloader(RESOURCE_PATH + "notAvailable/"));
+            NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "notAvailable/"));
         }
 
-        @Test(expected = ContentNotAvailableException.class)
-        public void AccountTerminatedFetch() throws Exception {
+        @Test
+        void AccountTerminatedFetch() throws Exception {
             YoutubeFeedExtractor extractor = (YoutubeFeedExtractor) YouTube
                     .getFeedExtractor("https://www.youtube.com/channel/UCTGjY2I-ZUGnwVoWAGRd7XQ");
-            extractor.fetchPage();
+            assertThrows(ContentNotAvailableException.class, extractor::fetchPage);
         }
-
     }
 }

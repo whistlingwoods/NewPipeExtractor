@@ -13,7 +13,7 @@ import java.time.format.DateTimeParseException;
 public class YoutubeFeedInfoItemExtractor implements StreamInfoItemExtractor {
     private final Element entryElement;
 
-    public YoutubeFeedInfoItemExtractor(Element entryElement) {
+    public YoutubeFeedInfoItemExtractor(final Element entryElement) {
         this.entryElement = entryElement;
     }
 
@@ -37,7 +37,8 @@ public class YoutubeFeedInfoItemExtractor implements StreamInfoItemExtractor {
 
     @Override
     public long getViewCount() {
-        return Long.parseLong(entryElement.getElementsByTag("media:statistics").first().attr("views"));
+        return Long.parseLong(entryElement.getElementsByTag("media:statistics").first()
+                .attr("views"));
     }
 
     @Override
@@ -48,6 +49,12 @@ public class YoutubeFeedInfoItemExtractor implements StreamInfoItemExtractor {
     @Override
     public String getUploaderUrl() {
         return entryElement.select("author > uri").first().text();
+    }
+
+    @Nullable
+    @Override
+    public String getUploaderAvatarUrl() throws ParsingException {
+        return null;
     }
 
     @Override
@@ -66,8 +73,9 @@ public class YoutubeFeedInfoItemExtractor implements StreamInfoItemExtractor {
     public DateWrapper getUploadDate() throws ParsingException {
         try {
             return new DateWrapper(OffsetDateTime.parse(getTextualUploadDate()));
-        } catch (DateTimeParseException e) {
-            throw new ParsingException("Could not parse date (\"" + getTextualUploadDate() + "\")", e);
+        } catch (final DateTimeParseException e) {
+            throw new ParsingException("Could not parse date (\"" + getTextualUploadDate() + "\")",
+                    e);
         }
     }
 
@@ -83,6 +91,10 @@ public class YoutubeFeedInfoItemExtractor implements StreamInfoItemExtractor {
 
     @Override
     public String getThumbnailUrl() {
-        return entryElement.getElementsByTag("media:thumbnail").first().attr("url");
+        // The hqdefault thumbnail has some black bars at the top and at the bottom, while the
+        // mqdefault doesn't, so return the mqdefault one. It should always exist, according to
+        // https://stackoverflow.com/a/20542029/9481500.
+        return entryElement.getElementsByTag("media:thumbnail").first().attr("url")
+                .replace("hqdefault", "mqdefault");
     }
 }
