@@ -20,7 +20,7 @@
     "responseMessage": "",
     "responseHeaders": {
       "alt-svc": [
-        "h3\u003d\":443\"; ma\u003d2592000,h3-29\u003d\":443\"; ma\u003d2592000,h3-Q050\u003d\":443\"; ma\u003d2592000,h3-Q046\u003d\":443\"; ma\u003d2592000,h3-Q043\u003d\":443\"; ma\u003d2592000,quic\u003d\":443\"; ma\u003d2592000; v\u003d\"46,43\""
+        "h3\u003d\":443\"; ma\u003d2592000,h3-29\u003d\":443\"; ma\u003d2592000"
       ],
       "cache-control": [
         "no-cache, no-store, max-age\u003d0, must-revalidate"
@@ -28,14 +28,17 @@
       "content-type": [
         "text/html; charset\u003dutf-8"
       ],
-      "cross-origin-opener-policy-report-only": [
+      "cross-origin-opener-policy": [
         "same-origin-allow-popups; report-to\u003d\"youtube_main\""
       ],
       "date": [
-        "Fri, 12 Aug 2022 17:15:40 GMT"
+        "Sun, 16 Apr 2023 17:42:25 GMT"
       ],
       "expires": [
         "Mon, 01 Jan 1990 00:00:00 GMT"
+      ],
+      "origin-trial": [
+        "AvC9UlR6RDk2crliDsFl66RWLnTbHrDbp+DiY6AYz/PNQ4G4tdUTjrHYr2sghbkhGQAVxb7jaPTHpEVBz0uzQwkAAAB4eyJvcmlnaW4iOiJodHRwczovL3lvdXR1YmUuY29tOjQ0MyIsImZlYXR1cmUiOiJXZWJWaWV3WFJlcXVlc3RlZFdpdGhEZXByZWNhdGlvbiIsImV4cGlyeSI6MTcxOTUzMjc5OSwiaXNTdWJkb21haW4iOnRydWV9"
       ],
       "p3p": [
         "CP\u003d\"This is not a P3P policy! See http://support.google.com/accounts/answer/151657?hl\u003den-GB for more info.\""
@@ -53,9 +56,9 @@
         "ESF"
       ],
       "set-cookie": [
-        "YSC\u003dm8gSDNdggLc; Domain\u003d.youtube.com; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone",
-        "VISITOR_INFO1_LIVE\u003d; Domain\u003d.youtube.com; Expires\u003dSat, 16-Nov-2019 17:15:40 GMT; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone",
-        "__Secure-YEC\u003dCgtNY09qSVAzU2xoWSi8ldqXBg%3D%3D; Domain\u003d.youtube.com; Expires\u003dMon, 11-Sep-2023 17:15:39 GMT; Path\u003d/; Secure; HttpOnly; SameSite\u003dlax"
+        "YSC\u003dquqJbwlWjeg; Domain\u003d.youtube.com; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone",
+        "VISITOR_INFO1_LIVE\u003d; Domain\u003d.youtube.com; Expires\u003dMon, 20-Jul-2020 17:42:25 GMT; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone",
+        "__Secure-YEC\u003dCgtoeGlra2FJX3p3NCiB5_ChBg%3D%3D; Domain\u003d.youtube.com; Expires\u003dWed, 15-May-2024 17:42:24 GMT; Path\u003d/; Secure; HttpOnly; SameSite\u003dlax"
       ],
       "strict-transport-security": [
         "max-age\u003d31536000"
