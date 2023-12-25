@@ -6,6 +6,8 @@ import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.linkhandler.ListLinkHandler;
 import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 
+import java.util.List;
+
 /*
  * Created by Christian Schabesberger on 25.07.16.
  *
@@ -44,4 +46,7 @@ public abstract class ChannelExtractor extends ListExtractor<StreamInfoItem> {
     public abstract String getParentChannelAvatarUrl() throws ParsingException;
     public abstract boolean isVerified() throws ParsingException;
 
+    public List<ChannelHeaderItem> getHeaderItems() {
+        return List.of();
+    }
 }

@@ -15,6 +15,7 @@ import com.grack.nanojson.JsonWriter;
 import org.schabi.newpipe.extractor.Page;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.channel.ChannelExtractor;
+import org.schabi.newpipe.extractor.channel.ChannelHeaderItem;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ContentNotAvailableException;
 import org.schabi.newpipe.extractor.exceptions.ContentNotSupportedException;
@@ -75,6 +76,9 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
      * </pre>
      */
     private String redirectedChannelId;
+
+    private ChannelHeaderItem selectedHeaderItem;
+    private List<ChannelHeaderItem> headerItems;
 
     public YoutubeChannelExtractor(final StreamingService service,
                                    final ListLinkHandler linkHandler) {
@@ -282,7 +286,10 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
                 ))
                 .filter(url -> !url.contains("s.ytimg.com") && !url.contains("default_banner"))
                 .map(YoutubeParsingHelper::fixThumbnailUrl)
-                .orElseThrow(() -> new ParsingException("Could not get banner"));
+                // Channels may not have a banner, so no exception should be thrown if no banner is
+                // found
+                // Return null in this case
+                .orElse(null);
     }
 
     @Override
@@ -397,18 +404,53 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
 
         final StreamInfoItemsCollector collector = new StreamInfoItemsCollector(getServiceId());
 
-        final JsonObject ajaxJson = getJsonPostResponse("browse", page.getBody(),
+        final JsonObject ajaxJson = getJsonPostResponse("browse", getFixedBody(page),
                 getExtractorLocalization());
+        JsonArray rra = ajaxJson.getArray("onResponseReceivedActions");
 
-        final JsonObject sectionListContinuation = ajaxJson.getArray("onResponseReceivedActions")
-                .getObject(0)
-                .getObject("appendContinuationItemsAction");
+        if (rra.size() > 1 && rra.getObject(1).has("reloadContinuationItemsCommand")) {
+            this.headerItems = parseHeaderItems(rra.getObject(0)
+                    .getObject("reloadContinuationItemsCommand")
+                    .getArray("continuationItems")
+                    .getObject(0)
+                    .getObject("feedFilterChipBarRenderer")
+                    .getArray("contents"));
 
-        final JsonObject continuation = collectStreamsFrom(collector, sectionListContinuation
-                .getArray("continuationItems"), channelIds);
+            final JsonArray continuationItems = rra.getObject(1)
+                    .getObject("reloadContinuationItemsCommand")
+                    .getArray("continuationItems");
 
-        return new InfoItemsPage<>(collector, getNextPageFrom(continuation, channelIds));
+            final JsonObject continuations =
+                    collectStreamsFrom(collector, continuationItems, channelIds);
+
+            return new InfoItemsPage<>(collector, getNextPageFrom(continuations, channelIds));
+        } else if (rra.getObject(0).has("appendContinuationItemsAction")) {
+            final JsonObject sectionListContinuation = ajaxJson.getArray("onResponseReceivedActions")
+                    .getObject(0)
+                    .getObject("appendContinuationItemsAction");
+
+            final JsonObject continuation = collectStreamsFrom(collector, sectionListContinuation
+                    .getArray("continuationItems"), channelIds);
+
+            return new InfoItemsPage<>(collector, getNextPageFrom(continuation, channelIds));
+        } else {
+            throw new ExtractionException("Unknown response type");
+        }
     }
+
+    private byte[] getFixedBody(Page page) throws ExtractionException, IOException {
+        if (this.selectedHeaderItem != null) {
+            byte[] bytes = JsonWriter.string(prepareDesktopJsonBuilder(getExtractorLocalization(),
+                            getExtractorContentCountry())
+                            .value("continuation", this.selectedHeaderItem.getContinuationToken())
+                            .done())
+                    .getBytes(StandardCharsets.UTF_8);
+            this.selectedHeaderItem = null;
+            return bytes;
+        }
+        return page.getBody();
+    }
+
 
     @Nullable
     private Page getNextPageFrom(final JsonObject continuations,
@@ -529,5 +571,56 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
 
         videoTab = foundVideoTab;
         return foundVideoTab;
+    }
+
+    @Override
+    public List<ChannelHeaderItem> getHeaderItems() {
+        if (headerItems != null) {
+            return headerItems;
+        }
+        JsonArray array = initialData
+                .getObject("contents")
+                .getObject("twoColumnBrowseResultsRenderer")
+                .getArray("tabs");
+
+        List<ChannelHeaderItem> items = new ArrayList<>();
+        for (int i = 0; i < array.size(); i++) {
+            JsonObject json = array.getObject(i);
+            if (json.has("tabRenderer")) {
+                JsonObject tabContents = json
+                        .getObject("tabRenderer")
+                        .getObject("content");
+
+                if (tabContents.has("richGridRenderer")) {
+                    items.addAll(parseHeaderItems(tabContents
+                            .getObject("richGridRenderer")
+                            .getObject("header")
+                            .getObject("feedFilterChipBarRenderer")
+                            .getArray("contents")));
+                }
+            }
+        }
+        this.headerItems = items;
+        return items;
+    }
+
+    private List<ChannelHeaderItem> parseHeaderItems(JsonArray array) {
+        final List<ChannelHeaderItem> items = new ArrayList<>();
+        for (int i = 0; i < array.size(); i++) {
+            final JsonObject chipRenderer = array
+                    .getObject(i)
+                    .getObject("chipCloudChipRenderer");
+
+            final String simpleText = chipRenderer.getObject("text").getString("simpleText");
+            final String token = chipRenderer.getObject("navigationEndpoint")
+                    .getObject("continuationCommand").getString("token");
+            final boolean isSelected = chipRenderer.getBoolean("isSelected", Boolean.FALSE);
+            items.add(new ChannelHeaderItem(simpleText, token, isSelected));
+        }
+        return items;
+    }
+
+    public void setSelectedHeaderItem(ChannelHeaderItem channelHeaderItem) {
+        this.selectedHeaderItem = channelHeaderItem;
     }
 }

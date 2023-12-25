@@ -11,6 +11,7 @@ import org.schabi.newpipe.extractor.stream.StreamInfoItem;
 import org.schabi.newpipe.extractor.utils.ExtractorHelper;
 
 import java.io.IOException;
+import java.util.List;
 
 /*
  * Created by Christian Schabesberger on 31.07.16.
@@ -130,6 +131,12 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
             info.addError(e);
         }
 
+        try {
+            info.setHeaderItems(extractor.getHeaderItems());
+        } catch (final Exception e) {
+            info.addError(e);
+        }
+
         return info;
     }
 
@@ -143,6 +150,7 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
     private String description;
     private String[] donationLinks;
     private boolean verified;
+    private List<ChannelHeaderItem> headerItems;
 
     public String getParentChannelName() {
         return parentChannelName;
@@ -222,5 +230,13 @@ public class ChannelInfo extends ListInfo<StreamInfoItem> {
 
     public void setVerified(final boolean verified) {
         this.verified = verified;
+    }
+
+    public List<ChannelHeaderItem> getHeaderItems() {
+        return this.headerItems;
+    }
+
+    public void setHeaderItems(final List<ChannelHeaderItem> items) {
+        this.headerItems = items;
     }
 }
