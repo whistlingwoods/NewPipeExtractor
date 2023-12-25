@@ -6,6 +6,7 @@ on:
     branches:
       - dev
       - master
+      - sort-videos-inside-channels-by-views-and-dates
   pull_request:
 
 permissions:
