@@ -92,8 +92,7 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
         // we couldn't get information about the channel associated with this URL, if there is one.
         if (channelId[0].startsWith("UC")) {
             id = channelId[0];
-        }   
-        else {
+        } else {
             final byte[] body = JsonWriter.string(prepareDesktopJsonBuilder(
                             getExtractorLocalization(), getExtractorContentCountry())
                             .value("url", "https://www.youtube.com/" + channelPath)
@@ -124,7 +123,7 @@ public class YoutubeChannelExtractor extends ChannelExtractor {
                 id = browseId;
                 redirectedChannelId = browseId;
             }
-        } 
+        }
         JsonObject ajaxJson = null;
 
         int level = 0;
