@@ -40,12 +40,7 @@ public class BandcampPlaylistStreamInfoItemExtractor extends BandcampStreamInfoI
 
     @Override
     public String getUrl() {
-        final String relativeUrl = track.getString("title_link");
-        if (relativeUrl != null) {
-            return getUploaderUrl() + relativeUrl;
-        } else {
-            return null;
-        }
+        return getUploaderUrl() + track.getString("title_link");
     }
 
     @Override
@@ -73,7 +68,7 @@ public class BandcampPlaylistStreamInfoItemExtractor extends BandcampStreamInfoI
      */
     @Override
     public String getThumbnailUrl() throws ParsingException {
-        if (substituteCovers.isEmpty() && getUrl() != null) {
+        if (substituteCoverUrl != null) {
             return substituteCoverUrl;
         } else {
             try {
