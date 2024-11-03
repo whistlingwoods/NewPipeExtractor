@@ -8,6 +8,8 @@ import org.schabi.newpipe.extractor.comments.CommentsInfoItemExtractor;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.stream.Description;
 
+import javax.annotation.Nonnull;
+
 public class BandcampCommentsInfoItemExtractor implements CommentsInfoItemExtractor {
 
     private final JsonObject review;
@@ -33,6 +35,7 @@ public class BandcampCommentsInfoItemExtractor implements CommentsInfoItemExtrac
         return getUploaderAvatarUrl();
     }
 
+    @Nonnull
     @Override
     public Description getCommentText() throws ParsingException {
         return new Description(review.getString("why"), Description.PLAIN_TEXT);

@@ -7,6 +7,7 @@ import org.schabi.newpipe.extractor.localization.DateWrapper;
 import org.schabi.newpipe.extractor.services.soundcloud.SoundcloudParsingHelper;
 import org.schabi.newpipe.extractor.stream.Description;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
 
@@ -24,6 +25,7 @@ public class SoundcloudCommentsInfoItemExtractor implements CommentsInfoItemExtr
         return Objects.toString(json.getLong("id"), null);
     }
 
+    @Nonnull
     @Override
     public Description getCommentText() {
         return new Description(json.getString("body"), Description.PLAIN_TEXT);
