@@ -1240,7 +1240,7 @@ public final class YoutubeParsingHelper {
                         // "iOS version.0.build version"
                         // The build version corresponding to the iOS version used can be found on
                         // https://www.theiphonewiki.com/wiki/Firmware/iPhone/15.x#iPhone_13
-                        .value("osVersion", "15.6.0.19G71")
+                        .value("osVersion", "17.5.1.21F90")
                         .value("hl", localization.getLocalizationCode())
                         .value("gl", contentCountry.getCountryCode())
                     .end()
@@ -1366,7 +1366,7 @@ public final class YoutubeParsingHelper {
     public static String getIosUserAgent(@Nullable final Localization localization) {
         // Spoofing an iPhone 13 running iOS 15.6 with the hardcoded version of the iOS app
         return "com.google.ios.youtube/" + IOS_YOUTUBE_CLIENT_VERSION
-                + "(" + IOS_DEVICE_MODEL + "; U; CPU iOS 15_6 like Mac OS X; "
+                + "(" + IOS_DEVICE_MODEL + "; U; CPU iOS 17_5_1 like Mac OS X; "
                 + (localization != null ? localization : Localization.DEFAULT).getCountryCode()
                 + ")";
     }
