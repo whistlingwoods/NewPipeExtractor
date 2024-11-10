@@ -95,6 +95,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -653,8 +654,10 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     @Override
     public List<AudioStream> getAudioStreams() throws ExtractionException {
         assertPageFetched();
-        return getItags(ADAPTIVE_FORMATS, ItagItem.ItagType.AUDIO,
+        List<AudioStream> result = getItags(ADAPTIVE_FORMATS, ItagItem.ItagType.AUDIO,
                 getAudioStreamBuilderHelper(), "audio");
+        Collections.sort(result, Comparator.comparingInt(AudioStream::getBitrate).reversed());
+        return result;
     }
 
     @Override
