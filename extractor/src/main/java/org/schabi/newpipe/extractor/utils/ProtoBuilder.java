@@ -2,6 +2,7 @@ package org.schabi.newpipe.extractor.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URLEncoder;
 import java.io.UnsupportedEncodingException;
 import static org.schabi.newpipe.extractor.utils.Utils.UTF_8;
@@ -22,7 +23,7 @@ public class ProtoBuilder {
             final String b64 = encodeUrl(toBytes());
             return URLEncoder.encode(b64, UTF_8);
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -43,7 +44,7 @@ public class ProtoBuilder {
                 }
             }
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -64,7 +65,7 @@ public class ProtoBuilder {
             final byte[] strBts = string.getBytes(UTF_8);
             bytes(field, strBts);
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
 
@@ -74,7 +75,7 @@ public class ProtoBuilder {
         try {
             byteBuffer.write(bytes);
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
 

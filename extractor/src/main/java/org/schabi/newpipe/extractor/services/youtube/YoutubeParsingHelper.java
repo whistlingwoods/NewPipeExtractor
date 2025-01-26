@@ -175,7 +175,7 @@ public final class YoutubeParsingHelper {
      * Store page of the YouTube app</a>, in the {@code What’s New} section.
      * </p>
      */
-    private static final String IOS_YOUTUBE_CLIENT_VERSION = "19.45.4";
+    private static final String IOS_YOUTUBE_CLIENT_VERSION = "20.03.02";
 
     /**
      * The hardcoded client version used for InnerTube requests with the TV HTML5 embed client.
@@ -213,7 +213,8 @@ public final class YoutubeParsingHelper {
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
     /**
-     * The device machine id for the iPhone 15, used to get 60fps with the {@code iOS} client.
+     * The device machine id for the iPhone 15 Pro Max,
+     * used to get 60fps with the {@code iOS} client.
      *
      * <p>
      * See <a href="https://gist.github.com/adamawolf/3048717">this GitHub Gist</a> for more
@@ -236,15 +237,15 @@ public final class YoutubeParsingHelper {
      *
      * @see #IOS_USER_AGENT_VERSION
      */
-    private static final String IOS_OS_VERSION = "18.1.0.22B83";
+    private static final String IOS_OS_VERSION = "18.2.1.22C161";
 
     /**
-     * Spoofing an iPhone 15 Pro Max running iOS 18.1.0 with the hardcoded version of the iOS app.
+     * Spoofing an iPhone 15 Pro Max running iOS 18.2.1 with the hardcoded version of the iOS app.
      * To be used in the user agent for requests.
      *
      * @see #IOS_OS_VERSION
      */
-    private static final String IOS_USER_AGENT_VERSION = "18_1_0";
+    private static final String IOS_USER_AGENT_VERSION = "18_2_1";
 
     private static Random numberGenerator = new Random();
 
@@ -1412,8 +1413,8 @@ public final class YoutubeParsingHelper {
      */
     @Nonnull
     public static String getIosUserAgent(@Nullable final Localization localization) {
-        // Spoofing an iPhone 15 Pro Max running iOS 18.1.0 with hardcoded version of the iOS
-        // app
+        // Spoofing an iPhone 15 Pro Max running iOS 18.2.1
+        // with  hardcoded version of the iOS app
         return "com.google.ios.youtube/" + IOS_YOUTUBE_CLIENT_VERSION
                 + "(" + IOS_DEVICE_MODEL + "; U; CPU iOS "
                 + IOS_USER_AGENT_VERSION + " like Mac OS X; "
