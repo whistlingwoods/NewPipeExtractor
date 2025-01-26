@@ -187,7 +187,7 @@ public final class YoutubeParsingHelper {
      * Store page of the YouTube app</a>, in the {@code What’s New} section.
      * </p>
      */
-    private static final String IOS_YOUTUBE_CLIENT_VERSION = "20.02.3";
+    private static final String IOS_YOUTUBE_CLIENT_VERSION = "20.03.02";
 
     /**
      * The InnerTube API key used by the {@code iOS} client. Found with the help of
