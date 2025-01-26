@@ -22,11 +22,11 @@ package org.schabi.newpipe.extractor.utils;
 
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -78,6 +78,37 @@ public final class Parser {
         }
     }
 
+    public static String matchGroup1MultiplePatterns(final Pattern[] patterns, final String input)
+            throws RegexException {
+        return matchMultiplePatterns(patterns, input).group(1);
+    }
+
+    public static Matcher matchMultiplePatterns(final Pattern[] patterns, final String input)
+            throws RegexException {
+        Parser.RegexException exception = null;
+        for (final Pattern pattern : patterns) {
+            final Matcher matcher = pattern.matcher(input);
+            if (matcher.find()) {
+                return matcher;
+            } else if (exception == null) {
+                // only pass input to exception message when it is not too long
+                if (input.length() > 1024) {
+                    exception = new RegexException("Failed to find pattern \"" + pattern.pattern()
+                            + "\"");
+                } else {
+                    exception = new RegexException("Failed to find pattern \"" + pattern.pattern()
+                            + "\" inside of \"" + input + "\"");
+                }
+            }
+        }
+
+        if (exception == null) {
+            throw new RegexException("Empty patterns array passed to matchMultiplePatterns");
+        } else {
+            throw exception;
+        }
+    }
+
     public static boolean isMatch(final String pattern, final String input) {
         final Pattern pat = Pattern.compile(pattern);
         final Matcher mat = pat.matcher(input);
@@ -90,17 +121,12 @@ public final class Parser {
     }
 
     @Nonnull
-    public static Map<String, String> compatParseMap(@Nonnull final String input)
-            throws UnsupportedEncodingException {
-        final Map<String, String> map = new HashMap<>();
-        for (final String arg : input.split("&")) {
-            final String[] splitArg = arg.split("=");
-            if (splitArg.length > 1) {
-                map.put(splitArg[0], Utils.decodeUrlUtf8(splitArg[1]));
-            } else {
-                map.put(splitArg[0], "");
-            }
-        }
-        return map;
+    public static Map<String, String> compatParseMap(@Nonnull final String input) {
+        return Arrays.stream(input.split("&"))
+                .map(arg -> arg.split("="))
+                .filter(splitArg -> splitArg.length > 1)
+                .collect(Collectors.toMap(splitArg -> splitArg[0],
+                        splitArg -> Utils.decodeUrlUtf8(splitArg[1]),
+                        (existing, replacement) -> replacement));
     }
 }

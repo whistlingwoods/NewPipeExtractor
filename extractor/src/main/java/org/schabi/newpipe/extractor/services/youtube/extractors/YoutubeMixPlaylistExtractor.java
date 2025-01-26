@@ -4,13 +4,13 @@ import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.YOUTUBEI_V1_URL;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.extractCookieValue;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.extractPlaylistTypeFromPlaylistId;
-import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getKey;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getValidJsonResponseBody;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getYouTubeHeaders;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareDesktopJsonBuilder;
 import static org.schabi.newpipe.extractor.utils.Utils.getQueryValue;
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 import static org.schabi.newpipe.extractor.utils.Utils.stringToURL;
+import static org.schabi.newpipe.extractor.utils.Utils.UTF_8;
 
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonBuilder;
@@ -41,7 +41,6 @@ import org.schabi.newpipe.extractor.utils.JsonUtils;
 
 import java.io.IOException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,14 +96,14 @@ public class YoutubeMixPlaylistExtractor extends PlaylistExtractor {
             jsonBody.value("playlistIndex", Integer.parseInt(playlistIndexString));
         }
 
-        final byte[] body = JsonWriter.string(jsonBody.done()).getBytes(StandardCharsets.UTF_8);
+        final byte[] body = JsonWriter.string(jsonBody.done()).getBytes(UTF_8);
 
         // Cookie is required due to consent
         final var headers = getYouTubeHeaders();
 
         final Response response = getDownloader().postWithContentTypeJson(
-                YOUTUBEI_V1_URL + "next?key=" + getKey() + DISABLE_PRETTY_PRINT_PARAMETER,
-                headers, body, localization);
+                YOUTUBEI_V1_URL + "next?" + DISABLE_PRETTY_PRINT_PARAMETER, headers, body,
+                localization);
 
         initialData = JsonUtils.toJsonObject(getValidJsonResponseBody(response));
         playlistData = initialData
@@ -223,9 +222,10 @@ public class YoutubeMixPlaylistExtractor extends PlaylistExtractor {
                 .value("playlistIndex", index)
                 .value("params", params)
                 .done())
-                .getBytes(StandardCharsets.UTF_8);
+                .getBytes(UTF_8);
 
-        return new Page(YOUTUBEI_V1_URL + "next?key=" + getKey(), null, null, cookies, body);
+        return new Page(YOUTUBEI_V1_URL + "next?" + DISABLE_PRETTY_PRINT_PARAMETER, null, null,
+                cookies, body);
     }
 
     @Override

@@ -22,7 +22,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Cache Gradle dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ~/.gradle/caches
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle') }}
@@ -32,7 +32,7 @@ jobs:
         run: ./gradlew aggregatedJavadocs
 
       - name: Deploy JavaDocs
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build/docs

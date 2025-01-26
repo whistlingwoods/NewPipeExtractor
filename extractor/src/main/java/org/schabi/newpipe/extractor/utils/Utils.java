@@ -2,12 +2,11 @@ package org.schabi.newpipe.extractor.utils;
 
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
+import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -23,6 +22,7 @@ public final class Utils {
     public static final String HTTPS = "https://";
     private static final Pattern M_PATTERN = Pattern.compile("(https?)?://m\\.");
     private static final Pattern WWW_PATTERN = Pattern.compile("(https?)?://www\\.");
+    public static final String UTF_8 = "UTF-8";
 
     private Utils() {
         // no instance
@@ -33,22 +33,28 @@ public final class Utils {
      *
      * @param string The string to be encoded.
      * @return The encoded URL.
-     * @throws UnsupportedEncodingException This shouldn't be thrown, as UTF-8 should be supported.
      */
-    public static String encodeUrlUtf8(final String string) throws UnsupportedEncodingException {
-        // TODO: Switch to URLEncoder.encode(String, Charset) in Java 10.
-        return URLEncoder.encode(string, StandardCharsets.UTF_8.name());
+    public static String encodeUrlUtf8(final String string) {
+        try {
+            // TODO: Switch to URLEncoder.encode(String, Charset) in Java 10.
+            return URLEncoder.encode(string, UTF_8);
+        } catch (final UnsupportedEncodingException e) {
+            throw new RuntimeException("UTF-8 not supported error: " + e.getMessage(), e);
+        }
     }
 
     /**
      * Decodes a URL using the UTF-8 character set.
      * @param url The URL to be decoded.
      * @return The decoded URL.
-     * @throws UnsupportedEncodingException This shouldn't be thrown, as UTF-8 should be supported.
      */
-    public static String decodeUrlUtf8(final String url) throws UnsupportedEncodingException {
+    public static String decodeUrlUtf8(final String url) {
         // TODO: Switch to URLDecoder.decode(String, Charset) in Java 10.
-        return URLDecoder.decode(url, StandardCharsets.UTF_8.name());
+        try {
+            return URLDecoder.decode(url, UTF_8);
+        } catch (final UnsupportedEncodingException e) {
+            throw new RuntimeException("UTF-8 not supported error: " + e.getMessage(), e);
+        }
     }
 
     /**
@@ -155,22 +161,10 @@ public final class Utils {
         if (urlQuery != null) {
             for (final String param : urlQuery.split("&")) {
                 final String[] params = param.split("=", 2);
-
-                String query;
-                try {
-                    query = decodeUrlUtf8(params[0]);
-                } catch (final UnsupportedEncodingException e) {
-                    // Cannot decode string with UTF-8, using the string without decoding
-                    query = params[0];
-                }
+                final String query = decodeUrlUtf8(params[0]);
 
                 if (query.equals(parameterName)) {
-                    try {
-                        return decodeUrlUtf8(params[1]);
-                    } catch (final UnsupportedEncodingException e) {
-                        // Cannot decode string with UTF-8, using the string without decoding
-                        return params[1];
-                    }
+                    return decodeUrlUtf8(params[1]);
                 }
             }
         }

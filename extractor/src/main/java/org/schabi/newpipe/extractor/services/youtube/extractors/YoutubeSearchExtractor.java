@@ -3,7 +3,6 @@ package org.schabi.newpipe.extractor.services.youtube.extractors;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.DISABLE_PRETTY_PRINT_PARAMETER;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.YOUTUBEI_V1_URL;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonPostResponse;
-import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getKey;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getTextFromObject;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareDesktopJsonBuilder;
 import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.ALL;
@@ -12,6 +11,7 @@ import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeS
 import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.VIDEOS;
 import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.getSearchParameter;
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
+import static org.schabi.newpipe.extractor.utils.Utils.UTF_8;
 
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonBuilder;
@@ -34,7 +34,6 @@ import org.schabi.newpipe.extractor.services.youtube.YoutubeMetaInfoHelper;
 import org.schabi.newpipe.extractor.utils.JsonUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 
@@ -101,7 +100,7 @@ public class YoutubeSearchExtractor extends SearchExtractor {
             jsonBody.value("params", params);
         }
 
-        final byte[] body = JsonWriter.string(jsonBody.done()).getBytes(StandardCharsets.UTF_8);
+        final byte[] body = JsonWriter.string(jsonBody.done()).getBytes(UTF_8);
 
         initialData = getJsonPostResponse("search", body, localization);
     }
@@ -203,7 +202,7 @@ public class YoutubeSearchExtractor extends SearchExtractor {
                 getExtractorContentCountry())
                 .value("continuation", page.getId())
                 .done())
-                .getBytes(StandardCharsets.UTF_8);
+                .getBytes(UTF_8);
         // @formatter:on
 
         final JsonObject ajaxJson = getJsonPostResponse("search", json, localization);
@@ -239,16 +238,27 @@ public class YoutubeSearchExtractor extends SearchExtractor {
             } else if (extractChannelResults && item.has("channelRenderer")) {
                 collector.commit(new YoutubeChannelInfoItemExtractor(
                         item.getObject("channelRenderer")));
-            } else if (extractPlaylistResults && item.has("playlistRenderer")) {
-                collector.commit(new YoutubePlaylistInfoItemExtractor(
-                        item.getObject("playlistRenderer")));
+            } else if (extractPlaylistResults) {
+                if (item.has("playlistRenderer")) {
+                    collector.commit(new YoutubePlaylistInfoItemExtractor(
+                            item.getObject("playlistRenderer")));
+                } else if (item.has("showRenderer")) {
+                    collector.commit(new YoutubeShowRendererInfoItemExtractor(
+                            item.getObject("showRenderer")));
+                } else if (item.has("lockupViewModel")) {
+                    final JsonObject lockupViewModel = item.getObject("lockupViewModel");
+                    if ("LOCKUP_CONTENT_TYPE_PLAYLIST".equals(
+                            lockupViewModel.getString("contentType"))) {
+                        collector.commit(
+                                new YoutubeMixOrPlaylistLockupInfoItemExtractor(lockupViewModel));
+                    }
+                }
             }
         }
     }
 
     @Nullable
-    private Page getNextPageFrom(final JsonObject continuationItemRenderer) throws IOException,
-            ExtractionException {
+    private Page getNextPageFrom(final JsonObject continuationItemRenderer) {
         if (isNullOrEmpty(continuationItemRenderer)) {
             return null;
         }
@@ -257,8 +267,7 @@ public class YoutubeSearchExtractor extends SearchExtractor {
                 .getObject("continuationCommand")
                 .getString("token");
 
-        final String url = YOUTUBEI_V1_URL + "search?key=" + getKey()
-                + DISABLE_PRETTY_PRINT_PARAMETER;
+        final String url = YOUTUBEI_V1_URL + "search?" + DISABLE_PRETTY_PRINT_PARAMETER;
 
         return new Page(url, token);
     }

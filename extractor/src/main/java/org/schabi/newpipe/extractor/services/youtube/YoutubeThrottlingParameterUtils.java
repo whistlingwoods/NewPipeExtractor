@@ -1,5 +1,7 @@
 package org.schabi.newpipe.extractor.services.youtube;
 
+import static org.schabi.newpipe.extractor.utils.Parser.matchMultiplePatterns;
+
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
 import org.schabi.newpipe.extractor.utils.JavaScript;
 import org.schabi.newpipe.extractor.utils.Parser;
@@ -18,10 +20,86 @@ final class YoutubeThrottlingParameterUtils {
 
     private static final Pattern THROTTLING_PARAM_PATTERN = Pattern.compile("[&?]n=([^&]+)");
 
-    private static final Pattern DEOBFUSCATION_FUNCTION_NAME_PATTERN = Pattern.compile(
-            // CHECKSTYLE:OFF
-            "\\.get\\(\"n\"\\)\\)&&\\([a-zA-Z0-9$_]=([a-zA-Z0-9$_]+)(?:\\[(\\d+)])?\\([a-zA-Z0-9$_]\\)");
-            // CHECKSTYLE:ON
+    private static final String SINGLE_CHAR_VARIABLE_REGEX = "[a-zA-Z0-9$_]";
+
+    private static final String MULTIPLE_CHARS_REGEX = SINGLE_CHAR_VARIABLE_REGEX + "+";
+
+    private static final String ARRAY_ACCESS_REGEX = "\\[(\\d+)]";
+
+    // CHECKSTYLE:OFF
+    private static final Pattern[] DEOBFUSCATION_FUNCTION_NAME_REGEXES = {
+
+            /*
+             * The first regex matches the following text, where we want Wma and the array index
+             * accessed:
+             *
+             * a.D&&(b="nn"[+a.D],WL(a),c=a.j[b]||null)&&(c=SDa[0](c),a.set(b,c),SDa.length||Wma("")
+             */
+            Pattern.compile(SINGLE_CHAR_VARIABLE_REGEX + "=\"nn\"\\[\\+" + MULTIPLE_CHARS_REGEX
+                    + "\\." + MULTIPLE_CHARS_REGEX + "]," + MULTIPLE_CHARS_REGEX + "\\("
+                    + MULTIPLE_CHARS_REGEX + "\\)," + MULTIPLE_CHARS_REGEX + "="
+                    + MULTIPLE_CHARS_REGEX + "\\." + MULTIPLE_CHARS_REGEX + "\\["
+                    + MULTIPLE_CHARS_REGEX + "]\\|\\|null\\).+\\|\\|(" + MULTIPLE_CHARS_REGEX
+                    + ")\\(\"\"\\)"),
+
+            /*
+             * The second regex matches the following text, where we want SDa and the array index
+             * accessed:
+             *
+             * a.D&&(b="nn"[+a.D],WL(a),c=a.j[b]||null)&&(c=SDa[0](c),a.set(b,c),SDa.length||Wma("")
+             */
+            Pattern.compile(SINGLE_CHAR_VARIABLE_REGEX + "=\"nn\"\\[\\+" + MULTIPLE_CHARS_REGEX
+                    + "\\." + MULTIPLE_CHARS_REGEX + "]," + MULTIPLE_CHARS_REGEX + "\\("
+                    + MULTIPLE_CHARS_REGEX + "\\)," + MULTIPLE_CHARS_REGEX + "="
+                    + MULTIPLE_CHARS_REGEX + "\\." + MULTIPLE_CHARS_REGEX + "\\["
+                    + MULTIPLE_CHARS_REGEX + "]\\|\\|null\\)&&\\(" + MULTIPLE_CHARS_REGEX + "=("
+                    + MULTIPLE_CHARS_REGEX + ")" + ARRAY_ACCESS_REGEX),
+
+            /*
+             * The third regex matches the following text, where we want rma:
+             *
+             * a.D&&(b="nn"[+a.D],c=a.get(b))&&(c=rDa[0](c),a.set(b,c),rDa.length||rma("")
+             */
+            Pattern.compile(SINGLE_CHAR_VARIABLE_REGEX + "=\"nn\"\\[\\+" + MULTIPLE_CHARS_REGEX
+                    + "\\." + MULTIPLE_CHARS_REGEX + "]," + MULTIPLE_CHARS_REGEX + "="
+                    + MULTIPLE_CHARS_REGEX + "\\.get\\(" + MULTIPLE_CHARS_REGEX + "\\)\\).+\\|\\|("
+                    + MULTIPLE_CHARS_REGEX + ")\\(\"\"\\)"),
+
+            /*
+             * The fourth regex matches the following text, where we want rDa and the array index
+             * accessed:
+             *
+             * a.D&&(b="nn"[+a.D],c=a.get(b))&&(c=rDa[0](c),a.set(b,c),rDa.length||rma("")
+             */
+            Pattern.compile(SINGLE_CHAR_VARIABLE_REGEX + "=\"nn\"\\[\\+" + MULTIPLE_CHARS_REGEX
+                    + "\\." + MULTIPLE_CHARS_REGEX + "]," + MULTIPLE_CHARS_REGEX + "="
+                    + MULTIPLE_CHARS_REGEX + "\\.get\\(" + MULTIPLE_CHARS_REGEX + "\\)\\)&&\\("
+                    + MULTIPLE_CHARS_REGEX + "=(" + MULTIPLE_CHARS_REGEX + ")\\[(\\d+)]"),
+
+            /*
+             * The fifth regex matches the following text, where we want BDa and the array index
+             * accessed:
+             *
+             * (b=String.fromCharCode(110),c=a.get(b))&&(c=BDa[0](c)
+             */
+            Pattern.compile("\\(" + SINGLE_CHAR_VARIABLE_REGEX + "=String\\.fromCharCode\\(110\\),"
+                    + SINGLE_CHAR_VARIABLE_REGEX + "=" + SINGLE_CHAR_VARIABLE_REGEX + "\\.get\\("
+                    + SINGLE_CHAR_VARIABLE_REGEX + "\\)\\)" + "&&\\(" + SINGLE_CHAR_VARIABLE_REGEX
+                    + "=(" + MULTIPLE_CHARS_REGEX + ")" + "(?:" + ARRAY_ACCESS_REGEX + ")?\\("
+                    + SINGLE_CHAR_VARIABLE_REGEX + "\\)"),
+
+            /*
+             * The sixth regex matches the following text, where we want Yva and the array index
+             * accessed:
+             *
+             * .get("n"))&&(b=Yva[0](b)
+             */
+            Pattern.compile("\\.get\\(\"n\"\\)\\)&&\\(" + SINGLE_CHAR_VARIABLE_REGEX
+                    + "=(" + MULTIPLE_CHARS_REGEX + ")(?:" + ARRAY_ACCESS_REGEX + ")?\\("
+                    + SINGLE_CHAR_VARIABLE_REGEX + "\\)")
+    };
+    // CHECKSTYLE:ON
+
 
     // Escape the curly end brace to allow compatibility with Android's regex engine
     // See https://stackoverflow.com/q/45074813
@@ -48,11 +126,13 @@ final class YoutubeThrottlingParameterUtils {
     @Nonnull
     static String getDeobfuscationFunctionName(@Nonnull final String javaScriptPlayerCode)
             throws ParsingException {
-        final Matcher matcher = DEOBFUSCATION_FUNCTION_NAME_PATTERN.matcher(javaScriptPlayerCode);
-        if (!matcher.find()) {
-            throw new ParsingException("Failed to find deobfuscation function name pattern \""
-                    + DEOBFUSCATION_FUNCTION_NAME_PATTERN
-                    + "\" in the base JavaScript player code");
+        final Matcher matcher;
+        try {
+            matcher = matchMultiplePatterns(DEOBFUSCATION_FUNCTION_NAME_REGEXES,
+                    javaScriptPlayerCode);
+        } catch (final Parser.RegexException e) {
+            throw new ParsingException("Could not find deobfuscation function with any of the "
+                    + "known patterns in the base JavaScript player code", e);
         }
 
         final String functionName = matcher.group(1);

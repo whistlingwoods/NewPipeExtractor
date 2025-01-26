@@ -3,6 +3,7 @@ package org.schabi.newpipe.extractor.services.youtube.extractors;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.DISABLE_PRETTY_PRINT_PARAMETER;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getTextFromObject;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getValidJsonResponseBody;
+import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getYoutubeMusicClientVersion;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getYoutubeMusicHeaders;
 import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.MUSIC_ALBUMS;
 import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.MUSIC_ARTISTS;
@@ -10,6 +11,7 @@ import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeS
 import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.MUSIC_SONGS;
 import static org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory.MUSIC_VIDEOS;
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
+import static org.schabi.newpipe.extractor.utils.Utils.UTF_8;
 
 import com.grack.nanojson.JsonArray;
 import com.grack.nanojson.JsonObject;
@@ -25,14 +27,11 @@ import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.downloader.Downloader;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
-import org.schabi.newpipe.extractor.exceptions.ReCaptchaException;
 import org.schabi.newpipe.extractor.linkhandler.SearchQueryHandler;
 import org.schabi.newpipe.extractor.search.SearchExtractor;
-import org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper;
 import org.schabi.newpipe.extractor.utils.JsonUtils;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,10 +51,8 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
     @Override
     public void onFetchPage(@Nonnull final Downloader downloader)
             throws IOException, ExtractionException {
-        final String[] youtubeMusicKeys = YoutubeParsingHelper.getYoutubeMusicKey();
-
-        final String url = "https://music.youtube.com/youtubei/v1/search?key="
-                + youtubeMusicKeys[0] + DISABLE_PRETTY_PRINT_PARAMETER;
+        final String url = "https://music.youtube.com/youtubei/v1/search?"
+                + DISABLE_PRETTY_PRINT_PARAMETER;
 
         final String params;
 
@@ -86,7 +83,7 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
                 .object("context")
                     .object("client")
                         .value("clientName", "WEB_REMIX")
-                        .value("clientVersion", youtubeMusicKeys[2])
+                        .value("clientVersion", getYoutubeMusicClientVersion())
                         .value("hl", "en-GB")
                         .value("gl", getExtractorContentCountry().getCountryCode())
                         .value("platform", "DESKTOP")
@@ -105,7 +102,7 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
                 .end()
                 .value("query", getSearchString())
                 .value("params", params)
-            .end().done().getBytes(StandardCharsets.UTF_8);
+            .end().done().getBytes(UTF_8);
         // @formatter:on
 
         final String responseBody = getValidJsonResponseBody(
@@ -206,15 +203,13 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
 
         final MultiInfoItemsCollector collector = new MultiInfoItemsCollector(getServiceId());
 
-        final String[] youtubeMusicKeys = YoutubeParsingHelper.getYoutubeMusicKey();
-
         // @formatter:off
         final byte[] json = JsonWriter.string()
             .object()
                 .object("context")
                     .object("client")
                         .value("clientName", "WEB_REMIX")
-                        .value("clientVersion", youtubeMusicKeys[2])
+                        .value("clientVersion", getYoutubeMusicClientVersion())
                         .value("hl", "en-GB")
                         .value("gl", getExtractorContentCountry().getCountryCode())
                         .value("platform", "DESKTOP")
@@ -231,7 +226,7 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
                         .value("lockedSafetyMode", false)
                     .end()
                 .end()
-            .end().done().getBytes(StandardCharsets.UTF_8);
+            .end().done().getBytes(UTF_8);
         // @formatter:on
 
         final String responseBody = getValidJsonResponseBody(
@@ -295,8 +290,7 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
     }
 
     @Nullable
-    private Page getNextPageFrom(final JsonArray continuations)
-            throws IOException, ParsingException, ReCaptchaException {
+    private Page getNextPageFrom(final JsonArray continuations) {
         if (isNullOrEmpty(continuations)) {
             return null;
         }
@@ -306,7 +300,6 @@ public class YoutubeMusicSearchExtractor extends SearchExtractor {
         final String continuation = nextContinuationData.getString("continuation");
 
         return new Page("https://music.youtube.com/youtubei/v1/search?ctoken=" + continuation
-                + "&continuation=" + continuation + "&key="
-                + YoutubeParsingHelper.getYoutubeMusicKey()[0] + DISABLE_PRETTY_PRINT_PARAMETER);
+                + "&continuation=" + continuation + "&" + DISABLE_PRETTY_PRINT_PARAMETER);
     }
 }
