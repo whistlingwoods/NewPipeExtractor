@@ -18,6 +18,7 @@ import org.schabi.newpipe.extractor.services.peertube.PeertubeParsingHelper;
 import org.schabi.newpipe.extractor.utils.Utils;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 
 import static org.schabi.newpipe.extractor.services.peertube.PeertubeParsingHelper.COUNT_KEY;
 import static org.schabi.newpipe.extractor.services.peertube.PeertubeParsingHelper.ITEMS_PER_PAGE;
@@ -134,7 +135,7 @@ public class PeertubeCommentsExtractor extends CommentsExtractor {
                 isReply = true;
                 total = json.getArray(CHILDREN).size();
                 collectRepliesFrom(collector, json);
-            } catch (final JsonParserException e) {
+                 } catch (final JsonParserException | UnsupportedEncodingException e) {
                 throw new ParsingException(
                         "Could not parse json data for nested comments  info", e);
             }

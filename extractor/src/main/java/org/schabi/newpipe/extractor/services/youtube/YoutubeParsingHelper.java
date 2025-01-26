@@ -228,7 +228,8 @@ public final class YoutubeParsingHelper {
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
     /**
-     * The device machine id for the iPhone 16, used to get 60fps with the {@code iOS} client.
+     * The device machine id for the iPhone 15 Pro Max,
+     * used to get 60fps with the {@code iOS} client.
      *
      * <p>
      * See <a href="https://gist.github.com/adamawolf/3048717">this GitHub Gist</a> for more
@@ -1270,7 +1271,7 @@ public final class YoutubeParsingHelper {
                         // The value of this field seems to use the following structure:
                         // "iOS version.0.build version"
                         // The build version corresponding to the iOS version used can be found on
-                        // https://theapplewiki.com/wiki/Firmware/iPhone/18.x#iPhone_16_Pro_Max
+                        // https://theapplewiki.com/wiki/Firmware/iPhone/18.x#iPhone_15_Pro_Max
                         .value("osVersion", "18.1.0.22B83")
                         .value("visitorData", randomVisitorData(contentCountry))
                         .value("hl", localization.getLocalizationCode())
@@ -1396,7 +1397,7 @@ public final class YoutubeParsingHelper {
      */
     @Nonnull
     public static String getIosUserAgent(@Nullable final Localization localization) {
-        // Spoofing an iPhone 16 running iOS 18.1 with the hardcoded version of the iOS app
+        // Spoofing an iPhone 15 Pro Max running iOS 18.1 with the hardcoded version of the iOS app
         return "com.google.ios.youtube/" + IOS_YOUTUBE_CLIENT_VERSION
                 + "(" + IOS_DEVICE_MODEL + "; U; CPU iOS 18_1_0 like Mac OS X; "
                 + (localization != null ? localization : Localization.DEFAULT).getCountryCode()
