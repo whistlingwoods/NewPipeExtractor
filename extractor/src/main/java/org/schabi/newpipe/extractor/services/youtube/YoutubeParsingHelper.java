@@ -187,7 +187,7 @@ public final class YoutubeParsingHelper {
      * Store page of the YouTube app</a>, in the {@code What’s New} section.
      * </p>
      */
-    private static final String IOS_YOUTUBE_CLIENT_VERSION = "19.45.4";
+    private static final String IOS_YOUTUBE_CLIENT_VERSION = "20.03.02";
 
     /**
      * The InnerTube API key used by the {@code iOS} client. Found with the help of
@@ -1272,7 +1272,7 @@ public final class YoutubeParsingHelper {
                         // "iOS version.0.build version"
                         // The build version corresponding to the iOS version used can be found on
                         // https://theapplewiki.com/wiki/Firmware/iPhone/18.x#iPhone_15_Pro_Max
-                        .value("osVersion", "18.1.0.22B83")
+                        .value("osVersion", "18.2.1.22C161")
                         .value("visitorData", randomVisitorData(contentCountry))
                         .value("hl", localization.getLocalizationCode())
                         .value("gl", contentCountry.getCountryCode())
@@ -1397,9 +1397,9 @@ public final class YoutubeParsingHelper {
      */
     @Nonnull
     public static String getIosUserAgent(@Nullable final Localization localization) {
-        // Spoofing an iPhone 15 Pro Max running iOS 18.1 with the hardcoded version of the iOS app
+        // Spoofing an iPhone 15 Pro Max running iOS 18.2.1 with the hardcoded version of the iOS app
         return "com.google.ios.youtube/" + IOS_YOUTUBE_CLIENT_VERSION
-                + "(" + IOS_DEVICE_MODEL + "; U; CPU iOS 18_1_0 like Mac OS X; "
+                + "(" + IOS_DEVICE_MODEL + "; U; CPU iOS 18_2_1 like Mac OS X; "
                 + (localization != null ? localization : Localization.DEFAULT).getCountryCode()
                 + ")";
     }
