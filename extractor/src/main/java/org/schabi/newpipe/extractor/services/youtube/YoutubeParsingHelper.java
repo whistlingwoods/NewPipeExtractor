@@ -348,7 +348,7 @@ public final class YoutubeParsingHelper {
             throws ParsingException, IOException, ReCaptchaException {
         final String url = YOUTUBE_BASE + "sw.js_data";
         final var headers = getOriginReferrerHeaders(YOUTUBE_BASE);
-        final String response = getDownloader().get(url, headers).responseBody()
+        final String response = getDownloader().get(url, headers).responseBody();
         final JsonArray jsonArray = JsonUtils.toJsonArray(
                 Parser.matchGroup(JSON_ARRAY, response, 0));
         // Got this particular extraction logic by finding where the visitor data
