@@ -84,6 +84,11 @@ public final class YoutubeParsingHelper {
     }
 
     /**
+     * The base URL for plain Youtube.
+     */
+    public static final String YOUTUBE_BASE = "https://www.youtube.com/";
+
+    /**
      * The base URL of requests of the {@code WEB} clients to the InnerTube internal API.
      */
     public static final String YOUTUBEI_V1_URL = "https://www.youtube.com/youtubei/v1/";
@@ -228,6 +233,11 @@ public final class YoutubeParsingHelper {
             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
     /**
+     * Regex for extracing any JSON array.
+     */
+    private static final String JSON_ARRAY = "\\[.*\\]";
+
+    /**
      * The device machine id for the iPhone 15 Pro Max,
      * used to get 60fps with the {@code iOS} client.
      *
@@ -331,6 +341,35 @@ public final class YoutubeParsingHelper {
         pb.varint(5, System.currentTimeMillis() / 1000 - numberGenerator.nextInt(600000));
         pb.bytes(6, pbE.toBytes());
         return pb.toUrlencodedBase64();
+    }
+
+    /**
+     * Requests and parses out the visitor data from the sw.js_data YT endpoint.
+     * This function does not parse it into a programmatic form, just returns the encoded string.
+     * Useful for passing into API requests which require visitorData to work.
+     * The function currently uses very brittle extraction logic.
+     * Likely to fail with future changes.
+     *
+     * @return extracted encoded visitor data string
+     * @throws ParsingException if the format of data is no longer a JSON array
+     * @throws IOException when it cannot fetch the API data
+     * @throws ReCaptchaException when it cannot fetch the API data
+     */
+    public static String extractVisitorData()
+            throws ParsingException, IOException, ReCaptchaException {
+        final String url = YOUTUBE_BASE + "sw.js_data";
+        final var headers = getOriginReferrerHeaders(YOUTUBE_BASE);
+        final String response = getDownloader().get(url, headers).responseBody();
+        final JsonArray jsonArray = JsonUtils.toJsonArray(
+                Parser.matchGroup(JSON_ARRAY, response, 0));
+        // Got this particular extraction logic by finding where the visitor data
+        // lives through comparison. If the structure changes this is likely to fail.
+        return jsonArray
+                .getArray(0)
+                .getArray(2)
+                .getArray(0)
+                .getArray(0)
+                .getString(13);
     }
 
     /**
@@ -1257,6 +1296,16 @@ public final class YoutubeParsingHelper {
     public static JsonBuilder<JsonObject> prepareIosMobileJsonBuilder(
             @Nonnull final Localization localization,
             @Nonnull final ContentCountry contentCountry) {
+
+        // Try to extract the visitor data from the sw.js_data API, but otherwise
+        // fall back to randomly generating the visitor data.
+        String visitorData = null;
+        try {
+            visitorData = extractVisitorData();
+        } catch (ParsingException | IOException | ReCaptchaException e) {
+            visitorData = randomVisitorData(contentCountry);
+        }
+
         // @formatter:off
         return JsonObject.builder()
                 .object("context")
@@ -1273,7 +1322,7 @@ public final class YoutubeParsingHelper {
                         // The build version corresponding to the iOS version used can be found on
                         // https://theapplewiki.com/wiki/Firmware/iPhone/18.x#iPhone_15_Pro_Max
                         .value("osVersion", "18.2.1.22C161")
-                        .value("visitorData", randomVisitorData(contentCountry))
+                        .value("visitorData", visitorData)
                         .value("hl", localization.getLocalizationCode())
                         .value("gl", contentCountry.getCountryCode())
                     .end()
