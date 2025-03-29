@@ -80,6 +80,7 @@ final class YoutubeSignatureUtils {
     @Nonnull
     static String getDeobfuscationCode(@Nonnull final String javaScriptPlayerCode)
             throws ParsingException {
+        System.out.println(javaScriptPlayerCode);
         try {
             final String deobfuscationFunctionName = getDeobfuscationFunctionName(
                     javaScriptPlayerCode);
@@ -115,6 +116,7 @@ final class YoutubeSignatureUtils {
     @Nonnull
     private static String getDeobfuscationFunctionName(@Nonnull final String javaScriptPlayerCode)
             throws ParsingException {
+        System.out.println(javaScriptPlayerCode);
         try {
             return matchGroup1MultiplePatterns(FUNCTION_REGEXES, javaScriptPlayerCode);
         } catch (final Parser.RegexException e) {
