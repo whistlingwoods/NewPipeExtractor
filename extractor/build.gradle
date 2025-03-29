@@ -36,6 +36,8 @@ dependencies {
     implementation "org.mozilla:rhino:$rhinoVersion"
     implementation "org.mozilla:rhino-engine:$rhinoVersion"
 
+    implementation "com.github.tony19:named-regexp:1.0.0"
+
     checkstyle "com.puppycrawl.tools:checkstyle:$checkstyleVersion"
 
     testImplementation platform("org.junit:junit-bom:$junitVersion")

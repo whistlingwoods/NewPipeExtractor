@@ -12,7 +12,7 @@ import org.schabi.newpipe.extractor.utils.Parser;
 import javax.annotation.Nonnull;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.regex.Pattern;
+import com.google.code.regexp.Pattern;
 
 /**
  * The extractor of YouTube's base JavaScript player file.
