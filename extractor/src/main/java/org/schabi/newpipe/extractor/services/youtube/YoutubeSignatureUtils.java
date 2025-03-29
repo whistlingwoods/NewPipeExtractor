@@ -24,9 +24,12 @@ final class YoutubeSignatureUtils {
 
     private static final Pattern[] FUNCTION_REGEXES = {
             // CHECKSTYLE:OFF
-            Pattern.compile("\\b([a-zA-Z0-9_$]+)&&\\(\\1=([a-zA-Z0-9_$]{2,})\\(decodeURIComponent\\(\\1\\)\\)"),
-            Pattern.compile("([a-zA-Z0-9_$]+)\\s*=\\s*function\\(\\s*([a-zA-Z0-9_$]+)\\s*\\)\\s*\\{\\s*\\2\\s*=\\s*\\2\\.split\\(\\s*\"\"\\s*\\)\\s*;\\s*[^}]+;\\s*return\\s+\\2\\.join\\(\\s*\"\"\\s*\\)"),
-            Pattern.compile("(?:\\b|[^a-zA-Z0-9_$])([a-zA-Z0-9_$]{2,})\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\)(?:[a-zA-Z0-9_$]{2}\\.[a-zA-Z0-9_$]{2}\\(a,\\d+\\))?"),
+            Pattern.compile(Pattern.quote("\\b(?P<var>[a-zA-Z0-9_$]+)&&\\((?P=var)=(?P<sig>[a-zA-Z0-9_$]{2,})\\(decodeURIComponent\\((?P=var)\\)\\)")),
+//            \b(?P<var>[a-zA-Z0-9_$]+)&&\((?P=var)=(?P<sig>[a-zA-Z0-9_$]{2,})\(decodeURIComponent\((?P=var)\)\)
+            Pattern.compile(Pattern.quote("(?P<sig>[a-zA-Z0-9_$]+)\\s*=\\s*function\\(\\s*(?P<arg>[a-zA-Z0-9_$]+)\\s*\\)\\s*{\\s*(?P=arg)\\s*=\\s*(?P=arg)\\.split\\(\\s*\"\"\\s*\\)\\s*;\\s*[^}]+;\\s*return\\s+(?P=arg)\\.join\\(\\s*\"\"\\s*\\)")),
+//            (?P<sig>[a-zA-Z0-9_$]+)\s*=\s*function\(\s*(?P<arg>[a-zA-Z0-9_$]+)\s*\)\s*{\s*(?P=arg)\s*=\s*(?P=arg)\.split\(\s*""\s*\)\s*;\s*[^}]+;\s*return\s+(?P=arg)\.join\(\s*""\s*\)
+            Pattern.compile(Pattern.quote("(?:\\b|[^a-zA-Z0-9_$])(?P<sig>[a-zA-Z0-9_$]{2,})\\s*=\\s*function\\(\\s*a\\s*\\)\\s*{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)(?:;[a-zA-Z0-9_$]{2}\\.[a-zA-Z0-9_$]{2}\\(a,\\d+\\))?"))
+//            (?:\b|[^a-zA-Z0-9_$])(?P<sig>[a-zA-Z0-9_$]{2,})\s*=\s*function\(\s*a\s*\)\s*{\s*a\s*=\s*a\.split\(\s*""\s*\)(?:;[a-zA-Z0-9_$]{2}\.[a-zA-Z0-9_$]{2}\(a,\d+\))?
             // CHECKSTYLE:ON
     };
 
