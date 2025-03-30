@@ -1,12 +1,14 @@
 package org.schabi.newpipe.extractor.services.youtube.dashmanifestcreators;
 
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getAndroidUserAgent;
-import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getClientInfoHeaders;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getIosUserAgent;
+import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getOriginReferrerHeaders;
+import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getTvHtml5UserAgent;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.isAndroidStreamingUrl;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.isIosStreamingUrl;
-import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.isTvHtml5SimplyEmbeddedPlayerStreamingUrl;
+import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.isTvHtml5StreamingUrl;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.isWebStreamingUrl;
+import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.isWebEmbeddedPlayerStreamingUrl;
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 
 import org.schabi.newpipe.extractor.MediaFormat;
@@ -26,6 +28,7 @@ import org.w3c.dom.Element;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -119,7 +122,7 @@ public final class YoutubeDashManifestCreatorsUtils {
     /**
      * Generate a {@link Document} with common manifest creator elements added to it.
      *
-     * <p>
+     * <br>
      * Those are:
      * <ul>
      *     <li>{@code MPD} (using {@link #generateDocumentAndMpdElement(long)});</li>
@@ -132,7 +135,7 @@ public final class YoutubeDashManifestCreatorsUtils {
      *     <li>and, for audio streams, {@code AudioChannelConfiguration} (using
      *     {@link #generateAudioChannelConfigurationElement(Document, ItagItem)}).</li>
      * </ul>
-     * </p>
+     *
      *
      * @param itagItem the {@link ItagItem} associated to the stream, which must not be null
      * @param streamDuration the duration of the stream, in milliseconds
@@ -325,6 +328,8 @@ public final class YoutubeDashManifestCreatorsUtils {
                 case DESCRIPTIVE:
                     return "description";
                 default:
+                    // Secondary track types do not seem to have a dedicated role in the DASH
+                    // specification, so use alternate for them
                     return "alternate";
             }
         }
@@ -494,7 +499,6 @@ public final class YoutubeDashManifestCreatorsUtils {
      * This method is only used when generating DASH manifests from OTF and post-live-DVR streams.
      * </p>
      *
-     * <p>
      * It will produce a {@code <SegmentTemplate>} element with the following attributes:
      * <ul>
      *     <li>{@code startNumber}, which takes the value {@code 0} for post-live-DVR streams and
@@ -505,7 +509,6 @@ public final class YoutubeDashManifestCreatorsUtils {
      *     <li>{@code initialization} (only for OTF streams), which is the base URL of the stream
      *     on which is appended {@link #SQ_0}.</li>
      * </ul>
-     * </p>
      *
      * <p>
      * The {@code <Representation>} element needs to be generated before this element with
@@ -578,17 +581,16 @@ public final class YoutubeDashManifestCreatorsUtils {
 
     /**
      * Get the "initialization" {@link Response response} of a stream.
-     *
-     * <p>This method fetches, for OTF streams and for post-live-DVR streams:
+     * <br>
+     * This method fetches, for OTF streams and for post-live-DVR streams:
      *     <ul>
      *         <li>the base URL of the stream, to which are appended {@link #SQ_0} and
-     *         {@link #RN_0} parameters, with a {@code GET} request for streaming URLs from HTML5
-     *         clients and a {@code POST} request for the ones from the {@code ANDROID} and the
+     *         {@link #RN_0} parameters, with a {@code POS} request for streaming URLs from
+     *         {@code WEB}, {@code TVHTML5}, {@code WEB_EMBEDDED_PLAYER}, {@code ANDROID} and
      *         {@code IOS} clients;</li>
      *         <li>for streaming URLs from HTML5 clients, the {@link #ALR_YES} param is also added.
      *         </li>
      *     </ul>
-     * </p>
      *
      * @param baseStreamingUrl the base URL of the stream, which must not be null
      * @param itagItem         the {@link ItagItem} of stream, which must not be null
@@ -602,8 +604,10 @@ public final class YoutubeDashManifestCreatorsUtils {
                                                      @Nonnull final ItagItem itagItem,
                                                      final DeliveryType deliveryType)
             throws CreationException {
+        final boolean isTvHtml5StreamingUrl = isTvHtml5StreamingUrl(baseStreamingUrl);
         final boolean isHtml5StreamingUrl = isWebStreamingUrl(baseStreamingUrl)
-                || isTvHtml5SimplyEmbeddedPlayerStreamingUrl(baseStreamingUrl);
+                || isTvHtml5StreamingUrl
+                || isWebEmbeddedPlayerStreamingUrl(baseStreamingUrl);
         final boolean isAndroidStreamingUrl = isAndroidStreamingUrl(baseStreamingUrl);
         final boolean isIosStreamingUrl = isIosStreamingUrl(baseStreamingUrl);
         if (isHtml5StreamingUrl) {
@@ -616,7 +620,7 @@ public final class YoutubeDashManifestCreatorsUtils {
             final String mimeTypeExpected = itagItem.getMediaFormat().getMimeType();
             if (!isNullOrEmpty(mimeTypeExpected)) {
                 return getStreamingWebUrlWithoutRedirects(downloader, baseStreamingUrl,
-                        mimeTypeExpected);
+                        mimeTypeExpected, isTvHtml5StreamingUrl);
             }
         } else if (isAndroidStreamingUrl || isIosStreamingUrl) {
             try {
@@ -731,6 +735,8 @@ public final class YoutubeDashManifestCreatorsUtils {
      * @param downloader               the {@link Downloader} instance to be used
      * @param streamingUrl             the streaming URL which we are trying to get a streaming URL
      *                                 without any redirection on the network and/or IP used
+     * @param isTvHtml5StreamingUrl    whether the streaming URL comes from TVHTML5 client, in
+     *                                 order to use an appropriate HTTP User-Agent header
      * @param responseMimeTypeExpected the response mime type expected from Google video servers
      * @return the {@link Response} of the stream, which should have no redirections
      */
@@ -739,17 +745,23 @@ public final class YoutubeDashManifestCreatorsUtils {
     private static Response getStreamingWebUrlWithoutRedirects(
             @Nonnull final Downloader downloader,
             @Nonnull String streamingUrl,
-            @Nonnull final String responseMimeTypeExpected)
+            @Nonnull final String responseMimeTypeExpected,
+            final boolean isTvHtml5StreamingUrl)
             throws CreationException {
         try {
-            final var headers = getClientInfoHeaders();
+            final var headers = new HashMap<>(
+                    getOriginReferrerHeaders("https://www.youtube.com"));
+            if (isTvHtml5StreamingUrl) {
+                headers.put("User-Agent", List.of(getTvHtml5UserAgent()));
+            }
 
             String responseMimeType = "";
 
             int redirectsCount = 0;
             while (!responseMimeType.equals(responseMimeTypeExpected)
                     && redirectsCount < MAXIMUM_REDIRECT_COUNT) {
-                final Response response = downloader.get(streamingUrl, headers);
+                final byte[] html5Body = new byte[] {0x78, 0};
+                final Response response = downloader.post(streamingUrl, headers, html5Body);
 
                 final int responseCode = response.responseCode();
                 if (responseCode != 200) {

@@ -1,7 +1,7 @@
 {
   "request": {
     "httpMethod": "POST",
-    "url": "https://www.youtube.com/youtubei/v1/browse?key\u003dAIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8\u0026prettyPrint\u003dfalse",
+    "url": "https://www.youtube.com/youtubei/v1/browse?prettyPrint\u003dfalse",
     "headers": {
       "Origin": [
         "https://www.youtube.com"
@@ -13,7 +13,7 @@
         "SOCS\u003dCAE\u003d"
       ],
       "X-YouTube-Client-Version": [
-        "2.20231208.01.00"
+        "2.20241107.11.00"
       ],
       "X-YouTube-Client-Name": [
         "1"
@@ -254,13 +254,13 @@
       50,
       48,
       50,
-      51,
+      52,
       49,
-      50,
+      49,
       48,
-      56,
+      55,
       46,
-      48,
+      49,
       49,
       46,
       48,
@@ -376,7 +376,7 @@
         "application/json; charset\u003dUTF-8"
       ],
       "date": [
-        "Fri, 08 Dec 2023 19:37:58 GMT"
+        "Sun, 10 Nov 2024 17:47:45 GMT"
       ],
       "server": [
         "scaffolding on HTTPServer2"
@@ -397,6 +397,6 @@
       ]
     },
     "responseBody": "{\n  \"error\": {\n    \"code\": 400,\n    \"message\": \"Request contains an invalid argument.\",\n    \"errors\": [\n      {\n        \"message\": \"Request contains an invalid argument.\",\n        \"domain\": \"global\",\n        \"reason\": \"badRequest\"\n      }\n    ],\n    \"status\": \"INVALID_ARGUMENT\"\n  }\n}\n",
-    "latestUrl": "https://www.youtube.com/youtubei/v1/browse?key\u003dAIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8\u0026prettyPrint\u003dfalse"
+    "latestUrl": "https://www.youtube.com/youtubei/v1/browse?prettyPrint\u003dfalse"
   }
 }

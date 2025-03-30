@@ -19,21 +19,21 @@ public class YoutubeParsingHelperTest {
     private static final String RESOURCE_PATH = DownloaderFactory.RESOURCE_PATH + "services/youtube/";
 
     @BeforeAll
-    public static void setUp() throws IOException {
+    public static void setUp() {
         YoutubeTestsUtils.ensureStateless();
         NewPipe.init(DownloaderFactory.getDownloader(RESOURCE_PATH + "youtubeParsingHelper"));
     }
 
     @Test
-    void testAreHardcodedClientVersionAndKeyValid() throws IOException, ExtractionException {
-        assertTrue(YoutubeParsingHelper.areHardcodedClientVersionAndKeyValid(),
-                "Hardcoded client version and key are not valid anymore");
+    void testIsHardcodedClientVersionValid() throws IOException, ExtractionException {
+        assertTrue(YoutubeParsingHelper.isHardcodedClientVersionValid(),
+                "Hardcoded client version is not valid anymore");
     }
 
     @Test
-    void testAreHardcodedYoutubeMusicKeysValid() throws IOException, ExtractionException {
-        assertTrue(YoutubeParsingHelper.isHardcodedYoutubeMusicKeyValid(),
-                "Hardcoded YouTube Music keys are not valid anymore");
+    void testIsHardcodedYoutubeMusicClientVersionValid() throws IOException, ExtractionException {
+        assertTrue(YoutubeParsingHelper.isHardcodedYoutubeMusicClientVersionValid(),
+                "Hardcoded YouTube Music client version is not valid anymore");
     }
 
     @Test

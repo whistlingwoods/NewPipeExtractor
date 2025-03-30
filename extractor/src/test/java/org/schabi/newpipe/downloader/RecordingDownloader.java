@@ -7,11 +7,8 @@ import org.schabi.newpipe.extractor.downloader.Request;
 import org.schabi.newpipe.extractor.downloader.Response;
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,32 +34,39 @@ import javax.annotation.Nonnull;
  */
 class RecordingDownloader extends Downloader {
 
-    public final static String FILE_NAME_PREFIX = "generated_mock_";
+    public static final String FILE_NAME_PREFIX = "generated_mock_";
 
     // From https://stackoverflow.com/a/15875500/13516981
-    private final static String IP_V4_PATTERN =
+    private static final String IP_V4_PATTERN =
             "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
 
     private int index = 0;
-    private final String path;
+    private final Path path;
 
     /**
-     * Creates the folder described by {@code stringPath} if it does not exists.
+     * Creates the folder described by {@code stringPath} if it does not exist.
      * Deletes existing files starting with {@link RecordingDownloader#FILE_NAME_PREFIX}.
      * @param stringPath Path to the folder where the json files will be saved to.
      */
-    public RecordingDownloader(final String stringPath) throws IOException {
-        this.path = stringPath;
-        final Path path = Paths.get(stringPath);
-        final File folder = path.toFile();
-        if (folder.exists()) {
-            for (final File file : folder.listFiles()) {
-                if (file.getName().startsWith(RecordingDownloader.FILE_NAME_PREFIX)) {
-                    file.delete();
+    public RecordingDownloader(final String stringPath) {
+        this.path = Paths.get(stringPath);
+        
+        if (Files.exists(path)) {
+            try (final var directoryStream = Files.newDirectoryStream(path,
+                    entry -> entry.getFileName().toString()
+                            .startsWith(RecordingDownloader.FILE_NAME_PREFIX))) {
+                for (final Path entry : directoryStream) {
+                    Files.delete(entry);
                 }
+            } catch (final IOException ioe) {
+                throw new UncheckedIOException(ioe);
             }
         } else {
-            Files.createDirectories(path);
+            try {
+                Files.createDirectories(path);
+            } catch (final IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
     }
 
@@ -71,27 +75,22 @@ class RecordingDownloader extends Downloader {
             ReCaptchaException {
         final Downloader downloader = DownloaderTestImpl.getInstance();
         Response response = downloader.execute(request);
-        String cleanedResponseBody = response.responseBody().replaceAll(IP_V4_PATTERN, "127.0.0.1");
         response = new Response(
-                response.responseCode(),
-                response.responseMessage(),
-                response.responseHeaders(),
-                cleanedResponseBody,
-                response.latestUrl()
+            response.responseCode(),
+            response.responseMessage(),
+            response.responseHeaders(),
+            response.responseBody().replaceAll(IP_V4_PATTERN, "127.0.0.1"),
+            response.latestUrl()
         );
 
-        final File outputFile = new File(path + File.separator + FILE_NAME_PREFIX + index
-                + ".json");
+        final Path outputPath = path.resolve(FILE_NAME_PREFIX + index + ".json");
         index++;
-        outputFile.createNewFile();
-        final OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(outputFile),
-                StandardCharsets.UTF_8);
-        new GsonBuilder()
-                .setPrettyPrinting()
-                .create()
-                .toJson(new TestRequestResponse(request, response), writer);
-        writer.flush();
-        writer.close();
+        try (final var writer = Files.newBufferedWriter(outputPath)) {
+            new GsonBuilder()
+                    .setPrettyPrinting()
+                    .create()
+                    .toJson(new TestRequestResponse(request, response), writer);
+        }
 
         return response;
     }
