@@ -9,6 +9,7 @@ import org.schabi.newpipe.extractor.utils.jsextractor.JavaScriptExtractor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import com.google.code.regexp.Pattern;
 import com.google.code.regexp.Matcher;
 
 /**
