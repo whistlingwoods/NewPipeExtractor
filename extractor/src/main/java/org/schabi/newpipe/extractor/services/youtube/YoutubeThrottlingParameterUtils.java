@@ -9,8 +9,8 @@ import org.schabi.newpipe.extractor.utils.jsextractor.JavaScriptExtractor;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.code.regexp.Pattern;
+import com.google.code.regexp.Matcher;
 
 /**
  * Utility class to get the throttling parameter decryption code and check if a streaming has the
@@ -159,7 +159,7 @@ final class YoutubeThrottlingParameterUtils {
         final int arrayNum = Integer.parseInt(matcher.group(2));
         final Pattern arrayPattern = Pattern.compile(
                 DEOBFUSCATION_FUNCTION_ARRAY_OBJECT_TYPE_DECLARATION_REGEX
-                        + Pattern.quote(functionName)
+                        + functionName
                         + FUNCTION_NAMES_IN_DEOBFUSCATION_ARRAY_REGEX);
         final String arrayStr = Parser.matchGroup1(arrayPattern, javaScriptPlayerCode);
         final String[] names = arrayStr.split(",");
@@ -221,7 +221,7 @@ final class YoutubeThrottlingParameterUtils {
             throws Parser.RegexException {
         // Quote the function name, as it may contain special regex characters such as dollar
         final Pattern functionPattern = Pattern.compile(
-                Pattern.quote(functionName) + DEOBFUSCATION_FUNCTION_BODY_REGEX,
+                functionName + DEOBFUSCATION_FUNCTION_BODY_REGEX,
                 Pattern.DOTALL);
         return validateFunction("function " + functionName
                 + Parser.matchGroup1(functionPattern, javaScriptPlayerCode));

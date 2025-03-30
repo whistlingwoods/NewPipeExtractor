@@ -24,8 +24,8 @@ import org.schabi.newpipe.extractor.exceptions.ParsingException;
 
 import java.util.Arrays;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.google.code.regexp.Pattern;
+import com.google.code.regexp.Matcher;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;

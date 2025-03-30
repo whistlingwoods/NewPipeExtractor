@@ -47,8 +47,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.regex.Pattern;
-
+import com.google.code.regexp.Pattern;
 public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
 
     private static final Pattern ACCESSIBILITY_DATA_VIEW_COUNT_REGEX =

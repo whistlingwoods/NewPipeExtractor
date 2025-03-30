@@ -8,7 +8,7 @@ import org.schabi.newpipe.extractor.utils.Parser;
 import org.schabi.newpipe.extractor.utils.jsextractor.JavaScriptExtractor;
 
 import javax.annotation.Nonnull;
-import java.util.regex.Pattern;
+import com.google.code.regexp.Pattern;
 
 /**
  * Utility class to get the signature timestamp of YouTube's base JavaScript player and deobfuscate
@@ -24,10 +24,12 @@ final class YoutubeSignatureUtils {
 
     private static final Pattern[] FUNCTION_REGEXES = {
             // CHECKSTYLE:OFF
-            Pattern.compile("\\bm=([a-zA-Z0-9$]{2,})\\(decodeURIComponent\\(h\\.s\\)\\)"),
-            Pattern.compile("\\bc&&\\(c=([a-zA-Z0-9$]{2,})\\(decodeURIComponent\\(c\\)\\)"),
-            Pattern.compile("(?:\\b|[^a-zA-Z0-9$])([a-zA-Z0-9$]{2,})\\s*=\\s*function\\(\\s*a\\s*\\)\\s*\\{\\s*a\\s*=\\s*a\\.split\\(\\s*\"\"\\s*\\)"),
-            Pattern.compile("([\\w$]+)\\s*=\\s*function\\((\\w+)\\)\\{\\s*\\2=\\s*\\2\\.split\\(\"\"\\)\\s*;")
+            Pattern.compile(
+                "\b([a-zA-Z0-9_$]+)&&\\(\1=([a-zA-Z0-9_$]{2,})\\(decodeURIComponent\\(\1\\)\\)"
+            ),
+//            \b(?P<var>[a-zA-Z0-9_$]+)&&\((?P=var)=(?P<sig>[a-zA-Z0-9_$]{2,})\(decodeURIComponent\((?P=var)\)\)
+//            (?P<sig>[a-zA-Z0-9_$]+)\s*=\s*function\(\s*(?P<arg>[a-zA-Z0-9_$]+)\s*\)\s*{\s*(?P=arg)\s*=\s*(?P=arg)\.split\(\s*""\s*\)\s*;\s*[^}]+;\s*return\s+(?P=arg)\.join\(\s*""\s*\)
+//            (?:\b|[^a-zA-Z0-9_$])(?P<sig>[a-zA-Z0-9_$]{2,})\s*=\s*function\(\s*a\s*\)\s*{\s*a\s*=\s*a\.split\(\s*""\s*\)(?:;[a-zA-Z0-9_$]{2}\.[a-zA-Z0-9_$]{2}\(a,\d+\))?
             // CHECKSTYLE:ON
     };
 
@@ -71,6 +73,7 @@ final class YoutubeSignatureUtils {
     @Nonnull
     static String getDeobfuscationCode(@Nonnull final String javaScriptPlayerCode)
             throws ParsingException {
+        System.out.println(javaScriptPlayerCode);
         try {
             final String deobfuscationFunctionName = getDeobfuscationFunctionName(
                     javaScriptPlayerCode);
@@ -106,6 +109,7 @@ final class YoutubeSignatureUtils {
     @Nonnull
     private static String getDeobfuscationFunctionName(@Nonnull final String javaScriptPlayerCode)
             throws ParsingException {
+        System.out.println(javaScriptPlayerCode);
         try {
             return matchGroup1MultiplePatterns(FUNCTION_REGEXES, javaScriptPlayerCode);
         } catch (final Parser.RegexException e) {
@@ -128,7 +132,7 @@ final class YoutubeSignatureUtils {
             @Nonnull final String javaScriptPlayerCode,
             @Nonnull final String deobfuscationFunctionName) throws ParsingException {
         final String functionPattern = DEOBF_FUNC_REGEX_START
-                + Pattern.quote(deobfuscationFunctionName)
+                + (deobfuscationFunctionName)
                 + DEOBF_FUNC_REGEX_END;
         return "var " + Parser.matchGroup1(functionPattern, javaScriptPlayerCode);
     }
@@ -138,7 +142,7 @@ final class YoutubeSignatureUtils {
                                           @Nonnull final String helperObjectName)
             throws ParsingException {
         final String helperPattern = SIG_DEOBF_HELPER_OBJ_REGEX_START
-                + Pattern.quote(helperObjectName)
+                + (helperObjectName)
                 + SIG_DEOBF_HELPER_OBJ_REGEX_END;
         return Parser.matchGroup1(helperPattern, javaScriptPlayerCode)
                 .replace("\n", "");

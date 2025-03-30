@@ -78,7 +78,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.regex.Pattern;
+import com.google.code.regexp.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
