@@ -9,7 +9,6 @@ import org.schabi.newpipe.extractor.utils.jsextractor.JavaScriptExtractor;
 
 import javax.annotation.Nonnull;
 import com.google.code.regexp.Pattern;
-import com.google.code.regexp.Matcher;
 
 /**
  * Utility class to get the signature timestamp of YouTube's base JavaScript player and deobfuscate
