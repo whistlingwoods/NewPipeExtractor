@@ -97,7 +97,7 @@ public class ItagItem implements Serializable {
             new ItagItem(303, VIDEO_ONLY, WEBM, "1080p60", 60),
             new ItagItem(308, VIDEO_ONLY, WEBM, "1440p60", 60),
             new ItagItem(313, VIDEO_ONLY, WEBM, "2160p"),
-            new ItagItem(315, VIDEO_ONLY, WEBM, "2160p60", 60)
+            new ItagItem(315, VIDEO_ONLY, WEBM, "2160p60", 60),
             new ItagItem(272, VIDEO_ONLY, WEBM, "4320p60", 60)
     };
 
@@ -106,7 +106,6 @@ public class ItagItem implements Serializable {
     //////////////////////////////////////////////////////////////////////////*/
 
     @Deprecated
-
     @Nonnull
     public static ItagItem getItag(final int itagId) throws ParsingException {
         for (final ItagItem item : ITAG_LIST) {
