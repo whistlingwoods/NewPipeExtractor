@@ -7,7 +7,10 @@ on:
   push:
     branches:
       - dev
+      - dev1
+      - dev2
       - master
+      - skytube
   pull_request:
 
 permissions:
@@ -43,9 +46,9 @@ jobs:
             ./gradlew check --stacktrace -Ddownloader=MOCK
           fi
 
-      - name: Upload test reports when failure occurs
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: NewPipeExtractor-test-reports
-          path: extractor/build/reports/tests/test/**
+//      - name: Upload test reports when failure occurs
+//        uses: actions/upload-artifact@v4
+//        if: failure()
+//        with:
+//          name: NewPipeExtractor-test-reports
+//          path: extractor/build/reports/tests/test/**
