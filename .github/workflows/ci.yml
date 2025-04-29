@@ -5,9 +5,8 @@ on:
   push:
     branches:
       - dev
-      - dev1
-      - dev2
       - master
+      - master-8k
       - skytube
   pull_request:
 
