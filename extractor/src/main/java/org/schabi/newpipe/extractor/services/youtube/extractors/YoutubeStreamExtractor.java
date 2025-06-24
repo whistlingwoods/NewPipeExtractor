@@ -1441,7 +1441,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                         final String mimeType = formatData.getString("mimeType");
 
                         final ItagItem itagItem = ItagItem.
-                                getItag(itag, averageBitrate, fps, qualityLabel, mimeType); 
+                                getItag(itag, averageBitrate, fps, qualityLabel, mimeType);
                         if (itagItem.itagType == itagTypeWanted) {
                             return buildAndAddItagInfoToList(videoId, formatData, itagItem,
                                     itagItem.itagType, contentPlaybackNonce);
