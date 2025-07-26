@@ -191,7 +191,7 @@ public class YoutubeStreamInfoItemLockupExtractor implements StreamInfoItemExtra
         if (isNullOrEmpty(channelId)) {
             throw new ParsingException("Could not get uploader url");
         }
-        return YoutubeChannelLinkHandlerFactory.getInstance().getUrl(channelId);
+        return YoutubeChannelLinkHandlerFactory.getInstance().getUrl("channel/" + channelId);
     }
 
     @Nonnull
