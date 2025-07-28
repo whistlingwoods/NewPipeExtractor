@@ -940,7 +940,92 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             }
         }
 
+        // "Sign in to confirm that you're not a bot"
+        if (reason != null && reason.contains("a bot")) {
+            throw new SignInConfirmNotBotException(
+                    "YouTube probably temporarily blocked this IP, got error "
+                            + status + ": \"" + reason + "\"");
+        }
+
         throw new ContentNotAvailableException("Got error " + status + ": \"" + reason + "\"");
+    }
+
+    private void fetchHtml5Client(@Nonnull final Localization localization,
+                                  @Nonnull final ContentCountry contentCountry,
+                                  @Nonnull final String videoId,
+                                  @Nullable final PoTokenProvider poTokenProviderInstance)
+            throws IOException, ExtractionException {
+        html5Cpn = generateContentPlaybackNonce();
+
+        final JsonObject webPlayerResponse = YoutubeStreamHelper.getWebMetadataPlayerResponse(
+                    localization, contentCountry, videoId);
+
+        throwExceptionIfPlayerResponseNotValid(webPlayerResponse, videoId);
+
+        // Save the webPlayerResponse into playerResponse in the case the video cannot be
+        // played, so some metadata can be retrieved
+        playerResponse = webPlayerResponse;
+
+        // The microformat JSON object of the content is only returned on the WEB client,
+        // so we need to store it instead of getting it directly from the playerResponse
+        playerMicroFormatRenderer = playerResponse.getObject("microformat")
+                .getObject("playerMicroformatRenderer");
+
+        final JsonObject playabilityStatus = webPlayerResponse.getObject(PLAYABILITY_STATUS);
+
+        if (isVideoAgeRestricted(playabilityStatus)) {
+            fetchHtml5EmbedClient(localization, contentCountry, videoId,
+                    poTokenProviderInstance == null ? null
+                            : poTokenProviderInstance.getWebEmbedClientPoToken(videoId));
+        } else {
+            checkPlayabilityStatus(playabilityStatus);
+        }
+    }
+
+    private static void throwExceptionIfPlayerResponseNotValid(
+            @Nonnull final JsonObject webPlayerResponse,
+            @Nonnull final String videoId) throws ExtractionException {
+        if (isPlayerResponseNotValid(webPlayerResponse, videoId)) {
+            // Check the playability status, as private and deleted videos and invalid video
+            // IDs do not return the ID provided in the player response
+            // When the requested video is playable and a different video ID is returned, it
+            // has the OK playability status, meaning the ExtractionException after this check
+            // will be thrown
+            checkPlayabilityStatus(webPlayerResponse.getObject(PLAYABILITY_STATUS));
+            throw new ExtractionException("WEB player response is not valid");
+        }
+    }
+
+    private void fetchHtml5EmbedClient(@Nonnull final Localization localization,
+                                       @Nonnull final ContentCountry contentCountry,
+                                       @Nonnull final String videoId,
+                                       @Nullable final PoTokenResult webEmbedPoTokenResult)
+            throws IOException, ExtractionException {
+        html5Cpn = generateContentPlaybackNonce();
+
+        final JsonObject webEmbeddedPlayerResponse =
+                YoutubeStreamHelper.getWebEmbeddedPlayerResponse(localization, contentCountry,
+                        videoId, html5Cpn, webEmbedPoTokenResult,
+                        YoutubeJavaScriptPlayerManager.getSignatureTimestamp(videoId));
+
+        // Save the webEmbeddedPlayerResponse into playerResponse in the case the video cannot be
+        // played, so some metadata can be retrieved
+        playerResponse = webEmbeddedPlayerResponse;
+
+        // Check if the playability status in the player response, if the age-restriction could not
+        // be bypassed, an exception will be thrown
+        checkPlayabilityStatus(webEmbeddedPlayerResponse.getObject(PLAYABILITY_STATUS));
+
+        if (isPlayerResponseNotValid(webEmbeddedPlayerResponse, videoId)) {
+            throw new ExtractionException("WEB_EMBEDDED_PLAYER player response is not valid");
+        }
+
+        html5StreamingData = webEmbeddedPlayerResponse.getObject(STREAMING_DATA);
+        playerCaptionsTracklistRenderer = webEmbeddedPlayerResponse.getObject(CAPTIONS)
+                .getObject(PLAYER_CAPTIONS_TRACKLIST_RENDERER);
+        if (webEmbedPoTokenResult != null) {
+            html5StreamingUrlsPoToken = webEmbedPoTokenResult.streamingDataPoToken;
+        }
     }
 
     private void fetchAndroidClient(@Nonnull final Localization localization,
