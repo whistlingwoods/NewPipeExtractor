@@ -27,7 +27,8 @@ checkstyleTest {
 }
 
 ext {
-    rhinoVersion = '1.8.0'
+    // 1.8.0 refers to some javax.script (from Java 11) class that not available on old Android
+    rhinoVersion = '1.7.15'
     protobufVersion = '4.32.0'
 }
 
@@ -40,7 +41,6 @@ dependencies {
     implementation "com.google.protobuf:protobuf-javalite:$protobufVersion"
 
     implementation "org.mozilla:rhino:$rhinoVersion"
-    implementation "org.mozilla:rhino-engine:$rhinoVersion"
 
     checkstyle "com.puppycrawl.tools:checkstyle:$checkstyleVersion"
 
