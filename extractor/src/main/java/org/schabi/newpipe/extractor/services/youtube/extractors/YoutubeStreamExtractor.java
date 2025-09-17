@@ -229,7 +229,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
         return parseOptionalDate(dateText, "MMM dd, yyyy")
                 .or(() -> parseOptionalDate(dateText, "dd MMM yyyy"))
-                .map(DateWrapper::new)
+                .map(date -> new DateWrapper(date.atStartOfDay(), true))
                 .orElseThrow(() ->
                     new ParsingException("Could not parse upload date \"" + dateText + "\""));
     }
