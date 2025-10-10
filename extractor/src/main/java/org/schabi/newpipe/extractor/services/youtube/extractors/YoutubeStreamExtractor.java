@@ -102,6 +102,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class YoutubeStreamExtractor extends StreamExtractor {
+    private static final String PREMIERED = "Premiered ";
+    private static final String PREMIERED_ON = "Premiered on ";
 
     private static final String PREMIERED = "Premiered ";
     private static final String PREMIERED_ON = "Premiered on ";
