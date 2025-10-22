@@ -14,9 +14,7 @@ on:
   #  - cron: 0 0 * * *
   push:
     branches:
-      - dev
-      - legacy-01-08-25
-      - master
+     - '**'
   pull_request:
 
 permissions:
