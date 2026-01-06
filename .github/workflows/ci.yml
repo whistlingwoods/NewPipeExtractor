@@ -12,6 +12,7 @@ on:
   #schedule:
   #    # once per day
   #  - cron: 0 0 * * *
+
   push:
     branches:
      - '**'
@@ -58,4 +59,5 @@ jobs:
           ./gradlew check \
             -Dorg.gradle.welcome=never \
             --stacktrace \
-            -Ddownloader=$downloader_type
+            -Ddownloader=$downloader_type \
+            -Dcom.google.protobuf.error_on_unsafe_pre22_gencode
