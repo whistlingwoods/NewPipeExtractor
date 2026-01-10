@@ -9,13 +9,12 @@ on:
         options:
           - MOCK
           - REAL
-  schedule:
-      # once per day
-    - cron: 0 0 * * *
+  #schedule:
+  #    # once per day
+  #  - cron: 0 0 * * *
   push:
     branches:
-      - dev
-      - master
+     - '**'
   pull_request:
 
 permissions:
@@ -60,10 +59,3 @@ jobs:
             -Dorg.gradle.welcome=never \
             --stacktrace \
             -Ddownloader=$downloader_type
-
-      - name: Upload test reports when failure occurs
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: NewPipeExtractor-test-reports
-          path: extractor/build/reports/tests/test/**
