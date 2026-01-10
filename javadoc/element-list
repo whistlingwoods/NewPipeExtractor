@@ -27,7 +27,6 @@ org.schabi.newpipe.extractor.services.soundcloud.linkHandler
 org.schabi.newpipe.extractor.services.youtube
 org.schabi.newpipe.extractor.services.youtube.dashmanifestcreators
 org.schabi.newpipe.extractor.services.youtube.extractors
-org.schabi.newpipe.extractor.services.youtube.extractors.kiosk
 org.schabi.newpipe.extractor.services.youtube.linkHandler
 org.schabi.newpipe.extractor.services.youtube.protos.playlist
 org.schabi.newpipe.extractor.stream
