@@ -14,8 +14,6 @@ import org.schabi.newpipe.extractor.services.soundcloud.SoundcloudParsingHelper;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import static org.schabi.newpipe.extractor.services.soundcloud.SoundcloudParsingHelper.SOUNDCLOUD_API_V2_URL;
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
@@ -23,9 +21,6 @@ import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 public class SoundcloudChannelTabExtractor extends ChannelTabExtractor {
 
     private static final String USERS_ENDPOINT = SOUNDCLOUD_API_V2_URL + "users/";
-
-    /** Empty page cap against infinite pagination loops. */
-    private static final int MAX_EMPTY_PAGES = 3;
 
     private final String userId;
 
@@ -75,40 +70,9 @@ public class SoundcloudChannelTabExtractor extends ChannelTabExtractor {
         }
 
         final MultiInfoItemsCollector collector = new MultiInfoItemsCollector(getServiceId());
-        final Set<String> visitedPages = new HashSet<>();
+        final String nextPageUrl = SoundcloudParsingHelper.getInfoItemsFromApi(
+                collector, page.getUrl());
 
-        String currentPageUrl = page.getUrl();
-        String nextPageUrl = "";
-        int emptyPageCount = 0;
-
-        while (!isNullOrEmpty(currentPageUrl)) {
-            if (!visitedPages.add(currentPageUrl)) {
-                // Prevent infinite loops when the API points back to an already visited page.
-                nextPageUrl = "";
-                break;
-            }
-
-            final int itemsBefore = collector.getItems().size();
-            final String candidateNextPage = SoundcloudParsingHelper
-                    .getInfoItemsFromApi(collector, currentPageUrl);
-            final boolean hasNewItems = collector.getItems().size() > itemsBefore;
-
-            if (hasNewItems) {
-                nextPageUrl = candidateNextPage;
-                break;
-            }
-
-            emptyPageCount++;
-            if (emptyPageCount >= MAX_EMPTY_PAGES || isNullOrEmpty(candidateNextPage)) {
-                // Give up after too many empty responses or when SoundCloud stops providing tokens.
-                nextPageUrl = "";
-                break;
-            }
-
-            currentPageUrl = candidateNextPage;
-        }
-
-        final Page nextPage = isNullOrEmpty(nextPageUrl) ? null : new Page(nextPageUrl);
-        return new InfoItemsPage<>(collector, nextPage);
+        return new InfoItemsPage<>(collector, new Page(nextPageUrl));
     }
 }
