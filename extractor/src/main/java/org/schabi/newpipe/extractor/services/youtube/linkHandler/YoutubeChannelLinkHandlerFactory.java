@@ -99,7 +99,7 @@ public final class YoutubeChannelLinkHandlerFactory extends ListLinkHandlerFacto
             // Remove leading "/"
             path = path.substring(1);
 
-            String[] splitPath = path.split("/");
+            final String[] splitPath = path.split("/");
 
             if (isHandle(splitPath) || isCustomShortChannelUrl(splitPath)) {
                 // Handle YouTube handle URLs like youtube.com/@yourhandle and
