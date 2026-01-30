@@ -88,5 +88,8 @@ public class YoutubeChannelLinkHandlerFactoryTest {
 
         assertEquals("@Gronkh", linkHandler.fromUrl("https://www.youtube.com/@Gronkh?ucbcb=1").getId());
         assertEquals("@YouTubeCreators", linkHandler.fromUrl("https://www.youtube.com/@YouTubeCreators/shorts").getId());
+
+        assertEquals("PewDiePie", linkHandler.fromUrl("https://www.youtube.com/PewDiePie").getId());
+        assertEquals("DreamTraps", linkHandler.fromUrl("https://www.youtube.com/DreamTraps").getId());
     }
 }

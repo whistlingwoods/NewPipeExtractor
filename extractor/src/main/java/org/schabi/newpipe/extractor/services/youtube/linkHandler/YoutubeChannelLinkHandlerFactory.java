@@ -71,7 +71,8 @@ public final class YoutubeChannelLinkHandlerFactory extends ListLinkHandlerFacto
      * @return whether the value conform to short channel URLs
      */
     private boolean isCustomShortChannelUrl(@Nonnull final String[] splitPath) {
-        return splitPath.length == 1 && !EXCLUDED_SEGMENTS.matcher(splitPath[0]).matches();
+        return splitPath.length == 1 && !splitPath[0].isEmpty()
+                && !EXCLUDED_SEGMENTS.matcher(splitPath[0]).matches();
     }
 
     /**
