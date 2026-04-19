@@ -49,6 +49,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
 
@@ -130,9 +131,14 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
 
     @Override
     public String getName() throws ParsingException {
-        final String name = getTextFromObject(videoInfo.getObject("title"));
+        final JsonObject title = videoInfo.getObject("title");
+        final String name = getTextFromObject(title);
         if (!isNullOrEmpty(name)) {
             return name;
+        }
+        // Videos can have no title, e.g. https://www.youtube.com/watch?v=nc1kN8ZSfGQ
+        if (!isNullOrEmpty(title) && !title.has("runs")) {
+            return "";
         }
         throw new ParsingException("Could not get name");
     }
@@ -150,19 +156,24 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
             duration = videoInfo.getString("lengthSeconds");
 
             if (isNullOrEmpty(duration)) {
-                final JsonObject timeOverlay = videoInfo.getArray("thumbnailOverlays")
+                final List<String> timeOverlays = videoInfo.getArray("thumbnailOverlays")
                         .stream()
                         .filter(JsonObject.class::isInstance)
                         .map(JsonObject.class::cast)
                         .filter(thumbnailOverlay ->
                                 thumbnailOverlay.has("thumbnailOverlayTimeStatusRenderer"))
-                        .findFirst()
-                        .orElse(null);
+                        .map(thumbnailOverlay -> getTextFromObject(
+                                thumbnailOverlay.getObject("thumbnailOverlayTimeStatusRenderer")
+                                        .getObject("text")))
+                        .filter(text -> !isNullOrEmpty(text))
+                        .collect(Collectors.toList());
 
-                if (timeOverlay != null) {
-                    duration = getTextFromObject(
-                            timeOverlay.getObject("thumbnailOverlayTimeStatusRenderer")
-                                    .getObject("text"));
+                for (final String timeOverlayText : timeOverlays) {
+                    try {
+                        return YoutubeParsingHelper.parseDurationString(timeOverlayText);
+                    } catch (final ParsingException ex) {
+                        // try next
+                    }
                 }
             }
 
@@ -447,24 +458,21 @@ public class YoutubeStreamInfoItemExtractor implements StreamInfoItemExtractor {
             }
 
             if (!isShort) {
-                final JsonObject thumbnailTimeOverlay = videoInfo.getArray("thumbnailOverlays")
-                        .stream()
-                        .filter(JsonObject.class::isInstance)
-                        .map(JsonObject.class::cast)
-                        .filter(thumbnailOverlay -> thumbnailOverlay.has(
-                                "thumbnailOverlayTimeStatusRenderer"))
-                        .map(thumbnailOverlay -> thumbnailOverlay.getObject(
-                                "thumbnailOverlayTimeStatusRenderer"))
-                        .findFirst()
-                        .orElse(null);
-
-                if (!isNullOrEmpty(thumbnailTimeOverlay)) {
-                    isShort = thumbnailTimeOverlay.getString("style", "")
-                            .equalsIgnoreCase("SHORTS")
-                            || thumbnailTimeOverlay.getObject("icon")
-                            .getString("iconType", "")
-                            .toLowerCase()
-                            .contains("shorts");
+                if (videoInfo.has("thumbnailOverlays")) {
+                    isShort = videoInfo.getArray("thumbnailOverlays")
+                            .stream()
+                            .filter(JsonObject.class::isInstance)
+                            .map(JsonObject.class::cast)
+                            .filter(thumbnailOverlay -> thumbnailOverlay.has(
+                                    "thumbnailOverlayTimeStatusRenderer"))
+                            .map(thumbnailOverlay -> thumbnailOverlay.getObject(
+                                    "thumbnailOverlayTimeStatusRenderer"))
+                            .anyMatch(timeOverlay -> timeOverlay.getString("style", "")
+                                    .equalsIgnoreCase("SHORTS")
+                                    || timeOverlay.getObject("icon")
+                                    .getString("iconType", "")
+                                    .toLowerCase()
+                                    .contains("shorts"));
                 }
             }
 

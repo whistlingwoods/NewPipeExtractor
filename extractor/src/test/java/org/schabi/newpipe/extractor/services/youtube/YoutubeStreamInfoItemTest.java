@@ -85,4 +85,81 @@ class YoutubeStreamInfoItemTest {
         () -> assertFalse(extractor.isShortFormContent())
         );
     }
+
+    @Test
+    void lockupViewModelVideo()
+            throws FileNotFoundException, JsonParserException {
+        final var json = JsonParser.object().from(new FileInputStream(getMockPath(
+                YoutubeStreamInfoItemTest.class, "lockupViewModelVideo") + ".json"));
+        final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(Localization.DEFAULT);
+        final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser);
+        assertAll(
+        () -> assertEquals(StreamType.VIDEO_STREAM, extractor.getStreamType()),
+        () -> assertFalse(extractor.isAd()),
+        () -> assertEquals("https://www.youtube.com/watch?v=dQw4w9WgXcQ", extractor.getUrl()),
+        () -> assertEquals("VIDEO_TITLE", extractor.getName()),
+        () -> assertEquals(974, extractor.getDuration()),
+        () -> assertFalse(extractor.getThumbnails().isEmpty())
+        );
+    }
+
+    @Test
+    void lockupViewModelLiveStream()
+            throws FileNotFoundException, JsonParserException {
+        final var json = JsonParser.object().from(new FileInputStream(getMockPath(
+                YoutubeStreamInfoItemTest.class, "lockupViewModelLiveStream") + ".json"));
+        final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(Localization.DEFAULT);
+        final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser);
+        assertAll(
+        () -> assertEquals(StreamType.LIVE_STREAM, extractor.getStreamType()),
+        () -> assertFalse(extractor.isAd()),
+        () -> assertEquals("https://www.youtube.com/watch?v=LIVE_VIDEO_ID", extractor.getUrl()),
+        () -> assertEquals("LIVE_VIDEO_TITLE", extractor.getName()),
+        () -> assertEquals(-1, extractor.getDuration()),
+        () -> assertNull(extractor.getTextualUploadDate()),
+        () -> assertNull(extractor.getUploadDate()),
+        () -> assertEquals(0, extractor.getViewCount()),
+        () -> assertFalse(extractor.getThumbnails().isEmpty())
+        );
+    }
+
+    @Test
+    void lockupViewModelNoDuration()
+            throws FileNotFoundException, JsonParserException {
+        final var json = JsonParser.object().from(new FileInputStream(getMockPath(
+                YoutubeStreamInfoItemTest.class, "lockupViewModelNoDuration") + ".json"));
+        final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(Localization.DEFAULT);
+        final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser);
+        assertAll(
+        () -> assertEquals(StreamType.VIDEO_STREAM, extractor.getStreamType()),
+        () -> assertFalse(extractor.isAd()),
+        () -> assertEquals(-1, extractor.getDuration()),
+        () -> assertFalse(extractor.getThumbnails().isEmpty())
+        );
+    }
+
+    @Test
+    void emptyTitle() throws FileNotFoundException, JsonParserException {
+        final var json = JsonParser.object().from(new FileInputStream(getMockPath(
+                YoutubeStreamInfoItemTest.class, "emptyTitle") + ".json"));
+        final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(Localization.DEFAULT);
+        final var extractor = new YoutubeStreamInfoItemExtractor(json, timeAgoParser);
+        assertAll(
+                () -> assertEquals(StreamType.VIDEO_STREAM, extractor.getStreamType()),
+                () -> assertFalse(extractor.isAd()),
+                () -> assertEquals("https://www.youtube.com/watch?v=nc1kN8ZSfGQ", extractor.getUrl()),
+                () -> assertEquals("", extractor.getName()),
+                () -> assertEquals(39, extractor.getDuration()),
+                () -> assertEquals("hyper", extractor.getUploaderName()),
+                () -> assertEquals("https://www.youtube.com/channel/UCSezUnbvCLYBXuUlPcXU_QQ", extractor.getUploaderUrl()),
+                () -> assertFalse(extractor.getUploaderAvatars().isEmpty()),
+                () -> assertTrue(extractor.isUploaderVerified()),
+                () -> assertEquals("8 years ago", extractor.getTextualUploadDate()),
+                () -> assertNotNull(extractor.getUploadDate()),
+                () -> assertTrue(extractor.getViewCount() >= 1318193),
+                () -> assertFalse(extractor.getThumbnails().isEmpty()),
+                () -> assertNull(extractor.getShortDescription()),
+                () -> assertFalse(extractor.isShortFormContent())
+        );
+    }
 }
