@@ -359,6 +359,8 @@ public class StreamInfo extends Info {
         }
         try {
             streamInfo.setSongMetadata(extractor.getSongMetadata());
+            streamInfo.setLiveChat(extractor.hasLiveChat());
+            streamInfo.setLiveChatContinuation(extractor.getLiveChatContinuation());
         } catch (final Exception e) {
             streamInfo.addError(e);
         }
@@ -416,6 +418,8 @@ public class StreamInfo extends Info {
     @Nonnull
     private ContentAvailability contentAvailability = ContentAvailability.AVAILABLE;
     private SongMetadata songMetadata = null;
+    private boolean liveChat = false;
+    private String liveChatContinuation = null;
 
     /**
      * Preview frames, e.g. for the storyboard / seekbar thumbnail preview
@@ -791,5 +795,21 @@ public class StreamInfo extends Info {
 
     public void setSongMetadata(final SongMetadata songMetadata) {
         this.songMetadata = songMetadata;
+    }
+
+    public boolean hasLiveChat() {
+        return liveChat;
+    }
+
+    public void setLiveChat(final boolean liveChat) {
+        this.liveChat = liveChat;
+    }
+
+    public String getLiveChatContinuation() {
+        return liveChatContinuation;
+    }
+
+    public void setLiveChatContinuation(final String liveChatContinuation) {
+        this.liveChatContinuation = liveChatContinuation;
     }
 }
