@@ -97,7 +97,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -307,23 +306,14 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                 .getObject("metadataRowContainer")
                 .getObject("metadataRowContainerRenderer")
                 .getArray("rows")
-                .stream()
-                // Only JsonObjects allowed
-                .filter(JsonObject.class::isInstance)
-                .map(JsonObject.class::cast)
+                .streamAsJsonObjects()
                 .flatMap(metadataRow -> metadataRow
                         .getObject("metadataRowRenderer")
                         .getArray("contents")
-                        .stream()
-                        // Only JsonObjects allowed
-                        .filter(JsonObject.class::isInstance)
-                        .map(JsonObject.class::cast))
+                        .streamAsJsonObjects())
                 .flatMap(content -> content
                         .getArray("runs")
-                        .stream()
-                        // Only JsonObjects allowed
-                        .filter(JsonObject.class::isInstance)
-                        .map(JsonObject.class::cast))
+                        .streamAsJsonObjects())
                 .map(run -> run.getString("text", ""))
                 .anyMatch(rowText -> rowText.contains("Age-restricted"));
 
@@ -417,10 +407,77 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                 .getObject("menuRenderer")
                 .getArray("topLevelButtons");
 
+        try {
+            return parseLikeCountFromLikeButtonViewModel(topLevelButtons);
+        } catch (final ParsingException ignored) {
+            // A segmentedLikeDislikeButtonRenderer could be returned instead of a
+            // segmentedLikeDislikeButtonViewModel, so ignore extraction errors relative to
+            // segmentedLikeDislikeButtonViewModel object
+        }
+
+        try {
+            return parseLikeCountFromLikeButtonRenderer(topLevelButtons);
+        } catch (final ParsingException e) {
+            throw new ParsingException("Could not get like count", e);
+        }
+    }
+
+    private static long parseLikeCountFromLikeButtonRenderer(
+            @Nonnull final JsonArray topLevelButtons) throws ParsingException {
+        String likesString = null;
+        final JsonObject likeToggleButtonRenderer = topLevelButtons.streamAsJsonObjects()
+                .map(button -> button.getObject("segmentedLikeDislikeButtonRenderer")
+                        .getObject("likeButton")
+                        .getObject("toggleButtonRenderer"))
+                .filter(toggleButtonRenderer -> !isNullOrEmpty(toggleButtonRenderer))
+                .findFirst()
+                .orElse(null);
+
+        if (likeToggleButtonRenderer != null) {
+            // Use one of the accessibility strings available (this one has the same path as the
+            // one used for comments' like count extraction)
+            likesString = likeToggleButtonRenderer.getObject("accessibilityData")
+                    .getObject("accessibilityData")
+                    .getString("label");
+
+            // Use the other accessibility string available which contains the exact like count
+            if (likesString == null) {
+                likesString = likeToggleButtonRenderer.getObject("accessibility")
+                        .getString("label");
+            }
+
+            // Last method: use the defaultText's accessibility data, which contains the exact like
+            // count too, except when it is equal to 0, where a localized string is returned instead
+            if (likesString == null) {
+                likesString = likeToggleButtonRenderer.getObject("defaultText")
+                        .getObject("accessibility")
+                        .getObject("accessibilityData")
+                        .getString("label");
+            }
+
+            // This check only works with English localizations!
+            if (likesString != null && likesString.toLowerCase().contains("no likes")) {
+                return 0;
+            }
+        }
+
+        // If ratings are allowed and the likes string is null, it means that we couldn't extract
+        // the full like count from accessibility data
+        if (likesString == null) {
+            throw new ParsingException("Could not get like count from accessibility data");
+        }
+
+        try {
+            return Long.parseLong(Utils.removeNonDigitCharacters(likesString));
+        } catch (final NumberFormatException e) {
+            throw new ParsingException("Could not parse \"" + likesString + "\" as a long", e);
+        }
+    }
+
+    private static long parseLikeCountFromLikeButtonViewModel(
+            @Nonnull final JsonArray topLevelButtons) throws ParsingException {
         // Try first with the current video actions buttons data structure
-        final JsonObject likeToggleButtonViewModel = topLevelButtons.stream()
-                .filter(JsonObject.class::isInstance)
-                .map(JsonObject.class::cast)
+        final JsonObject likeToggleButtonViewModel = topLevelButtons.streamAsJsonObjects()
                 .map(button -> button.getObject("segmentedLikeDislikeButtonViewModel")
                         .getObject("likeButtonViewModel")
                         .getObject("likeButtonViewModel")
@@ -723,9 +780,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                     .getArray("results");
 
             final TimeAgoParser timeAgoParser = getTimeAgoParser();
-            results.stream()
-                    .filter(JsonObject.class::isInstance)
-                    .map(JsonObject.class::cast)
+            results.streamAsJsonObjects()
                     .map(result -> {
                         if (result.has("compactVideoRenderer")) {
                             return new YoutubeStreamInfoItemExtractor(
@@ -1061,9 +1116,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                 .getObject("results")
                 .getObject("results")
                 .getArray("contents")
-                .stream()
-                .filter(JsonObject.class::isInstance)
-                .map(JsonObject.class::cast)
+                .streamAsJsonObjects()
                 .filter(content -> content.has(videoRendererName))
                 .map(content -> content.getObject(videoRendererName))
                 .findFirst()
@@ -1232,9 +1285,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             return java.util.stream.Stream.empty();
         }
 
-        return streamingData.getArray(streamingDataKey).stream()
-                .filter(JsonObject.class::isInstance)
-                .map(JsonObject.class::cast)
+        return streamingData.getArray(streamingDataKey).streamAsJsonObjects()
                 .map(formatData -> {
                     try {
                         final ItagItem itagItem = ItagItem.getItag(formatData.getInt("itag"));
@@ -1505,10 +1556,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         }
 
         final JsonArray segmentsArray = nextResponse.getArray("engagementPanels")
-                .stream()
-                // Check if object is a JsonObject
-                .filter(JsonObject.class::isInstance)
-                .map(JsonObject.class::cast)
+                .streamAsJsonObjects()
                 // Check if the panel is the correct one
                 .filter(panel -> "engagement-panel-macro-markers-description-chapters".equals(
                         panel
@@ -1530,12 +1578,11 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
         final long duration = getLength();
         final List<StreamSegment> segments = new ArrayList<>();
-        for (final JsonObject segmentJson : segmentsArray.stream()
-                .filter(JsonObject.class::isInstance)
-                .map(JsonObject.class::cast)
-                .map(object -> object.getObject("macroMarkersListItemRenderer"))
-                .collect(Collectors.toList())
-        ) {
+        final var segmentStream = segmentsArray.streamAsJsonObjects();
+        final var it = segmentStream.iterator();
+
+        while (it.hasNext()) {
+            final var segmentJson = it.next();
             final int startTimeSeconds = segmentJson.getObject("onTap")
                     .getObject("watchEndpoint").getInt("startTimeSeconds", -1);
 
