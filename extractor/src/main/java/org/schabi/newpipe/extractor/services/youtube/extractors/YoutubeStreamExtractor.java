@@ -132,6 +132,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     private JsonObject iosStreamingData;
     @Nullable
     private JsonObject androidStreamingData;
+    @Nullable
+    private JsonObject webEmbedStreamingData;
 
     private JsonObject videoPrimaryInfoRenderer;
     private JsonObject videoSecondaryInfoRenderer;
@@ -147,9 +149,11 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     // three different strings are used.
     private String iosCpn;
     private String androidCpn;
+    private String webEmbedCpn;
 
     @Nullable
     private String androidStreamingUrlsPoToken;
+    private String webEmbedStreamingUrlsPoToken;
     @Nullable
     private String iosStreamingUrlsPoToken;
 
@@ -640,7 +644,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         // There is no DASH manifest available with the iOS client
         return getManifestUrl(
                 "dash",
-                List.of(new Pair<>(androidStreamingData, androidStreamingUrlsPoToken)),
+                List.of(new Pair<>(androidStreamingData, androidStreamingUrlsPoToken),
+                        new Pair<>(webEmbedStreamingData, webEmbedStreamingUrlsPoToken)),
                 // Return version 7 of the DASH manifest, which is the latest one, reducing
                 // manifest size and allowing playback with some DASH players
                 "mpd_version=7");
@@ -659,7 +664,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         return getManifestUrl(
                 "hls",
                 List.of(new Pair<>(iosStreamingData, iosStreamingUrlsPoToken),
-                        new Pair<>(androidStreamingData, androidStreamingUrlsPoToken)),
+                        new Pair<>(androidStreamingData, androidStreamingUrlsPoToken),
+                        new Pair<>(webEmbedStreamingData, webEmbedStreamingUrlsPoToken)),
                 "");
     }
 
@@ -859,14 +865,46 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         final PoTokenResult androidPoTokenResult = noPoTokenProviderSet ? null
                 : poTokenProviderInstance.getAndroidClientPoToken(videoId);
 
-        fetchAndroidClient(localization, contentCountry, videoId, androidPoTokenResult);
+        // TEMP FORCE WEB-EMBED: wenn env FORCE_WEBEMBED=1, ueberspringe Android+iOS komplett
+        final boolean forceWebEmbed = "1".equals(System.getenv("FORCE_WEBEMBED"));
+        boolean androidOk = false;
+        if (!forceWebEmbed) {
+            try {
+                fetchAndroidClient(localization, contentCountry, videoId, androidPoTokenResult);
+                androidOk = true;
+            } catch (final SignInConfirmNotBotException eAndroid) {
+                // weiter mit iOS/WebEmbed fallback
+            }
+        } else {
+            System.out.println("[NPE] FORCE_WEBEMBED active — skipping Android");
+        }
+
+        // EARLY WebEmbed: wenn Android nichts gesetzt hat, fuelle playerResponse jetzt
+        // — sonst crasht setStreamType() unten an null playerResponse.
+        if (!androidOk) {
+            try {
+                final PoTokenResult webEmbedPoTokenEarly = noPoTokenProviderSet ? null
+                        : poTokenProviderInstance.getWebEmbedClientPoToken(videoId);
+                fetchWebEmbedClient(localization, contentCountry, videoId, webEmbedPoTokenEarly);
+            } catch (final Exception eEarly) {
+                System.out.println("[NPE/WebEmbed] early WebEmbed failed: " + eEarly.getMessage());
+            }
+        }
 
         setStreamType();
 
-        if (fetchIosClient) {
+        // iOS als zusaetzlicher Fallback (Originalverhalten).
+        if (!forceWebEmbed) {
             final PoTokenResult iosPoTokenResult = noPoTokenProviderSet ? null
                     : poTokenProviderInstance.getIosClientPoToken(videoId);
             fetchIosClient(localization, contentCountry, videoId, iosPoTokenResult);
+        } else {
+            System.out.println("[NPE] FORCE_WEBEMBED active — skipping iOS");
+        }
+
+        if (!androidOk && iosStreamingData == null && webEmbedStreamingData == null) {
+            throw new SignInConfirmNotBotException(
+                "YouTube probably temporarily blocked anonymous watch access with this IP");
         }
 
         fetchWebClientMetadataAndSetThumbnails(localization, contentCountry, videoId);
@@ -992,6 +1030,45 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         } catch (final Exception ignored) {
             // Ignore exceptions related to IOS client fetch or parsing, as it is not
             // compulsory to play contents
+        }
+    }
+
+    // Custom: Web-Embedded InnerTube Client als Fallback wenn Android/iOS geblockt sind.
+    private void fetchWebEmbedClient(@Nonnull final org.schabi.newpipe.extractor.localization.Localization localization,
+                                     @Nonnull final org.schabi.newpipe.extractor.localization.ContentCountry contentCountry,
+                                     @Nonnull final String videoId,
+                                     @Nullable final org.schabi.newpipe.extractor.services.youtube.PoTokenResult webEmbedPoTokenResult)
+            throws IOException, ExtractionException {
+        System.out.println("[NPE/WebEmbed] fetchWebEmbedClient called for " + videoId + ", poToken=" + (webEmbedPoTokenResult != null ? "yes" : "NO"));
+        webEmbedCpn = generateContentPlaybackNonce();
+        final Integer sts = org.schabi.newpipe.extractor.services.youtube.YoutubeJavaScriptPlayerManager.getSignatureTimestamp(videoId);
+        System.out.println("[NPE/WebEmbed] sts=" + sts);
+        final JsonObject webEmbedPlayerResponse = org.schabi.newpipe.extractor.services.youtube.YoutubeStreamHelper.getWebEmbeddedPlayerResponse(
+                localization, contentCountry, videoId, webEmbedCpn, webEmbedPoTokenResult, sts == null ? 0 : sts);
+        try {
+            final String pStatus = webEmbedPlayerResponse.getObject(PLAYABILITY_STATUS).getString("status");
+            final String pReason = webEmbedPlayerResponse.getObject(PLAYABILITY_STATUS).getString("reason");
+            System.out.println("[NPE/WebEmbed] playabilityStatus=" + pStatus + " reason=" + pReason);
+            final String full = webEmbedPlayerResponse.toString();
+            System.out.println("[NPE/WebEmbed] FULL: " + full.substring(0, Math.min(2000, full.length())));
+        } catch (Exception e) {
+            System.out.println("[NPE/WebEmbed] could not read playabilityStatus: " + e.getMessage());
+        }
+        if (!isPlayerResponseNotValid(webEmbedPlayerResponse, videoId)) {
+            webEmbedStreamingData = webEmbedPlayerResponse.getObject(STREAMING_DATA);
+            // Fallback: setze playerResponse falls Android/iOS nichts gesetzt haben.
+            // Downstream-Code (Titel, Description, Captions) braucht playerResponse non-null.
+            if (playerResponse == null) {
+                playerResponse = webEmbedPlayerResponse;
+                System.out.println("[NPE/WebEmbed] setting playerResponse from WebEmbed");
+            }
+            if (isNullOrEmpty(playerCaptionsTracklistRenderer)) {
+                playerCaptionsTracklistRenderer = webEmbedPlayerResponse.getObject(CAPTIONS)
+                        .getObject(PLAYER_CAPTIONS_TRACKLIST_RENDERER);
+            }
+            if (webEmbedPoTokenResult != null) {
+                webEmbedStreamingUrlsPoToken = webEmbedPoTokenResult.streamingDataPoToken;
+            }
         }
     }
 
@@ -1123,11 +1200,17 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             final String videoId = getId();
             final List<T> streamList = new ArrayList<>();
 
+            // iOS first so videoStreams[]/audioStreams[] prefer c=IOS URLs.
+            // Web Chrome cookies (typical "logged-in account" set self-hosted
+            // Pipeds carry) match iOS-client signed URLs better than Android's
+            // on googlevideo's stricter CDN checks (VEVO/music content).
             java.util.stream.Stream.of(
+                    new Pair<>(iosStreamingData,
+                            new Pair<>(iosCpn, iosStreamingUrlsPoToken)),
                     new Pair<>(androidStreamingData,
                             new Pair<>(androidCpn, androidStreamingUrlsPoToken)),
-                    new Pair<>(iosStreamingData,
-                            new Pair<>(iosCpn, iosStreamingUrlsPoToken)))
+                    new Pair<>(webEmbedStreamingData,
+                            new Pair<>(webEmbedCpn, webEmbedStreamingUrlsPoToken)))
                     .flatMap(pair -> getStreamsFromStreamingDataKey(
                             videoId,
                             pair.getFirst(),
