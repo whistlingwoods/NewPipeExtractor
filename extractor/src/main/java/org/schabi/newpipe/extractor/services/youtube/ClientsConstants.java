@@ -109,4 +109,21 @@ final class ClientsConstants {
      * </p>
      */
     static final String ANDROID_CLIENT_VERSION = "21.03.36";
+
+    // ANDROID_VR (YouTube VR app for Quest, Vision Pro, etc.) client fields.
+    // Used as primary client because it bypasses googlevideo CDN throttles that
+    // hit the regular ANDROID/IOS clients on many videos (3D/360 content path
+    // has historically been less aggressively gated). No PoToken required.
+
+    public static final String ANDROID_VR_CLIENT_ID = "28";
+    public static final String ANDROID_VR_CLIENT_NAME = "ANDROID_VR";
+    public static final String ANDROID_VR_CLIENT_VERSION = "1.62.27";
+    public static final String ANDROID_VR_DEVICE_MAKE = "Oculus";
+    public static final String ANDROID_VR_DEVICE_MODEL = "Quest 3";
+    public static final String ANDROID_VR_OS_NAME = "Android";
+    public static final String ANDROID_VR_OS_VERSION = "12L";
+    public static final int ANDROID_VR_SDK = 32;
+    public static final String ANDROID_VR_USER_AGENT =
+            "com.google.android.apps.youtube.vr.oculus/" + ANDROID_VR_CLIENT_VERSION
+                    + " (Linux; U; Android 12L; eureka-user Build/SQ3A.220605.009.A1) gzip";
 }

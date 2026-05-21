@@ -142,4 +142,20 @@ public final class InnertubeClientRequestInfo {
                 new InnertubeClientRequestInfo.DeviceInfo(MOBILE_CLIENT_PLATFORM, "Apple",
                         IOS_DEVICE_MODEL, "iOS", IOS_OS_VERSION, -1));
     }
+
+    @Nonnull
+    public static InnertubeClientRequestInfo ofAndroidVrClient() {
+        return new InnertubeClientRequestInfo(
+                new InnertubeClientRequestInfo.ClientInfo(
+                        ClientsConstants.ANDROID_VR_CLIENT_NAME,
+                        ClientsConstants.ANDROID_VR_CLIENT_VERSION,
+                        ClientsConstants.ANDROID_VR_CLIENT_ID,
+                        WATCH_CLIENT_SCREEN, null),
+                new InnertubeClientRequestInfo.DeviceInfo(MOBILE_CLIENT_PLATFORM,
+                        ClientsConstants.ANDROID_VR_DEVICE_MAKE,
+                        ClientsConstants.ANDROID_VR_DEVICE_MODEL,
+                        ClientsConstants.ANDROID_VR_OS_NAME,
+                        ClientsConstants.ANDROID_VR_OS_VERSION,
+                        ClientsConstants.ANDROID_VR_SDK));
+    }
 }

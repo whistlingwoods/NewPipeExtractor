@@ -134,6 +134,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     private JsonObject androidStreamingData;
     @Nullable
     private JsonObject webEmbedStreamingData;
+    @Nullable
+    private JsonObject androidVrStreamingData;
 
     private JsonObject videoPrimaryInfoRenderer;
     private JsonObject videoSecondaryInfoRenderer;
@@ -150,6 +152,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     private String iosCpn;
     private String androidCpn;
     private String webEmbedCpn;
+    private String androidVrCpn;
 
     @Nullable
     private String androidStreamingUrlsPoToken;
@@ -865,8 +868,15 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         final PoTokenResult androidPoTokenResult = noPoTokenProviderSet ? null
                 : poTokenProviderInstance.getAndroidClientPoToken(videoId);
 
-        // TEMP FORCE WEB-EMBED: wenn env FORCE_WEBEMBED=1, ueberspringe Android+iOS komplett
         final boolean forceWebEmbed = "1".equals(System.getenv("FORCE_WEBEMBED"));
+
+        // ANDROID_VR first: it bypasses googlevideo CDN throttling that hits
+        // the other clients on many videos. No PoToken required. Best-effort
+        // so we still fall through to Android/iOS/WebEmbed if VR fails.
+        if (!forceWebEmbed) {
+            fetchAndroidVrClient(localization, contentCountry, videoId);
+        }
+
         boolean androidOk = false;
         if (!forceWebEmbed) {
             try {
@@ -902,7 +912,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             System.out.println("[NPE] FORCE_WEBEMBED active — skipping iOS");
         }
 
-        if (!androidOk && iosStreamingData == null && webEmbedStreamingData == null) {
+        if (!androidOk && iosStreamingData == null && webEmbedStreamingData == null
+                && androidVrStreamingData == null) {
             throw new SignInConfirmNotBotException(
                 "YouTube probably temporarily blocked anonymous watch access with this IP");
         }
@@ -1002,6 +1013,29 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
         if (androidPoTokenResult != null) {
             androidStreamingUrlsPoToken = androidPoTokenResult.streamingDataPoToken;
+        }
+    }
+
+    private void fetchAndroidVrClient(@Nonnull final Localization localization,
+                                      @Nonnull final ContentCountry contentCountry,
+                                      @Nonnull final String videoId) {
+        try {
+            androidVrCpn = generateContentPlaybackNonce();
+            final JsonObject vrPlayerResponse =
+                    YoutubeStreamHelper.getAndroidVrPlayerResponse(
+                            contentCountry, localization, videoId, androidVrCpn);
+            if (!isPlayerResponseNotValid(vrPlayerResponse, videoId)) {
+                androidVrStreamingData = vrPlayerResponse.getObject(STREAMING_DATA);
+                if (playerResponse == null) {
+                    playerResponse = vrPlayerResponse;
+                }
+                if (isNullOrEmpty(playerCaptionsTracklistRenderer)) {
+                    playerCaptionsTracklistRenderer = vrPlayerResponse.getObject(CAPTIONS)
+                            .getObject(PLAYER_CAPTIONS_TRACKLIST_RENDERER);
+                }
+            }
+        } catch (final Exception ignored) {
+            // VR client is best-effort; failures fall through to Android/iOS/WebEmbed.
         }
     }
 
@@ -1200,11 +1234,12 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             final String videoId = getId();
             final List<T> streamList = new ArrayList<>();
 
-            // iOS first so videoStreams[]/audioStreams[] prefer c=IOS URLs.
-            // Web Chrome cookies (typical "logged-in account" set self-hosted
-            // Pipeds carry) match iOS-client signed URLs better than Android's
-            // on googlevideo's stricter CDN checks (VEVO/music content).
+            // ANDROID_VR first: bypasses googlevideo CDN throttling that hits
+            // the other clients on many videos (no PoToken/Widevine required).
+            // iOS next (cookies-consistent), Android as fallback, WebEmbed last.
             java.util.stream.Stream.of(
+                    new Pair<>(androidVrStreamingData,
+                            new Pair<>(androidVrCpn, (String) null)),
                     new Pair<>(iosStreamingData,
                             new Pair<>(iosCpn, iosStreamingUrlsPoToken)),
                     new Pair<>(androidStreamingData,
