@@ -139,8 +139,35 @@ class YoutubeStreamInfoItemTest {
     }
 
     /**
-     * Tests that findMetadataPart correctly extracts date and view count
-     * from the 1-row format where parts are in reversed order: [date, views]
+     * Tests that the info row search correctly extracts date and view count
+     * from the 1-row channel format where parts are in normal order: [views, date].
+     */
+    @Test
+    void lockupViewModelOneRowNormal()
+            throws FileNotFoundException, JsonParserException {
+        final var json = JsonParser.object().from(new FileInputStream(getMockPath(
+                YoutubeStreamInfoItemTest.class, "lockupViewModelOneRowNormal") + ".json"));
+        final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(Localization.DEFAULT);
+        final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser) {
+            // Channel tabs use 1-row format at index 0
+            @Override
+            protected int getInfoMetadataRowIndex() {
+                return 0;
+            }
+        };
+        assertAll(
+        () -> assertEquals(StreamType.VIDEO_STREAM, extractor.getStreamType()),
+        () -> assertEquals("Test Video One Row Normal", extractor.getName()),
+        () -> assertEquals("2 hours ago", extractor.getTextualUploadDate()),
+        () -> assertNotNull(extractor.getUploadDate()),
+        () -> assertEquals(3600000, extractor.getViewCount()), // 3.6m views
+        () -> assertEquals(630, extractor.getDuration()) // 10:30
+        );
+    }
+
+    /**
+     * Tests that the info row search correctly extracts date and view count
+     * from the 1-row channel format where parts are in reversed order: [date, views].
      */
     @Test
     void lockupViewModelOneRowReversed()
@@ -148,7 +175,13 @@ class YoutubeStreamInfoItemTest {
         final var json = JsonParser.object().from(new FileInputStream(getMockPath(
                 YoutubeStreamInfoItemTest.class, "lockupViewModelOneRowReversed") + ".json"));
         final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(Localization.DEFAULT);
-        final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser);
+        final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser) {
+            // Channel tabs use 1-row format at index 0
+            @Override
+            protected int getInfoMetadataRowIndex() {
+                return 0;
+            }
+        };
         assertAll(
         () -> assertEquals(StreamType.VIDEO_STREAM, extractor.getStreamType()),
         () -> assertEquals("Test Video One Row Reversed", extractor.getName()),
@@ -160,7 +193,7 @@ class YoutubeStreamInfoItemTest {
     }
 
     /**
-     * Tests that findMetadataPart handles 1-row format with only view count
+     * Tests that the info row search handles 1-row format with only view count
      * (no date text present) - e.g. for livestreams with watching count only.
      */
     @Test
@@ -169,7 +202,13 @@ class YoutubeStreamInfoItemTest {
         final var json = JsonParser.object().from(new FileInputStream(getMockPath(
                 YoutubeStreamInfoItemTest.class, "lockupViewModelOneRowViewsOnly") + ".json"));
         final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(Localization.DEFAULT);
-        final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser);
+        final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser) {
+            // Channel tabs use 1-row format at index 0
+            @Override
+            protected int getInfoMetadataRowIndex() {
+                return 0;
+            }
+        };
         assertAll(
         () -> assertEquals(StreamType.LIVE_STREAM, extractor.getStreamType()),
         () -> assertEquals("Test Video One Row Views Only", extractor.getName()),
