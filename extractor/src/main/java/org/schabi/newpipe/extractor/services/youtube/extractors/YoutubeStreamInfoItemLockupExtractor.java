@@ -426,12 +426,8 @@ public class YoutubeStreamInfoItemLockupExtractor implements StreamInfoItemExtra
     }
 
     /**
-     * Searches metadata rows and parts for text matching the given predicate.
+     * Searches all metadata rows and parts for text matching the given predicate.
      * This handles variable metadata layouts (1 row vs 2 rows, reversed parts, etc.).
-     * <p>In the 2-row layout ([uploader] [views, date]) the uploader row is skipped so
-     * that an uploader name containing words like "views" or "watching" cannot be
-     * mis-matched as the views/date text. The 1-row channel-tab layout ([views, date])
-     * has no uploader row, so nothing is skipped.</p>
      */
     private Optional<String> findMetadataPart(@Nonnull final Predicate<String> predicate)
             throws ParsingException {
@@ -440,10 +436,8 @@ public class YoutubeStreamInfoItemLockupExtractor implements StreamInfoItemExtra
                 "metadata.lockupMetadataViewModel.metadata"
                     + ".contentMetadataViewModel.metadataRows");
         }
-        final int rowSkip = cachedMetadataRows.size() > 1 ? 1 : 0;
         return cachedMetadataRows
             .streamAsJsonObjects()
-            .skip(rowSkip)
             .flatMap(jsonObject -> jsonObject.getArray("metadataParts")
                 .streamAsJsonObjects())
             .map(this::getTextContentFromMetadataPart)
