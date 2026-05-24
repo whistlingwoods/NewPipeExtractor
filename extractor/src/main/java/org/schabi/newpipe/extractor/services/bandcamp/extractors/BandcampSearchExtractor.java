@@ -21,6 +21,7 @@ import org.schabi.newpipe.extractor.services.bandcamp.extractors.streaminfoitem.
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Nonnull;
 
@@ -52,7 +53,10 @@ public class BandcampSearchExtractor extends SearchExtractor {
     public InfoItemsPage<InfoItem> getPage(final Page page)
             throws IOException, ExtractionException {
         final MultiInfoItemsCollector collector = new MultiInfoItemsCollector(getServiceId());
-        final Document d = Jsoup.parse(getDownloader().get(page.getUrl()).responseBody());
+//        final Document d = Jsoup.parse(getDownloader().get(page.getUrl()).responseBody());
+        final var headers = Map.of("Cookie", List.of("identity"));
+        final var response = getDownloader().get(page.getUrl(), headers).responseBody();
+        final Document d = Jsoup.parse(response);
 
         for (final Element searchResult : d.getElementsByClass("searchresult")) {
             final String type = searchResult.getElementsByClass("result-info").stream()
