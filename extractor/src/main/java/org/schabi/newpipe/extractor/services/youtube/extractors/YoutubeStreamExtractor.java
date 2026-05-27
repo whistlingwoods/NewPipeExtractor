@@ -132,6 +132,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     private JsonObject iosStreamingData;
     @Nullable
     private JsonObject androidStreamingData;
+    @Nullable
+    private JsonObject androidVRStreamingData;
 
     private JsonObject videoPrimaryInfoRenderer;
     private JsonObject videoSecondaryInfoRenderer;
@@ -147,6 +149,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     // three different strings are used.
     private String iosCpn;
     private String androidCpn;
+    private String androidVRCpn;
 
     @Nullable
     private String androidStreamingUrlsPoToken;
@@ -338,7 +341,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             return Long.parseLong(duration);
         } catch (final Exception e) {
             return getDurationFromFirstAdaptiveFormat(Arrays.asList(
-                    androidStreamingData, iosStreamingData));
+                    androidStreamingData, androidVRStreamingData, iosStreamingData));
         }
     }
 
@@ -569,7 +572,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         // There is no DASH manifest available with the iOS client
         return getManifestUrl(
                 "dash",
-                List.of(new Pair<>(androidStreamingData, androidStreamingUrlsPoToken)),
+                List.of(new Pair<>(androidStreamingData, androidStreamingUrlsPoToken),
+                        new Pair<>(androidVRStreamingData, (String) null)),
                 // Return version 7 of the DASH manifest, which is the latest one, reducing
                 // manifest size and allowing playback with some DASH players
                 "mpd_version=7");
@@ -588,7 +592,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         return getManifestUrl(
                 "hls",
                 List.of(new Pair<>(iosStreamingData, iosStreamingUrlsPoToken),
-                        new Pair<>(androidStreamingData, androidStreamingUrlsPoToken)),
+                        new Pair<>(androidStreamingData, androidStreamingUrlsPoToken),
+                        new Pair<>(androidVRStreamingData, (String) null)),
                 "");
     }
 
@@ -790,6 +795,10 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
         fetchAndroidClient(localization, contentCountry, videoId, androidPoTokenResult);
 
+        if (isSabrOnlyStreamingData(androidStreamingData)) {
+            fetchAndroidVRClient(localization, contentCountry, videoId);
+        }
+
         setStreamType();
 
         if (fetchIosClient) {
@@ -893,6 +902,38 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
         if (androidPoTokenResult != null) {
             androidStreamingUrlsPoToken = androidPoTokenResult.streamingDataPoToken;
+        }
+    }
+
+    private static boolean isSabrOnlyStreamingData(@Nullable final JsonObject streamingData) {
+        if (streamingData == null) {
+            return true;
+        }
+        final JsonArray adaptiveFormats = streamingData.getArray(ADAPTIVE_FORMATS);
+        if (adaptiveFormats == null || adaptiveFormats.isEmpty()) {
+            return true;
+        }
+        for (int i = 0; i < adaptiveFormats.size(); i++) {
+            final JsonObject fmt = adaptiveFormats.getObject(i);
+            if (fmt.has("url") || fmt.has(SIGNATURE_CIPHER) || fmt.has(CIPHER)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void fetchAndroidVRClient(@Nonnull final Localization localization,
+                                      @Nonnull final ContentCountry contentCountry,
+                                      @Nonnull final String videoId) {
+        try {
+            androidVRCpn = generateContentPlaybackNonce();
+            final JsonObject vrPlayerResponse =
+                    YoutubeStreamHelper.getAndroidVRPlayerResponse(
+                            contentCountry, localization, videoId, androidVRCpn);
+            if (!isPlayerResponseNotValid(vrPlayerResponse, videoId)) {
+                androidVRStreamingData = vrPlayerResponse.getObject(STREAMING_DATA);
+            }
+        } catch (final Exception ignored) {
         }
     }
 
@@ -1055,6 +1096,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             java.util.stream.Stream.of(
                     new Pair<>(androidStreamingData,
                             new Pair<>(androidCpn, androidStreamingUrlsPoToken)),
+                    new Pair<>(androidVRStreamingData,
+                            new Pair<>(androidVRCpn, (String) null)),
                     new Pair<>(iosStreamingData,
                             new Pair<>(iosCpn, iosStreamingUrlsPoToken)))
                     .flatMap(pair -> getStreamsFromStreamingDataKey(
