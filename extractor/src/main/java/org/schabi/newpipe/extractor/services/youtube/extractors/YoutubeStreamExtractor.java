@@ -1311,7 +1311,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                             audioTrackId.substring(0, audioTrackIdLastLocaleCharacter)
                     ).ifPresent(itagItem::setAudioLocale);
                 }
-                itagItem.setAudioTrackType(YoutubeParsingHelper.extractAudioTrackType(streamUrl));
+                itagItem.setAudioTrackType(YoutubeParsingHelper.extractAudioTrackType(streamUrl,
+                        itagItem.getXtags()));
             }
 
             itagItem.setAudioTrackName(formatData.getObject("audioTrack")
