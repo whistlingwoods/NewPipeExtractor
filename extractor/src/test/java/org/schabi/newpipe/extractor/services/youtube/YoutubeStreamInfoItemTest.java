@@ -151,8 +151,8 @@ class YoutubeStreamInfoItemTest {
         final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser) {
             // Channel tabs use 1-row format at index 0
             @Override
-            protected int getInfoMetadataRowIndex() {
-                return 0;
+            protected boolean isChannelOrCoursePlaylistLockupItem() {
+                return true;
             }
         };
         assertAll(
@@ -176,37 +176,9 @@ class YoutubeStreamInfoItemTest {
                 YoutubeStreamInfoItemTest.class, "lockupViewModelOneRowReversed") + ".json"));
         final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(Localization.DEFAULT);
         final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser) {
-            // Channel tabs use 1-row format at index 0
             @Override
-            protected int getInfoMetadataRowIndex() {
-                return 0;
-            }
-        };
-        assertAll(
-        () -> assertEquals(StreamType.VIDEO_STREAM, extractor.getStreamType()),
-        () -> assertEquals("Test Video One Row Reversed", extractor.getName()),
-        () -> assertEquals("1 day ago", extractor.getTextualUploadDate()),
-        () -> assertNotNull(extractor.getUploadDate()),
-        () -> assertEquals(1200, extractor.getViewCount()), // 1.2K views
-        () -> assertEquals(300, extractor.getDuration()) // 5:00
-        );
-    }
-
-    /**
-     * Tests that the info row search handles 1-row format with only view count
-     * (no date text present) - e.g. for livestreams with watching count only.
-     */
-    @Test
-    void lockupViewModelOneRowViewsOnly()
-            throws FileNotFoundException, JsonParserException {
-        final var json = JsonParser.object().from(new FileInputStream(getMockPath(
-                YoutubeStreamInfoItemTest.class, "lockupViewModelOneRowViewsOnly") + ".json"));
-        final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(Localization.DEFAULT);
-        final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser) {
-            // Channel tabs use 1-row format at index 0
-            @Override
-            protected int getInfoMetadataRowIndex() {
-                return 0;
+            protected boolean isChannelOrCoursePlaylistLockupItem() {
+                return true;
             }
         };
         assertAll(
@@ -215,7 +187,36 @@ class YoutubeStreamInfoItemTest {
         () -> assertNull(extractor.getTextualUploadDate()),
         () -> assertNull(extractor.getUploadDate()),
         () -> assertEquals(500, extractor.getViewCount()), // 500 watching
-        () -> assertEquals(-1, extractor.getDuration())
+        () -> assertEquals(-1, extractor.getDuration()),
+        () -> assertEquals(ContentAvailability.AVAILABLE, extractor.getContentAvailability())
+        );
+    }
+
+    @Test
+    void lockupViewModelOneRowViewsOnly()
+            throws FileNotFoundException, JsonParserException {
+        final var json = JsonParser.object().from(new FileInputStream(getMockPath(
+                YoutubeStreamInfoItemTest.class, "lockupViewModelOneRowViewsOnly") + ".json"));
+        final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(Localization.DEFAULT);
+        final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser) {
+            @Override
+            protected boolean isChannelOrCoursePlaylistLockupItem() {
+                return true;
+            }
+        };
+        assertAll(
+        () -> assertEquals(StreamType.VIDEO_STREAM, extractor.getStreamType()),
+        () -> assertFalse(extractor.isAd()),
+        () -> assertEquals("https://www.youtube.com/watch?v=x3pS1_qqtIs", extractor.getUrl()),
+        () -> assertEquals("Daily Linux News - S03E105 - EU will fund European datacenters, Steam Deck's massive price increase", extractor.getName()),
+        () -> assertEquals(725, extractor.getDuration()),
+        () -> assertEquals("12 hours ago", extractor.getTextualUploadDate()),
+        () -> assertNotNull(extractor.getUploadDate()),
+        () -> assertEquals(-1, extractor.getViewCount()),
+        () -> assertFalse(extractor.getThumbnails().isEmpty()),
+        () -> assertNull(extractor.getShortDescription()),
+        () -> assertFalse(extractor.isShortFormContent()),
+        () -> assertEquals(ContentAvailability.MEMBERSHIP, extractor.getContentAvailability())
         );
     }
 
@@ -233,10 +234,9 @@ class YoutubeStreamInfoItemTest {
         final var timeAgoParser = TimeAgoPatternsManager.getTimeAgoParserFor(
                 Localization.DEFAULT);
         final var extractor = new YoutubeStreamInfoItemLockupExtractor(json, timeAgoParser) {
-            // Channel tabs use 1-row format at index 0
             @Override
-            protected int getInfoMetadataRowIndex() {
-                return 0;
+            protected boolean isChannelOrCoursePlaylistLockupItem() {
+                return true;
             }
         };
         assertAll(

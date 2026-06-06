@@ -188,7 +188,7 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
         return playlistHeader;
     }
 
-    private Boolean isCoursePlaylist() {
+    private boolean isCoursePlaylist() {
         if (isCoursePlaylist == null) {
             isCoursePlaylist = getPlaylistHeader().getObject("onDescriptionTap")
                     .getObject(COMMAND_EXECUTOR_COMMAND)
@@ -201,7 +201,7 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
                                     .getObject("identifier")
                                     .getString("tag")));
         }
-    
+
         return isCoursePlaylist;
     }
 
@@ -426,9 +426,7 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
                 // containing the continuation we need and one a playlistVotingRefreshPopupCommand
                 continuationObject = continuationEndpoint.getObject(COMMAND_EXECUTOR_COMMAND)
                         .getArray("commands")
-                        .stream()
-                        .filter(JsonObject.class::isInstance)
-                        .map(JsonObject.class::cast)
+                        .streamAsJsonObjects()
                         .filter(command -> command.has(CONTINUATION_COMMAND))
                         .findFirst()
                         .orElse(new JsonObject());
@@ -472,9 +470,7 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
         final PlaylistExtractor playlistExtractor = this;
         final boolean isCoursePlaylistResult = isCoursePlaylist();
 
-        videos.stream()
-                .filter(JsonObject.class::isInstance)
-                .map(JsonObject.class::cast)
+        videos.streamAsJsonObjects()
                 .forEach(video -> {
                     if (video.has(PLAYLIST_VIDEO_RENDERER)) {
                         collector.commit(new YoutubeStreamInfoItemExtractor(
@@ -506,7 +502,8 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
                                         richItemRendererContent.getObject(REEL_ITEM_RENDERER)));
                             }
                         }
-                        } else if (video.has(LOCKUP_VIEW_MODEL)) {
+
+                    } else if (video.has(LOCKUP_VIEW_MODEL)) {
                         collector.commit(new YoutubeStreamInfoItemLockupExtractor(
                                 video.getObject(LOCKUP_VIEW_MODEL), timeAgoParser) {
                             @Override
