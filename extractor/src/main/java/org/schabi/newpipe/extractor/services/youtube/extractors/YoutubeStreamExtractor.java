@@ -856,11 +856,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
         setStreamType();
 
-        // Always fetch the iOS client for livestreams, since its player response returns
-        // adaptiveFormats with actual stream URLs, unlike the Android client which only
-        // returns format metadata without URLs for livestreams.
-        if (fetchIosClient || streamType == StreamType.LIVE_STREAM
-                || streamType == StreamType.POST_LIVE_STREAM) {
+        if (fetchIosClient) {
             final PoTokenResult iosPoTokenResult = noPoTokenProviderSet ? null
                     : poTokenProviderInstance.getIosClientPoToken(videoId);
             fetchIosClient(localization, contentCountry, videoId, iosPoTokenResult);
