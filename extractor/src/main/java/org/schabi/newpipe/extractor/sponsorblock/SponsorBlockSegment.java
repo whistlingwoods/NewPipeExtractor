@@ -31,7 +31,7 @@ public class SponsorBlockSegment implements Serializable {
         }
     }
 
-    public double getChainStartTime(){
+    public double getChainStartTime() {
         if (chain.isEmpty()) {
             return startTime;
         } else {
@@ -39,7 +39,7 @@ public class SponsorBlockSegment implements Serializable {
         }
     }
 
-    public double getChainEndTime(){
+    public double getChainEndTime() {
         if (chain.isEmpty()) {
             return endTime;
         } else {

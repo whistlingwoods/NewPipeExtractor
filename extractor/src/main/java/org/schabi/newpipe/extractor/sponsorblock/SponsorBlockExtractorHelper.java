@@ -81,7 +81,7 @@ public final class SponsorBlockExtractorHelper {
         final String videoIdHash;
         try {
             videoIdHash = Utils.toSha256(videoId);
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException e) {
             return new SponsorBlockSegment[0];
         }
 
