@@ -150,6 +150,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     private String visionOsCpn;
     private String iosCpn;
     private String androidCpn;
+    @Nullable
+    private String liveChatContinuation;
 
     @Nullable
     private String androidStreamingUrlsPoToken;
@@ -748,6 +750,17 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         assertPageFetched();
 
         return streamType;
+    }
+
+    @Override
+    public boolean hasLiveChat() {
+        return liveChatContinuation != null;
+    }
+
+    @Override
+    @Nullable
+    public String getLiveChatContinuation() {
+        return liveChatContinuation;
     }
 
     private void setStreamType() {
