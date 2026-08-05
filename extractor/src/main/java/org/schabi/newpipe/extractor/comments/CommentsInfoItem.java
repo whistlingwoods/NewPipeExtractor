@@ -105,6 +105,8 @@ public class CommentsInfoItem extends InfoItem {
     }
 
     /**
+     * Gets the comment's like count
+     *
      * @return the comment's like count or {@link CommentsInfoItem#NO_LIKE_COUNT} if it is
      * unavailable
      */

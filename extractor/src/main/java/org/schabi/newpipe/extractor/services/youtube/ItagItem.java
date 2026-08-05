@@ -232,6 +232,8 @@ public class ItagItem implements Serializable {
 
     // Audio fields
     /**
+     * The average bitrate
+     *
      * @deprecated Use {@link #getAverageBitrate()} instead.
      */
     @Deprecated
@@ -241,12 +243,16 @@ public class ItagItem implements Serializable {
 
     // Video fields
     /**
+     * The resolution string
+     *
      * @deprecated Use {@link #getResolutionString()} instead.
      */
     @Deprecated
     public String resolutionString;
 
     /**
+     * The frames per second
+     *
      * @deprecated Use {@link #getFps()} and {@link #setFps(int)} instead.
      */
     @Deprecated

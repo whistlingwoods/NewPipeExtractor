@@ -30,6 +30,8 @@ public class MetaInfo implements Serializable {
     }
 
     /**
+     * Gets the title of the meta info
+     *
      * @return Title of the info. Can be empty.
      */
     @Nonnull

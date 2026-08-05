@@ -28,6 +28,8 @@ public class MediaCCCChannelTabExtractor extends ChannelTabExtractor {
     private JsonObject conferenceData;
 
     /**
+     * Creates a new {@link MediaCCCChannelTabExtractor}
+     *
      * @param conferenceData will be not-null if conference data has already been fetched by
      *                       {@link MediaCCCConferenceExtractor}. Otherwise, if this parameter is
      *                       {@code null}, conference data will be fetched anew.

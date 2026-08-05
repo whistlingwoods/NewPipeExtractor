@@ -54,6 +54,8 @@ public final class MediaCCCConferenceLinkHandlerFactory extends ListLinkHandlerF
     }
 
     /**
+     * Gets the available content filters
+     *
      * @see MediaCCCConferenceLinkHandlerFactory
      * @return MediaCCC's only channel "tab", i.e. {@link ChannelTabs#VIDEOS}
      */

@@ -76,8 +76,8 @@
         </module>
         <module name="JavadocType"/>
         <!--<module name="JavadocVariable"/>-->
-        <module name="JavadocStyle">
-            <property name="checkFirstSentence" value="false"/>
+        <module name="SummaryJavadoc">
+            <property name="period" value=""/>
         </module>
         <!--<module name="MissingJavadocMethod"/>-->
 

@@ -15,6 +15,8 @@ public abstract class CommentsExtractor extends ListExtractor<CommentsInfoItem> 
     }
 
     /**
+     * Returns whether comments are disabled
+     *
      * @apiNote Warning: This method is experimental and may get removed in a future release.
      * @return <code>true</code> if the comments are disabled otherwise <code>false</code> (default)
      */
@@ -23,6 +25,8 @@ public abstract class CommentsExtractor extends ListExtractor<CommentsInfoItem> 
     }
 
     /**
+     * Gets the total number of comments
+     *
      * @return the total number of comments
      */
     public int getCommentsCount() throws ExtractionException {

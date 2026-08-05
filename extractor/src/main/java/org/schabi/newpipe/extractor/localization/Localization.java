@@ -26,6 +26,8 @@ public class Localization implements Serializable {
     private final String countryCode;
 
     /**
+     * Creates a list of localization objects from localization codes
+     *
      * @param localizationCodeList a list of localization code, formatted like {@link
      *                             #getLocalizationCode()}
      * @throws IllegalArgumentException If any of the localizationCodeList is formatted incorrectly
@@ -44,6 +46,8 @@ public class Localization implements Serializable {
     }
 
     /**
+     * Creates an optional localization object from a localization code
+     *
      * @param localizationCode a localization code, formatted like {@link #getLocalizationCode()}
      * @return A Localization, if the code was valid.
      */

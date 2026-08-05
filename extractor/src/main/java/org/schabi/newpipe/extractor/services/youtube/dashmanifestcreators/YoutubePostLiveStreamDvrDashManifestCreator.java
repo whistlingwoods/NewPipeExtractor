@@ -170,6 +170,8 @@ public final class YoutubePostLiveStreamDvrDashManifestCreator {
     }
 
     /**
+     * Gets the cache of DASH manifests generated for post-live-DVR streams
+     *
      * @return the cache of DASH manifests generated for post-live-DVR streams
      */
     @Nonnull

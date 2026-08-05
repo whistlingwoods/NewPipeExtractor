@@ -155,6 +155,8 @@ public final class BandcampExtractorHelper {
     }
 
     /**
+     * Checks if the given URL is a Bandcamp artist domain
+     *
      * @return <code>true</code> if the given URL looks like it comes from a bandcamp custom domain
      * or a <code>*.bandcamp.com</code> subdomain
      */

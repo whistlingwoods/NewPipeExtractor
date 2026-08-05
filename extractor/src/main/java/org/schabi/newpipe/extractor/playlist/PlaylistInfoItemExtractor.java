@@ -43,6 +43,8 @@ public interface PlaylistInfoItemExtractor extends InfoItemExtractor {
     }
 
     /**
+     * Gets the type of this playlist
+     *
      * @return the type of this playlist, see {@link PlaylistInfo.PlaylistType} for a description
      *         of types. If not overridden always returns {@link PlaylistInfo.PlaylistType#NORMAL}.
      */

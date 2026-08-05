@@ -632,6 +632,8 @@ public class StreamInfo extends Info {
     }
 
     /**
+     * Gets the related streams
+     *
      * @deprecated Use {@link #getRelatedItems()}
      */
     @Deprecated
@@ -644,6 +646,8 @@ public class StreamInfo extends Info {
     }
 
     /**
+     * Sets the related streams
+     *
      * @deprecated Use {@link #setRelatedItems(List)}
      */
     @Deprecated
