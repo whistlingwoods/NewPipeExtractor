@@ -1,0 +1,62 @@
+{
+  "request": {
+    "httpMethod": "GET",
+    "url": "https://bandcamp.com/api/mobile/22/tralbum_details?band_id\u003d2464198920\u0026tralbum_id\u003d2572654767\u0026tralbum_type\u003da",
+    "headers": {
+      "Accept-Language": [
+        "en-GB, en;q\u003d0.9"
+      ]
+    },
+    "localization": {
+      "languageCode": "en",
+      "countryCode": "GB"
+    }
+  },
+  "response": {
+    "responseCode": 200,
+    "responseMessage": "",
+    "responseHeaders": {
+      "accept-ranges": [
+        "bytes"
+      ],
+      "cache-control": [
+        "no-cache, no-store"
+      ],
+      "content-type": [
+        "application/json; charset\u003dUTF-8"
+      ],
+      "date": [
+        "Wed, 05 Aug 2026 17:31:52 GMT"
+      ],
+      "server": [
+        "nginx"
+      ],
+      "set-cookie": [
+        "BACKENDID3\u003dflexocentral-7w8g-7; path\u003d/; Secure"
+      ],
+      "strict-transport-security": [
+        "max-age\u003d63072000"
+      ],
+      "vary": [
+        "Accept-Encoding"
+      ],
+      "via": [
+        "1.1 varnish, 1.1 varnish"
+      ],
+      "x-cache": [
+        "MISS, MISS"
+      ],
+      "x-cache-hits": [
+        "0, 0"
+      ],
+      "x-served-by": [
+        "cache-bog-skbo2340026-BOG, cache-bog-skbo2340026-BOG, cache-bog-skbo2340026-BOG"
+      ],
+      "x-timer": [
+        "S1785951113.814043,VS0,VE158"
+      ]
+    },
+    "responseBody": "{\"id\":2572654767,\"type\":\"a\",\"title\":\"Wintergatan - Full Album\",\"bandcamp_url\":\"https://wintergatan.bandcamp.com/album/wintergatan-full-album\",\"art_id\":2367528067,\"band\":{\"band_id\":2464198920,\"name\":\"Wintergatan\",\"image_id\":1354613,\"bio\":\"\",\"location\":\"Gothenburg, Sweden\"},\"tralbum_artist\":\"Wintergatan\",\"package_art\":[],\"featured_track_id\":2221991469,\"tracks\":[{\"track_id\":2221991469,\"track_license_id\":null,\"title\":\"Sommarfågel\",\"track_num\":1,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d2221991469\u0026ts\u003d1785907722\u0026t\u003d45749efb93b1092be7fc771844c9f42ed805893f\"},\"duration\":232.642,\"encodings_id\":3744395278,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":2572654767,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":8.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/sommarf-gel\"},{\"track_id\":1593213040,\"track_license_id\":null,\"title\":\"The Rocket\",\"track_num\":2,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d1593213040\u0026ts\u003d1785907722\u0026t\u003d2f19ea626ef362155636d025f42e4a243658db82\"},\"duration\":211.491,\"encodings_id\":2499387043,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":2572654767,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":8.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/the-rocket\"},{\"track_id\":2806652396,\"track_license_id\":null,\"title\":\"Valentine\",\"track_num\":3,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d2806652396\u0026ts\u003d1785907722\u0026t\u003d1925be8773333be56f70471d6f7b2a7509215751\"},\"duration\":238.538,\"encodings_id\":1425682931,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":2572654767,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":8.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/valentine\"},{\"track_id\":4173325157,\"track_license_id\":null,\"title\":\"Slottskogen Disc Golf Club\",\"track_num\":4,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d4173325157\u0026ts\u003d1785907722\u0026t\u003dfb1fc2fcc44e7724ea326e1b7c7a85f196d9a07e\"},\"duration\":212.65,\"encodings_id\":3458042641,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":2572654767,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":8.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/slottskogen-disc-golf-club\"},{\"track_id\":3038199534,\"track_license_id\":null,\"title\":\"Biking Is Better\",\"track_num\":5,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d3038199534\u0026ts\u003d1785907722\u0026t\u003dba5cd9f6a073bf569373f8fa97cd8af785ea1b2b\"},\"duration\":208.27,\"encodings_id\":2051583298,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":2572654767,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":8.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/biking-is-better\"},{\"track_id\":3487050701,\"track_license_id\":null,\"title\":\"Västanberg\",\"track_num\":6,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d3487050701\u0026ts\u003d1785907722\u0026t\u003dcbd5772515ceb2677bb488c541dd8ca512f18ff5\"},\"duration\":265.692,\"encodings_id\":2970653762,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":2572654767,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":8.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/v-stanberg\"},{\"track_id\":1604303190,\"track_license_id\":null,\"title\":\"Starmachine2000\",\"track_num\":7,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d1604303190\u0026ts\u003d1785907722\u0026t\u003d1bf83c75c97b44a97fd3d0f05646173f35619b48\"},\"duration\":243.139,\"encodings_id\":441780849,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":2572654767,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":8.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/starmachine2000\"},{\"track_id\":716010980,\"track_license_id\":null,\"title\":\"All Was Well\",\"track_num\":8,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d716010980\u0026ts\u003d1785907722\u0026t\u003d4fbe38fe04e259ae76c42760325bf1cce1c94f89\"},\"duration\":183.224,\"encodings_id\":3257813101,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":2572654767,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":8.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/all-was-well\"},{\"track_id\":2322125757,\"track_license_id\":null,\"title\":\"Paradis\",\"track_num\":9,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d2322125757\u0026ts\u003d1785907722\u0026t\u003d3e02f2e0816bb21f4ac1c45c5709b6a025f2ef88\"},\"duration\":850.6,\"encodings_id\":2214980693,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":2572654767,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":8.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/paradis\"}],\"credits\":null,\"about\":null,\"album_id\":2572654767,\"album_title\":\"Wintergatan - Full Album\",\"release_date\":1366761600,\"is_purchasable\":true,\"free_download\":false,\"is_preorder\":false,\"tags\":[{\"name\":\"Pop\",\"norm_name\":\"pop\",\"url\":\"/discover/pop\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"Sommarfågel\",\"norm_name\":\"sommarfågel\",\"url\":\"/discover/sommarf%C3%A5gel\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"Wintergatan\",\"norm_name\":\"wintergatan\",\"url\":\"/discover/wintergatan\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"accordion\",\"norm_name\":\"accordion\",\"url\":\"/discover/accordion\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"bass\",\"norm_name\":\"bass\",\"url\":\"/discover/bass\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"drums\",\"norm_name\":\"drums\",\"url\":\"/discover/drums\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"instrumental\",\"norm_name\":\"instrumental\",\"url\":\"/discover/instrumental\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"theremin\",\"norm_name\":\"theremin\",\"url\":\"/discover/theremin\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"vibraphone\",\"norm_name\":\"vibraphone\",\"url\":\"/discover/vibraphone\",\"isloc\":false,\"loc_id\":null,\"geoname\":null}],\"currency\":\"SEK\",\"is_set_price\":false,\"price\":56.0,\"require_email\":false,\"label\":null,\"label_id\":null,\"package_details_lite\":{},\"has_digital_download\":true,\"num_downloadable_tracks\":9,\"merch_sold_out\":true,\"streaming_limit\":3}",
+    "latestUrl": "https://bandcamp.com/api/mobile/22/tralbum_details?band_id\u003d2464198920\u0026tralbum_id\u003d2572654767\u0026tralbum_type\u003da"
+  }
+}

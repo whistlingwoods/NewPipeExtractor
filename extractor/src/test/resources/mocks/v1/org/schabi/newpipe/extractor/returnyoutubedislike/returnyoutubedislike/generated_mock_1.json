@@ -1,0 +1,91 @@
+{
+  "request": {
+    "httpMethod": "POST",
+    "url": "https://returnyoutubedislikeapi.com/votes",
+    "headers": {
+      "Content-Type": [
+        "application/json"
+      ],
+      "Accept-Language": [
+        "en-GB, en;q\u003d0.9"
+      ]
+    },
+    "dataToSend": [
+      91,
+      34,
+      107,
+      120,
+      79,
+      117,
+      71,
+      56,
+      106,
+      77,
+      73,
+      103,
+      73,
+      34,
+      44,
+      34,
+      100,
+      81,
+      119,
+      52,
+      119,
+      57,
+      87,
+      103,
+      88,
+      99,
+      81,
+      34,
+      93
+    ],
+    "localization": {
+      "languageCode": "en",
+      "countryCode": "GB"
+    }
+  },
+  "response": {
+    "responseCode": 200,
+    "responseMessage": "",
+    "responseHeaders": {
+      "alt-svc": [
+        "h3\u003d\":443\"; ma\u003d86400"
+      ],
+      "cache-control": [
+        "max-age\u003d180, s-maxage\u003d180, public"
+      ],
+      "cf-cache-status": [
+        "DYNAMIC"
+      ],
+      "cf-ray": [
+        "a2678904b8d74e75-MIA"
+      ],
+      "content-length": [
+        "0"
+      ],
+      "date": [
+        "Wed, 05 Aug 2026 17:31:24 GMT"
+      ],
+      "nel": [
+        "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"
+      ],
+      "report-to": [
+        "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s\u003d33u7vJ46Z%2Bm7yhYswxs1HyXPbmEX%2BCyuFUhbEBTRFGJM8oiWxUnJTAWLw9XXWwpYY0Arw09%2FRJIOhZh9lb3izZ0EVnNp97SFPlDBnw7TU7QrJG%2FrdKoJWWU2CBmHPRcFxnW%2FnQQ2A8zWF8oV23k%3D\"}]}"
+      ],
+      "request-context": [
+        "appId\u003dcid-v1:19ab6044-91a6-4c44-a184-4d6a5e121c8a"
+      ],
+      "server": [
+        "cloudflare"
+      ],
+      "server-timing": [
+        "cfCacheStatus;desc\u003d\"DYNAMIC\"",
+        "cfEdge;dur\u003d3,cfOrigin;dur\u003d141"
+      ]
+    },
+    "responseBody": "",
+    "latestUrl": "https://returnyoutubedislikeapi.com/votes"
+  }
+}

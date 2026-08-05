@@ -1,0 +1,66 @@
+{
+  "request": {
+    "httpMethod": "GET",
+    "url": "https://returnyoutubedislikeapi.com/votes?videoId\u003ddQw4w9WgXcQ",
+    "headers": {
+      "Accept-Language": [
+        "en-GB, en;q\u003d0.9"
+      ]
+    },
+    "localization": {
+      "languageCode": "en",
+      "countryCode": "GB"
+    }
+  },
+  "response": {
+    "responseCode": 200,
+    "responseMessage": "",
+    "responseHeaders": {
+      "age": [
+        "90"
+      ],
+      "alt-svc": [
+        "h3\u003d\":443\"; ma\u003d86400"
+      ],
+      "cache-control": [
+        "public, max-age\u003d180, s-maxage\u003d180"
+      ],
+      "cf-cache-status": [
+        "HIT"
+      ],
+      "cf-ray": [
+        "a267890aede64e75-MIA"
+      ],
+      "content-type": [
+        "application/json; charset\u003dutf-8"
+      ],
+      "data-source": [
+        "db"
+      ],
+      "date": [
+        "Wed, 05 Aug 2026 17:31:25 GMT"
+      ],
+      "last-modified": [
+        "Wed, 05 Aug 2026 17:29:54 GMT"
+      ],
+      "nel": [
+        "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"
+      ],
+      "report-to": [
+        "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s\u003d8OxULSn%2BRdPpMn8APFfqz943rXb0UJi4jmZbV1elx8J0wB%2FGvszIalRTunPHv0n6OSNp30bvvOtqQqzoNG9utkifKinhpD%2FVmfvjEN4w2ts8Jz6STpRpgXmr2hIPOFWpYkDhq5s9Q6yjf8hwgds%3D\"}]}"
+      ],
+      "request-context": [
+        "appId\u003dcid-v1:19ab6044-91a6-4c44-a184-4d6a5e121c8a"
+      ],
+      "server": [
+        "cloudflare"
+      ],
+      "server-timing": [
+        "cfCacheStatus;desc\u003d\"HIT\"",
+        "cfEdge;dur\u003d6,cfOrigin;dur\u003d0"
+      ]
+    },
+    "responseBody": "{\"id\":\"dQw4w9WgXcQ\",\"dateCreated\":\"2022-04-09T22:01:38.222268Z\",\"likes\":19311989,\"rawDislikes\":6581,\"rawLikes\":127393,\"dislikes\":516744,\"rating\":4.895758543927139,\"viewCount\":1800605224,\"deleted\":false}",
+    "latestUrl": "https://returnyoutubedislikeapi.com/votes?videoId\u003ddQw4w9WgXcQ"
+  }
+}

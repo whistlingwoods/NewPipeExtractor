@@ -1,0 +1,62 @@
+{
+  "request": {
+    "httpMethod": "GET",
+    "url": "https://bandcamp.com/api/mobile/22/tralbum_details?band_id\u003d2464198920\u0026tralbum_id\u003d354392904\u0026tralbum_type\u003da",
+    "headers": {
+      "Accept-Language": [
+        "en-GB, en;q\u003d0.9"
+      ]
+    },
+    "localization": {
+      "languageCode": "en",
+      "countryCode": "GB"
+    }
+  },
+  "response": {
+    "responseCode": 200,
+    "responseMessage": "",
+    "responseHeaders": {
+      "accept-ranges": [
+        "bytes"
+      ],
+      "cache-control": [
+        "no-cache, no-store"
+      ],
+      "content-type": [
+        "application/json; charset\u003dUTF-8"
+      ],
+      "date": [
+        "Wed, 05 Aug 2026 17:31:54 GMT"
+      ],
+      "server": [
+        "nginx"
+      ],
+      "set-cookie": [
+        "BACKENDID3\u003dflexocentral-xngl-5; path\u003d/; Secure"
+      ],
+      "strict-transport-security": [
+        "max-age\u003d63072000"
+      ],
+      "vary": [
+        "Accept-Encoding"
+      ],
+      "via": [
+        "1.1 varnish, 1.1 varnish"
+      ],
+      "x-cache": [
+        "MISS, MISS"
+      ],
+      "x-cache-hits": [
+        "0, 0"
+      ],
+      "x-served-by": [
+        "cache-bog-skbo2340026-BOG, cache-bog-skbo2340026-BOG, cache-bog-skbo2340026-BOG"
+      ],
+      "x-timer": [
+        "S1785951114.063959,VS0,VE172"
+      ]
+    },
+    "responseBody": "{\"id\":354392904,\"type\":\"a\",\"title\":\"Wintergatan Live at Victoriateatern\",\"bandcamp_url\":\"https://wintergatan.bandcamp.com/album/wintergatan-live-at-victoriateatern\",\"art_id\":2772473693,\"band\":{\"band_id\":2464198920,\"name\":\"Wintergatan\",\"image_id\":1354613,\"bio\":\"\",\"location\":\"Gothenburg, Sweden\"},\"tralbum_artist\":\"Wintergatan\",\"package_art\":[],\"featured_track_id\":1602887025,\"tracks\":[{\"track_id\":198512081,\"track_license_id\":null,\"title\":\"Intro\",\"track_num\":1,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d198512081\u0026ts\u003d1785948242\u0026t\u003d005842cf01f6fcd191c16efbb4e368763c217cab\"},\"duration\":172.784,\"encodings_id\":1167393473,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":354392904,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":0.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/intro\"},{\"track_id\":3085584537,\"track_license_id\":null,\"title\":\"Marble Machine\",\"track_num\":2,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d3085584537\u0026ts\u003d1785948242\u0026t\u003d80c24d22f10d347d670a3e86b58d5aad0a10796a\"},\"duration\":261.538,\"encodings_id\":1988487940,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":354392904,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":0.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/marble-machine-2\"},{\"track_id\":718750543,\"track_license_id\":null,\"title\":\"Starmachine 2000\",\"track_num\":3,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d718750543\u0026ts\u003d1785948242\u0026t\u003de891641d4b02df0a6bdd4782c012663f2e67943d\"},\"duration\":286.466,\"encodings_id\":2179827235,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":354392904,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":0.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/starmachine-2000\"},{\"track_id\":96422749,\"track_license_id\":null,\"title\":\"All Was Well\",\"track_num\":4,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d96422749\u0026ts\u003d1785948242\u0026t\u003dd6acdd0a584664f5b4020e97afdca4e0a388d7e0\"},\"duration\":267.197,\"encodings_id\":1113121309,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":354392904,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":0.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/all-was-well-2\"},{\"track_id\":2873486045,\"track_license_id\":null,\"title\":\"Biking Is Better\",\"track_num\":5,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d2873486045\u0026ts\u003d1785948242\u0026t\u003d3653f68b7d74e206ae6f249d30008980b7ceb535\"},\"duration\":178.009,\"encodings_id\":2313000104,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":354392904,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":0.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/biking-is-better-2\"},{\"track_id\":4065057638,\"track_license_id\":null,\"title\":\"Slottskogen Disc Golf Club\",\"track_num\":6,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d4065057638\u0026ts\u003d1785948242\u0026t\u003d8f1961303b1bf6276a5bbc57a2dbd90005c1ea74\"},\"duration\":226.25,\"encodings_id\":1451521617,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":354392904,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":0.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/slottskogen-disc-golf-club-2\"},{\"track_id\":3893288722,\"track_license_id\":null,\"title\":\"Tornado\",\"track_num\":7,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d3893288722\u0026ts\u003d1785948242\u0026t\u003d3a7c556643ba10b42b5d149f15a600333ee6e930\"},\"duration\":313.927,\"encodings_id\":2864862253,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":354392904,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":0.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/tornado-2\"},{\"track_id\":32491107,\"track_license_id\":null,\"title\":\"Valentine\",\"track_num\":8,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d32491107\u0026ts\u003d1785948242\u0026t\u003da0ffee608ab05207d1fff3d58e9568748932e82c\"},\"duration\":304.072,\"encodings_id\":3356995925,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":354392904,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":0.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/valentine-2\"},{\"track_id\":176642463,\"track_license_id\":null,\"title\":\"Sommarfågel\",\"track_num\":9,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d176642463\u0026ts\u003d1785948242\u0026t\u003d8b7c8dac7207120910971a5fa83b9b917286ad13\"},\"duration\":340.6,\"encodings_id\":1644637117,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":354392904,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":0.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/sommarf-gel-2\"},{\"track_id\":1602887025,\"track_license_id\":null,\"title\":\"Paradis\",\"track_num\":10,\"streaming_url\":{\"mp3-128\":\"https://bandcamp.com/stream_redirect?enc\u003dmp3-128\u0026track_id\u003d1602887025\u0026ts\u003d1785948242\u0026t\u003dd8439bf38b4bff53f5a0a5323e36c347a5ad7d5b\"},\"duration\":819.852,\"encodings_id\":1052168892,\"album_title\":null,\"band_name\":\"Wintergatan\",\"art_id\":null,\"album_id\":354392904,\"is_streamable\":true,\"has_lyrics\":false,\"is_set_price\":false,\"price\":0.0,\"has_digital_download\":true,\"merch_ids\":null,\"merch_sold_out\":null,\"currency\":\"SEK\",\"require_email\":false,\"is_purchasable\":true,\"band_id\":2464198920,\"label\":null,\"label_id\":null,\"track_url\":\"https://wintergatan.bandcamp.com/track/paradis-2\"}],\"credits\":\"This concert was one of the absolute last concerts were we played the songs from our last album. We have now taken a break from playing live to record our new double album and build the Marble Machine X. While we are in the studio/workshop doing that we thought we should share this last concert with you since its going to be a while before we are on stage again. \\r\\n\\r\\nFor the next tour we will make sure to book shows worldwide and we will bring the Marble Machine X and we are already looking forward to that, so hope to see you there and then and for now, enjoy this concert!\\r\\n\\r\\nAll the best from us, \\r\\n\\r\\nWINTERGATAN\\r\\nMarcus Sjöberg\\r\\nEvelina Hägglund\\r\\nDavid Zandén\\r\\nMartin Molin\\r\\n\\r\\nFILMED AND DIRECTED BY \\r\\nIsak Olsson\\r\\n\\r\\nIsak has a youtube Channel where he films and uploads performances from swedish musicians, one of my favorites is this video with my friend Kristian Anttila who sings in swedish: \\r\\nhttps://www.youtube.com/watch?v\u003d2PMhWA8aReE\\r\\n\\r\\nSubscribe to Isaks Channel for more swedish music:\\r\\nhttps://www.youtube.com/channel/UCfvsPVemd2hf_QJ9sUJoi-A\\r\\n\\r\\nMIXED BY\\r\\nMarcus Sjöberg \u0026 Martin Molin\\r\\n\\r\\nLIGHTS AND LIVE SOUND RECORDING\\r\\nMartin Barni Moretec Johansson\\r\\n\\r\\nSUBSCRIBE TO WINTERGATAN ON YOUTUBE\\r\\nhttps://www.youtube.com/user/winterga...\\r\\n\\r\\nWEBSITE\\r\\nhttp://www.wintergatan.net\\r\\n\\r\\nINSTAGRAM\\r\\nhttps://www.instagram.com/wintergatan2000\",\"about\":\"SEE THE VIDEO FROM THIS CONCERT HERE:\",\"album_id\":354392904,\"album_title\":\"Wintergatan Live at Victoriateatern\",\"release_date\":1489602818,\"is_purchasable\":true,\"free_download\":false,\"is_preorder\":false,\"tags\":[{\"name\":\"Pop\",\"norm_name\":\"pop\",\"url\":\"/discover/pop\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"concert\",\"norm_name\":\"concert\",\"url\":\"/discover/concert\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"live\",\"norm_name\":\"live\",\"url\":\"/discover/live\",\"isloc\":false,\"loc_id\":null,\"geoname\":null},{\"name\":\"wintergatan\",\"norm_name\":\"wintergatan\",\"url\":\"/discover/wintergatan\",\"isloc\":false,\"loc_id\":null,\"geoname\":null}],\"currency\":\"SEK\",\"is_set_price\":false,\"price\":0.0,\"require_email\":false,\"label\":null,\"label_id\":null,\"package_details_lite\":{},\"has_digital_download\":true,\"num_downloadable_tracks\":10,\"merch_sold_out\":true,\"streaming_limit\":3}",
+    "latestUrl": "https://bandcamp.com/api/mobile/22/tralbum_details?band_id\u003d2464198920\u0026tralbum_id\u003d354392904\u0026tralbum_type\u003da"
+  }
+}
