@@ -17,6 +17,7 @@ import java.util.List;
 import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampExtractorHelper.BASE_URL;
 import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampExtractorHelper.getImagesFromImageId;
 import static org.schabi.newpipe.extractor.services.bandcamp.extractors.BandcampExtractorHelper.parseDate;
+import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 
 public class BandcampRadioInfoItemExtractor implements StreamInfoItemExtractor {
 
@@ -55,7 +56,8 @@ public class BandcampRadioInfoItemExtractor implements StreamInfoItemExtractor {
 
     @Override
     public String getName() throws ParsingException {
-        return show.getString("subtitle");
+        final String subtitle = show.getString("subtitle");
+        return isNullOrEmpty(subtitle) ? show.getString("title") : subtitle;
     }
 
     @Override
