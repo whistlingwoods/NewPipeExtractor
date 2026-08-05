@@ -26,6 +26,9 @@ import org.schabi.newpipe.extractor.InfoItem;
 import org.schabi.newpipe.extractor.MetaInfo;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.StreamingService;
+import org.schabi.newpipe.extractor.dearrow.DeArrowApiSettings;
+import org.schabi.newpipe.extractor.dearrow.DeArrowExtractorHelper;
+import org.schabi.newpipe.extractor.dearrow.DeArrowInfo;
 import org.schabi.newpipe.extractor.exceptions.ContentNotAvailableException;
 import org.schabi.newpipe.extractor.exceptions.ContentNotSupportedException;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
@@ -92,9 +95,18 @@ public class StreamInfo extends Info {
             @Nullable final SponsorBlockApiSettings sponsorBlockApiSettings,
             @Nullable final ReturnYouTubeDislikeApiSettings returnYouTubeDislikeApiSettings)
             throws IOException, ExtractionException {
+        return getInfo(url, sponsorBlockApiSettings, returnYouTubeDislikeApiSettings, null);
+    }
+
+    public static StreamInfo getInfo(
+            final String url,
+            @Nullable final SponsorBlockApiSettings sponsorBlockApiSettings,
+            @Nullable final ReturnYouTubeDislikeApiSettings returnYouTubeDislikeApiSettings,
+            @Nullable final DeArrowApiSettings deArrowApiSettings)
+            throws IOException, ExtractionException {
         ExtractorLogger.d(TAG, "getInfo({url})", url);
         return getInfo(NewPipe.getServiceByUrl(url), url,
-                sponsorBlockApiSettings, returnYouTubeDislikeApiSettings);
+                sponsorBlockApiSettings, returnYouTubeDislikeApiSettings, deArrowApiSettings);
     }
 
     public static StreamInfo getInfo(
@@ -103,15 +115,36 @@ public class StreamInfo extends Info {
             @Nullable final SponsorBlockApiSettings sponsorBlockApiSettings,
             @Nullable final ReturnYouTubeDislikeApiSettings returnYouTubeDislikeApiSettings)
             throws IOException, ExtractionException {
+        return getInfo(service, url, sponsorBlockApiSettings,
+                returnYouTubeDislikeApiSettings, null);
+    }
+
+    public static StreamInfo getInfo(
+            @Nonnull final StreamingService service,
+            final String url,
+            @Nullable final SponsorBlockApiSettings sponsorBlockApiSettings,
+            @Nullable final ReturnYouTubeDislikeApiSettings returnYouTubeDislikeApiSettings,
+            @Nullable final DeArrowApiSettings deArrowApiSettings)
+            throws IOException, ExtractionException {
         ExtractorLogger.d(TAG, "getInfo({service},{url})", service, url);
         return getInfo(service.getStreamExtractor(url),
-                sponsorBlockApiSettings, returnYouTubeDislikeApiSettings);
+                sponsorBlockApiSettings, returnYouTubeDislikeApiSettings, deArrowApiSettings);
     }
 
     public static StreamInfo getInfo(
             @Nonnull final StreamExtractor extractor,
             @Nullable final SponsorBlockApiSettings sponsorBlockApiSettings,
             @Nullable final ReturnYouTubeDislikeApiSettings returnYouTubeDislikeApiSettings)
+            throws ExtractionException, IOException {
+        return getInfo(extractor, sponsorBlockApiSettings,
+                returnYouTubeDislikeApiSettings, null);
+    }
+
+    public static StreamInfo getInfo(
+            @Nonnull final StreamExtractor extractor,
+            @Nullable final SponsorBlockApiSettings sponsorBlockApiSettings,
+            @Nullable final ReturnYouTubeDislikeApiSettings returnYouTubeDislikeApiSettings,
+            @Nullable final DeArrowApiSettings deArrowApiSettings)
             throws ExtractionException, IOException {
         ExtractorLogger.d(TAG, "getInfo({extractor})", extractor);
         extractor.fetchPage();
@@ -133,6 +166,12 @@ public class StreamInfo extends Info {
                         ReturnYouTubeDislikeExtractorHelper.getInfo(
                                 streamInfo, returnYouTubeDislikeApiSettings);
                 streamInfo.setReturnYouTubeDislikeInfo(rydInfo);
+            }
+
+            if (deArrowApiSettings != null) {
+                final DeArrowInfo deArrowInfo =
+                        DeArrowExtractorHelper.getInfo(streamInfo, deArrowApiSettings);
+                streamInfo.setDeArrowInfo(deArrowInfo);
             }
 
             return streamInfo;
@@ -446,6 +485,7 @@ public class StreamInfo extends Info {
     private boolean shortFormContent = false;
     private List<SponsorBlockSegment> sponsorBlockSegments = new ArrayList<>();
     @Nullable private ReturnYouTubeDislikeInfo rydInfo;
+    @Nullable private DeArrowInfo deArrowInfo;
     @Nonnull
     private ContentAvailability contentAvailability = ContentAvailability.AVAILABLE;
 
@@ -872,5 +912,14 @@ public class StreamInfo extends Info {
 
     public void setReturnYouTubeDislikeInfo(final @Nullable ReturnYouTubeDislikeInfo info) {
         this.rydInfo = info;
+    }
+
+    @Nullable
+    public DeArrowInfo getDeArrowInfo() {
+        return deArrowInfo;
+    }
+
+    public void setDeArrowInfo(final @Nullable DeArrowInfo info) {
+        this.deArrowInfo = info;
     }
 }
