@@ -8,6 +8,7 @@ import com.grack.nanojson.JsonWriter;
 import org.schabi.newpipe.extractor.NewPipe;
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException;
 import org.schabi.newpipe.extractor.stream.StreamInfo;
+import org.schabi.newpipe.extractor.utils.ExtractorLogger;
 import org.schabi.newpipe.extractor.utils.Utils;
 
 import javax.annotation.Nullable;
@@ -20,6 +21,8 @@ import java.util.List;
 import java.util.UUID;
 
 public final class DeArrowExtractorHelper {
+
+    private static final String TAG = "DeArrowExtractorHelper";
 
     private DeArrowExtractorHelper() {
     }
@@ -38,6 +41,8 @@ public final class DeArrowExtractorHelper {
             @Nullable final DeArrowApiSettings apiSettings) {
         final String apiUrl = getNormalizedApiUrl(apiSettings);
         if (apiUrl == null || videoId == null || videoId.isEmpty()) {
+            ExtractorLogger.d(TAG, "getInfo: Invalid arguments, apiUrl: {}, videoId: {}",
+                    apiUrl, videoId);
             return null;
         }
 
@@ -52,6 +57,8 @@ public final class DeArrowExtractorHelper {
                     hashPrefix = sha256.substring(0, 4);
                 }
             } catch (final NoSuchAlgorithmException e) {
+                ExtractorLogger.d(TAG, "getInfo: Failed to hash video ID, "
+                        + "falling back to direct request", e);
                 // Ignore and fall back to direct request if SHA256 is unavailable
             }
             if (hashPrefix != null) {
@@ -63,19 +70,28 @@ public final class DeArrowExtractorHelper {
             url = apiUrl + "api/branding?" + queryParams;
         }
 
+        ExtractorLogger.d(TAG, "getInfo: Fetching DeArrow info for videoId: {} from url: {}",
+                videoId, url);
+
         try {
             final String responseBody = NewPipe.getDownloader()
                     .get(url, Collections.emptyMap()).responseBody();
+            ExtractorLogger.d(TAG, "getInfo: Received DeArrow response: {}", responseBody);
             if (responseBody == null || responseBody.isEmpty()) {
                 return null;
             }
             final JsonObject response = JsonParser.object().from(responseBody);
             if (apiSettings.useHashPrefix && !url.contains("videoID=")) {
                 final JsonObject videoData = response.getObject(videoId);
+                if (videoData == null) {
+                    ExtractorLogger.d(TAG, "getInfo: No data found for videoId: {} in response",
+                            videoId);
+                }
                 return videoData != null ? parseInfo(videoData) : null;
             }
             return parseInfo(response);
         } catch (final ReCaptchaException | IOException | JsonParserException e) {
+            ExtractorLogger.d(TAG, "getInfo: Failed to fetch/parse DeArrow info", e);
             return null;
         }
     }
@@ -178,8 +194,13 @@ public final class DeArrowExtractorHelper {
             throws IOException, ReCaptchaException {
         final String apiUrl = getNormalizedApiUrl(settings);
         if (apiUrl == null || videoId == null || videoId.isEmpty()) {
+            ExtractorLogger.d(TAG, "submitBranding: Invalid arguments, apiUrl: {}, videoId: {}",
+                    apiUrl, videoId);
             return;
         }
+
+        ExtractorLogger.d(TAG, "submitBranding: Submitting branding for videoId: {} "
+                + "with title: {}, timestamp: {}", videoId, title, timestamp);
 
         final String userId = getOrGenerateUserId(settings.localUserId);
         final String userAgent = settings.userAgent != null
@@ -205,8 +226,16 @@ public final class DeArrowExtractorHelper {
         }
 
         final byte[] body = JsonWriter.string(obj).getBytes(StandardCharsets.UTF_8);
-        NewPipe.getDownloader().postWithContentType(
-                apiUrl + "api/branding", null, body, "application/json");
+        ExtractorLogger.d(TAG, "submitBranding: Body: {}",
+                new String(body, StandardCharsets.UTF_8));
+        try {
+            NewPipe.getDownloader().postWithContentType(
+                    apiUrl + "api/branding", null, body, "application/json");
+            ExtractorLogger.d(TAG, "submitBranding: Successfully submitted branding");
+        } catch (final IOException | ReCaptchaException e) {
+            ExtractorLogger.d(TAG, "submitBranding: Failed to submit branding", e);
+            throw e;
+        }
     }
 
     private static String getNormalizedApiUrl(

@@ -12,5 +12,6 @@ public class DeArrowApiSettings {
     public boolean fetchAll = false;
     public boolean returnUserId = false;
     public String localUserId = null;
+    public String licenseKey = null;
     public String userAgent = "NewPipeExtractor/1.0";
 }

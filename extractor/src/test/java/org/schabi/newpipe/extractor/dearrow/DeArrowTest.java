@@ -78,4 +78,13 @@ public class DeArrowTest implements InitNewPipeTest {
         Assertions.assertNotNull(info.titles);
         Assertions.assertNotNull(info.thumbnails);
     }
+    @Test
+    void testLiveDirectFetchingCYXm3SVmlOM() {
+        final DeArrowApiSettings settings = new DeArrowApiSettings();
+        settings.useHashPrefix = false;
+        final DeArrowInfo info = DeArrowExtractorHelper.getInfo("CYXm3SVmlOM", settings);
+        Assertions.assertNotNull(info, "Direct DeArrow response should not be null for CYXm3SVmlOM");
+        Assertions.assertNotNull(info.titles);
+        Assertions.assertNotNull(info.thumbnails);
+    }
 }
