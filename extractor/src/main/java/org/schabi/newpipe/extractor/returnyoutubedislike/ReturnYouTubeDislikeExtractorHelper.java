@@ -6,7 +6,7 @@ import com.grack.nanojson.JsonParser;
 import com.grack.nanojson.JsonParserException;
 import com.grack.nanojson.JsonWriter;
 
-import org.schabi.newpipe.extractor.NewPipe;
+import org.schabi.newpipe.extractor.ServiceList;
 import org.schabi.newpipe.extractor.exceptions.ReCaptchaException;
 import org.schabi.newpipe.extractor.stream.StreamInfo;
 
@@ -25,7 +25,7 @@ public final class ReturnYouTubeDislikeExtractorHelper {
     public static ReturnYouTubeDislikeInfo getInfo(
             final StreamInfo streamInfo,
             final ReturnYouTubeDislikeApiSettings apiSettings) {
-        if (streamInfo == null || !streamInfo.getUrl().startsWith("https://www.youtube.com")) {
+        if (streamInfo == null || streamInfo.getServiceId() != ServiceList.YouTube.getServiceId()) {
             return null;
         }
         return getInfo(streamInfo.getId(), streamInfo.getLikeCount(), apiSettings);
@@ -41,15 +41,15 @@ public final class ReturnYouTubeDislikeExtractorHelper {
         }
 
         final StringBuilder urlBuilder = new StringBuilder(apiUrl);
-        urlBuilder.append("votes?videoId=").append(videoId);
+        urlBuilder.append("Votes?videoId=").append(videoId);
         if (likeCount > 0) {
             urlBuilder.append("&likeCount=").append(likeCount);
         }
 
         JsonObject response = null;
         try {
-            final String responseBody =
-                    NewPipe.getDownloader().get(urlBuilder.toString()).responseBody();
+            final String responseBody = org.schabi.newpipe.extractor.NewPipe.getDownloader()
+                    .get(urlBuilder.toString()).responseBody();
 
             response = JsonParser.object().from(responseBody);
         } catch (final ReCaptchaException | IOException | JsonParserException e) {
@@ -103,9 +103,9 @@ public final class ReturnYouTubeDislikeExtractorHelper {
         }
         final byte[] body = JsonWriter.string(array).getBytes(StandardCharsets.UTF_8);
 
-        final String url = apiUrl + "votes";
+        final String url = apiUrl + "Votes";
         try {
-            NewPipe.getDownloader().postWithContentType(
+            org.schabi.newpipe.extractor.NewPipe.getDownloader().postWithContentType(
                     url, null, body, "application/json");
         } catch (final ReCaptchaException | IOException e) {
             // ignored
