@@ -56,6 +56,7 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
 
     private JsonObject browseMetadataResponse;
     private JsonObject initialBrowseContinuationResponse;
+    private JsonArray initialItems;
 
     private JsonObject playlistInfo;
     private JsonObject uploaderInfo;
@@ -359,7 +360,7 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
     public InfoItemsPage<StreamInfoItem> getInitialPage() throws IOException, ExtractionException {
         final StreamInfoItemsCollector collector = new StreamInfoItemsCollector(getServiceId());
 
-        final JsonArray initialItems = initialBrowseContinuationResponse
+        initialItems = initialBrowseContinuationResponse
                 .getArray("onResponseReceivedActions")
                 .getObject(0)
                 .getObject("reloadContinuationItemsCommand")
@@ -382,10 +383,19 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
         final JsonObject ajaxJson = getJsonPostResponse("browse", page.getBody(),
                 getExtractorLocalization());
 
-        final JsonArray continuation = ajaxJson.getArray("onResponseReceivedActions")
+        JsonArray continuation = ajaxJson.getArray("onResponseReceivedActions")
                 .getObject(0)
                 .getObject("appendContinuationItemsAction")
                 .getArray("continuationItems");
+
+        if (initialItems.isEmpty()) {
+            // New structure with lockup view models uses appendContinuationItemsAction for the
+            // initial continuation too
+            initialItems = initialBrowseContinuationResponse.getArray("onResponseReceivedActions")
+                    .getObject(0)
+                    .getObject("appendContinuationItemsAction")
+                    .getArray("continuationItems");
+        }
 
         collectStreamsFrom(collector, continuation);
 
@@ -398,6 +408,8 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
         if (isNullOrEmpty(contents)) {
             return null;
         }
+
+        final String continuation;
 
         final JsonObject lastElement = contents.getObject(contents.size() - 1);
         if (lastElement.has("continuationItemRenderer")) {
@@ -424,24 +436,32 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
                 continuationObject = continuationEndpoint;
             }
 
-            final String continuation = continuationObject.getObject("continuationCommand")
+            continuation = continuationObject.getObject("continuationCommand")
                     .getString("token");
+        } else if (lastElement.has("continuationItemViewModel")) {
+            final JsonObject continuationItemViewModel =
+                    lastElement.getObject("continuationItemViewModel");
 
-            if (isNullOrEmpty(continuation)) {
-                // Invalid continuation or no continuation found
-                return null;
-            }
-
-            final byte[] body = JsonWriter.string(prepareDesktopJsonBuilder(
-                            getExtractorLocalization(), getExtractorContentCountry())
-                            .value("continuation", continuation)
-                            .done())
-                    .getBytes(StandardCharsets.UTF_8);
-
-            return new Page(YOUTUBEI_V1_URL + "browse?" + DISABLE_PRETTY_PRINT_PARAMETER, body);
+            continuation = continuationItemViewModel.getObject("continuationCommand")
+                    .getObject("innertubeCommand")
+                    .getObject("continuationCommand")
+                    .getString("token");
+        } else {
+            return null;
         }
 
-        return null;
+        if (isNullOrEmpty(continuation)) {
+            // Invalid continuation or no continuation found
+            return null;
+        }
+
+        final byte[] body = JsonWriter.string(prepareDesktopJsonBuilder(
+                        getExtractorLocalization(), getExtractorContentCountry())
+                        .value("continuation", continuation)
+                        .done())
+                .getBytes(StandardCharsets.UTF_8);
+
+        return new Page(YOUTUBEI_V1_URL + "browse?" + DISABLE_PRETTY_PRINT_PARAMETER, body);
     }
 
     private void collectStreamsFrom(@Nonnull final StreamInfoItemsCollector collector,
