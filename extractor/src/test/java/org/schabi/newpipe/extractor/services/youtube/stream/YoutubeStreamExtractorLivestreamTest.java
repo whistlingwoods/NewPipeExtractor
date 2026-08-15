@@ -1,8 +1,9 @@
 package org.schabi.newpipe.extractor.services.youtube.stream;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.schabi.newpipe.extractor.ServiceList.YouTube;
 
-import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.extractor.StreamingService;
 import org.schabi.newpipe.extractor.services.DefaultStreamExtractorTest;
 import org.schabi.newpipe.extractor.services.youtube.InitYoutubeTest;
@@ -16,19 +17,13 @@ import javax.annotation.Nullable;
 
 public class YoutubeStreamExtractorLivestreamTest extends DefaultStreamExtractorTest
     implements InitYoutubeTest {
-    private static final String ID = "jfKfPfyJRdk";
+    private static final String ID = "X4VbdwhkE10";
     private static final int TIMESTAMP = 1737;
     private static final String URL = YoutubeStreamExtractorDefaultTest.BASE_URL + ID + "&t=" + TIMESTAMP;
 
     @Override
     protected StreamExtractor createExtractor() throws Exception {
         return YouTube.getStreamExtractor(URL);
-    }
-
-    @Override
-    @Test
-    public void testUploaderName() throws Exception {
-        super.testUploaderName();
     }
 
     @Override public StreamingService expectedService() { return YouTube; }
@@ -38,7 +33,15 @@ public class YoutubeStreamExtractorLivestreamTest extends DefaultStreamExtractor
     @Override public String expectedOriginalUrlContains() { return URL; }
 
     @Override public StreamType expectedStreamType() { return StreamType.LIVE_STREAM; }
+    @Override public boolean expectedHasLiveChat() { return true; }
     @Override public String expectedUploaderName() { return "Lofi Girl"; }
+
+    @Test
+    void testLiveChatContinuationNotNull() throws Exception {
+        final String continuation = extractor().getLiveChatContinuation();
+        assertNotNull(continuation);
+        assertFalse(continuation.isEmpty());
+    }
     @Override public String expectedUploaderUrl() { return "https://www.youtube.com/channel/UCSJ4gkVC6NrvII8umztf0Ow"; }
     @Override public long expectedUploaderSubscriberCountAtLeast() { return 9_800_000; }
     @Override public List<String> expectedDescriptionContains() {
@@ -49,9 +52,9 @@ public class YoutubeStreamExtractorLivestreamTest extends DefaultStreamExtractor
     @Override public long expectedLength() { return 0; }
     @Override public long expectedTimestamp() { return TIMESTAMP; }
     @Override public long expectedViewCountAtLeast() { return 0; }
-    @Nullable @Override public String expectedUploadDate() { return "2022-07-12 12:12:29.000"; }
-    @Nullable @Override public String expectedTextualUploadDate() { return "2022-07-12T05:12:29-07:00"; }
-    @Override public long expectedLikeCountAtLeast() { return 340_000; }
+    @Nullable @Override public String expectedUploadDate() { return "2026-06-04 06:49:58.000"; }
+    @Nullable @Override public String expectedTextualUploadDate() { return "2026-06-03T23:49:58-07:00"; }
+    @Override public long expectedLikeCountAtLeast() { return 5_000; }
     @Override public long expectedDislikeCountAtLeast() { return -1; }
     @Override public boolean expectedHasSubtitles() { return false; }
     @Nullable @Override public String expectedDashMpdUrlContains() { return "https://manifest.googlevideo.com/api/manifest/dash/"; }

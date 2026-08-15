@@ -10,11 +10,17 @@ import static org.schabi.newpipe.extractor.ExtractorAsserts.assertGreater;
 import static org.schabi.newpipe.extractor.ServiceList.YouTube;
 import static org.schabi.newpipe.extractor.comments.CommentsInfoItem.UNKNOWN_REPLY_COUNT;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.extractor.ListExtractor.InfoItemsPage;
 import org.schabi.newpipe.extractor.Page;
 import org.schabi.newpipe.extractor.comments.CommentsInfo;
 import org.schabi.newpipe.extractor.comments.CommentsInfoItem;
+import org.schabi.newpipe.extractor.InitNewPipeTest;
+import org.schabi.newpipe.extractor.NewPipe;
+import org.schabi.newpipe.extractor.downloader.Downloader;
+import org.schabi.newpipe.extractor.downloader.Request;
+import org.schabi.newpipe.extractor.downloader.Response;
 import org.schabi.newpipe.extractor.exceptions.ExtractionException;
 import org.schabi.newpipe.extractor.localization.Localization;
 import org.schabi.newpipe.extractor.services.DefaultSimpleExtractorTest;
@@ -25,6 +31,8 @@ import org.schabi.newpipe.extractor.utils.Utils;
 import java.io.IOException;
 import java.util.List;
 import java.util.Locale;
+
+import javax.annotation.Nonnull;
 
 public class YoutubeCommentsExtractorTest {
 
@@ -128,7 +136,7 @@ public class YoutubeCommentsExtractorTest {
      * Test a video with an empty comment
      */
     public static class EmptyComment extends Base {
-        private final static String URL = "https://www.youtube.com/watch?v=VM_6n762j6M";
+        private static final String URL = "https://www.youtube.com/watch?v=VM_6n762j6M";
 
         @Override
         protected String extractorUrl() {
@@ -162,7 +170,7 @@ public class YoutubeCommentsExtractorTest {
     }
 
     public static class HeartedByCreator extends Base {
-        private final static String URL = "https://www.youtube.com/watch?v=RwTdoQNVMTY";
+        private static final String URL = "https://www.youtube.com/watch?v=RwTdoQNVMTY";
 
         @Override
         protected String extractorUrl() {
@@ -199,7 +207,7 @@ public class YoutubeCommentsExtractorTest {
     }
 
     public static class Pinned extends Base {
-        private final static String URL = "https://www.youtube.com/watch?v=bjFtFMilb34";
+        private static final String URL = "https://www.youtube.com/watch?v=bjFtFMilb34";
 
         @Override
         protected String extractorUrl() {
@@ -235,7 +243,7 @@ public class YoutubeCommentsExtractorTest {
      * A pinned comment with >15K likes is used for the test
      */
     public static class LikesVotes extends Base {
-        private final static String URL = "https://www.youtube.com/watch?v=QqsLTNkzvaY";
+        private static final String URL = "https://www.youtube.com/watch?v=QqsLTNkzvaY";
 
         @Override
         protected String extractorUrl() {
@@ -261,7 +269,7 @@ public class YoutubeCommentsExtractorTest {
      * A pinned comment with >15K likes is used for the test
      */
     public static class LocalizedVoteCount extends Base {
-        private final static String URL = "https://www.youtube.com/watch?v=QqsLTNkzvaY";
+        private static final String URL = "https://www.youtube.com/watch?v=QqsLTNkzvaY";
 
         @Override
         protected String extractorUrl() {
@@ -289,7 +297,7 @@ public class YoutubeCommentsExtractorTest {
     }
 
     public static class RepliesTest extends Base {
-        private final static String URL = "https://www.youtube.com/watch?v=xaQJbozY_Is";
+        private static final String URL = "https://www.youtube.com/watch?v=xaQJbozY_Is";
 
         @Override
         protected String extractorUrl() {
@@ -331,7 +339,7 @@ public class YoutubeCommentsExtractorTest {
     }
 
     public static class ChannelOwnerTest extends Base {
-        private final static String URL = "https://www.youtube.com/watch?v=bem4adjGKjE";
+        private static final String URL = "https://www.youtube.com/watch?v=bem4adjGKjE";
 
         @Override
         protected String extractorUrl() {
@@ -369,7 +377,7 @@ public class YoutubeCommentsExtractorTest {
 
 
     public static class CreatorReply extends Base {
-        private final static String URL = "https://www.youtube.com/watch?v=bem4adjGKjE";
+        private static final String URL = "https://www.youtube.com/watch?v=bem4adjGKjE";
 
         @Override
         protected String extractorUrl() {
@@ -408,7 +416,7 @@ public class YoutubeCommentsExtractorTest {
 
     public static class Formatting extends Base {
 
-        private final static String URL = "https://www.youtube.com/watch?v=zYpyS2HaZHM";
+        private static final String URL = "https://www.youtube.com/watch?v=zYpyS2HaZHM";
 
         @Override
         protected String extractorUrl() {
@@ -425,6 +433,78 @@ public class YoutubeCommentsExtractorTest {
 
             assertContains("<s>", firstComment.getCommentText().getContent());
             assertContains("<b>", firstComment.getCommentText().getContent());
+        }
+    }
+
+    /**
+     * Test live chat mode behavior on a regular video extractor.
+     * Does not extend {@link Base} because these tests do not need network/mock data.
+     */
+    public static class LiveChatMode {
+        private static final String URL = "https://www.youtube.com/watch?v=D00Au7k3i6o";
+
+        @BeforeAll
+        static void setUp() {
+            InitNewPipeTest.initEmpty();
+            NewPipe.init(new Downloader() {
+                @Nonnull
+                @Override
+                public Response execute(@Nonnull final Request request) {
+                    throw new UnsupportedOperationException("No communication expected");
+                }
+            });
+        }
+
+        private YoutubeCommentsExtractor createExtractor() throws Exception {
+            return (YoutubeCommentsExtractor) YouTube.getCommentsExtractor(URL);
+        }
+
+        @Test
+        void testIsLiveChatDefaultFalse() throws Exception {
+            assertFalse(createExtractor().isLiveChat());
+        }
+
+        @Test
+        void testSetLiveChatContinuationActivatesLiveChat() throws Exception {
+            final YoutubeCommentsExtractor extractor = createExtractor();
+            assertFalse(extractor.isLiveChat());
+            extractor.setLiveChatContinuation("test-continuation");
+            assertTrue(extractor.isLiveChat());
+        }
+
+        @Test
+        void testCommentsDisabledIsFalseInLiveChatMode() throws Exception {
+            final YoutubeCommentsExtractor extractor = createExtractor();
+            extractor.setLiveChatContinuation("test-continuation");
+            assertTrue(extractor.isLiveChat());
+            assertFalse(extractor.isCommentsDisabled());
+        }
+    }
+
+    public static class EditedCommentTest extends Base {
+
+        private static final String URL = "https://www.youtube.com/watch?v=VsFjP58j5i8";
+
+        @Override
+        protected String extractorUrl() {
+            return URL;
+        }
+
+        @Test
+        public void testEditedCommentFlagIsExtracted() throws Exception {
+            final InfoItemsPage<CommentsInfoItem> comments = extractor().getInitialPage();
+
+            DefaultTests.defaultTestListOfItems(YouTube, comments.getItems(), comments.getErrors());
+
+            boolean hasEditedComment = false;
+            for (CommentsInfoItem comment : comments.getItems()) {
+                if (comment.isEdited()) {
+                    hasEditedComment = true;
+                    break;
+                }
+            }
+
+            assertTrue(hasEditedComment, "No comments is edited on this video. "+"Ensure test video has edited comment near the top.");
         }
     }
 }
