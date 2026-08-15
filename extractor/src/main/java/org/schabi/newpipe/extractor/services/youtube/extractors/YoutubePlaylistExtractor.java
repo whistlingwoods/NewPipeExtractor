@@ -359,11 +359,20 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
     public InfoItemsPage<StreamInfoItem> getInitialPage() throws IOException, ExtractionException {
         final StreamInfoItemsCollector collector = new StreamInfoItemsCollector(getServiceId());
 
-        final JsonArray initialItems = initialBrowseContinuationResponse
+        JsonArray initialItems = initialBrowseContinuationResponse
                 .getArray("onResponseReceivedActions")
                 .getObject(0)
                 .getObject("reloadContinuationItemsCommand")
                 .getArray("continuationItems");
+
+        if (initialItems.isEmpty()) {
+            // New structure with lockup view models uses appendContinuationItemsAction for the
+            // initial continuation too
+            initialItems = initialBrowseContinuationResponse.getArray("onResponseReceivedActions")
+                    .getObject(0)
+                    .getObject("appendContinuationItemsAction")
+                    .getArray("continuationItems");
+        }
 
         collectStreamsFrom(collector, initialItems);
 
@@ -399,6 +408,8 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
             return null;
         }
 
+        final String continuation;
+
         final JsonObject lastElement = contents.getObject(contents.size() - 1);
         if (lastElement.has("continuationItemRenderer")) {
             final JsonObject continuationEndpoint = lastElement
@@ -424,25 +435,33 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
                 continuationObject = continuationEndpoint;
             }
 
-            final String continuation = continuationObject.getObject("continuationCommand")
+            continuation = continuationObject.getObject("continuationCommand")
                     .getString("token");
+        } else if (lastElement.has("continuationItemViewModel")) {
+            final JsonObject continuationItemViewModel =
+                    lastElement.getObject("continuationItemViewModel");
+
+            continuation = continuationItemViewModel.getObject("continuationCommand")
+                    .getObject("innertubeCommand")
+                    .getObject("continuationCommand")
+                    .getString("token");
+        } else {
+            return null;
+        }
 
             if (isNullOrEmpty(continuation)) {
                 // Invalid continuation or no continuation found
                 return null;
             }
 
-            final byte[] body = JsonWriter.string(prepareDesktopJsonBuilder(
-                            getExtractorLocalization(), getExtractorContentCountry())
-                            .value("continuation", continuation)
-                            .done())
-                    .getBytes(StandardCharsets.UTF_8);
+        final byte[] body = JsonWriter.string(prepareDesktopJsonBuilder(
+                        getExtractorLocalization(), getExtractorContentCountry())
+                        .value("continuation", continuation)
+                        .done())
+                .getBytes(StandardCharsets.UTF_8);
 
-            return new Page(YOUTUBEI_V1_URL + "browse?" + DISABLE_PRETTY_PRINT_PARAMETER, body);
+        return new Page(YOUTUBEI_V1_URL + "browse?" + DISABLE_PRETTY_PRINT_PARAMETER, body);
         }
-
-        return null;
-    }
 
     private void collectStreamsFrom(@Nonnull final StreamInfoItemsCollector collector,
                                     @Nonnull final JsonArray videos) {
