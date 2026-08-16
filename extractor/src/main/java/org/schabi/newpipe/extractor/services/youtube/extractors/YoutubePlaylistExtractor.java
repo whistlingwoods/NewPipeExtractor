@@ -170,13 +170,10 @@ public class YoutubePlaylistExtractor extends PlaylistExtractor {
     @Nonnull
     private JsonObject getPlaylistHeader() {
         if (playlistHeader == null) {
-            if (browseMetadataResponse == null) {
-                return new JsonObject();
-            }
-            final JsonObject headerRenderer = browseMetadataResponse.getObject(HEADER)
+            playlistHeader = browseMetadataResponse.getObject(HEADER)
                     .getObject("playlistHeaderRenderer");
-            playlistHeader = headerRenderer != null ? headerRenderer : new JsonObject();
         }
+
         return playlistHeader;
     }
 
