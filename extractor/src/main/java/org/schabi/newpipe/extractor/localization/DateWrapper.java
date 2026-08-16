@@ -115,38 +115,5 @@ public class DateWrapper implements Serializable {
         } catch (final DateTimeParseException e) {
             throw new ParsingException("Could not parse date: \"" + date + "\"", e);
         }
-
-    /**
-     * Parses a date string that matches the ISO-8601 {@link OffsetDateTime} pattern, e.g.
-     * "2011-12-03T10:15:30+01:00".
-     *
-     * @param date The date string
-     * @return a non-approximate {@link DateWrapper}, or null if the string is null
-     * @throws ParsingException if the string does not match the expected format
-     */
-    @Nullable
-    public static DateWrapper fromOffsetDateTime(final String date) throws ParsingException {
-        try {
-            return date != null ? new DateWrapper(OffsetDateTime.parse(date)) : null;
-        } catch (final DateTimeParseException e) {
-            throw new ParsingException("Could not parse date: \"" + date + "\"", e);
-        }
-    }
-
-    /**
-     * Parses a date string that matches the ISO-8601 {@link Instant} pattern, e.g.
-     * "2011-12-03T10:15:30Z".
-     *
-     * @param date The date string
-     * @return a non-approximate {@link DateWrapper}, or null if the string is null
-     * @throws ParsingException if the string does not match the expected format
-     */
-    @Nullable
-    public static DateWrapper fromInstant(final String date) throws ParsingException {
-        try {
-            return date != null ? new DateWrapper(Instant.parse(date)) : null;
-        } catch (final DateTimeParseException e) {
-            throw new ParsingException("Could not parse date: \"" + date + "\"", e);
-        }
     }
 }
