@@ -371,6 +371,8 @@ public abstract class StreamExtractor extends Extractor {
     }
 
     /**
+     * Gets the related streams
+     *
      * @return The result of {@link #getRelatedItems()} if it is a
      * {@link StreamInfoItemsCollector}, <code>null</code> otherwise
      * @deprecated Use {@link #getRelatedItems()}. May be removed in a future version.

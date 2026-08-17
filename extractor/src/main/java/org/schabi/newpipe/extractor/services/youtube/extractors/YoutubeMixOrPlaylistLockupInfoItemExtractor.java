@@ -172,12 +172,15 @@ public class YoutubeMixOrPlaylistLockupInfoItemExtractor implements PlaylistInfo
     }
 
     private String getPlaylistId() throws ParsingException {
-        String id = lockupViewModel.getString("contentId");
+        String id = lockupViewModel.getObject("rendererContext")
+                .getObject("commandContext")
+                .getObject("onTap")
+                .getObject("innertubeCommand")
+                .getObject("watchEndpoint")
+                .getString("playlistId");
+
         if (Utils.isNullOrEmpty(id)) {
-            id = lockupViewModel.getObject("rendererContext")
-                    .getObject("commandContext")
-                    .getObject("watchEndpoint")
-                    .getString("playlistId");
+            id = lockupViewModel.getString("contentId");
         }
 
         if (Utils.isNullOrEmpty(id)) {

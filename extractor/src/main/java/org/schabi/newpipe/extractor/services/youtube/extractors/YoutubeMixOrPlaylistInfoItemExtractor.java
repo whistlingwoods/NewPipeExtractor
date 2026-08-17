@@ -35,7 +35,11 @@ public class YoutubeMixOrPlaylistInfoItemExtractor implements PlaylistInfoItemEx
 
     @Override
     public String getUrl() throws ParsingException {
-        final String url = mixInfoItem.getString("shareUrl");
+        String url = mixInfoItem.getString("shareUrl");
+        if (isNullOrEmpty(url) && mixInfoItem.has("navigationEndpoint")) {
+            url = YoutubeParsingHelper.getUrlFromNavigationEndpoint(
+                    mixInfoItem.getObject("navigationEndpoint"));
+        }
         if (isNullOrEmpty(url)) {
             throw new ParsingException("Could not get url");
         }
@@ -71,7 +75,7 @@ public class YoutubeMixOrPlaylistInfoItemExtractor implements PlaylistInfoItemEx
         final String countString = YoutubeParsingHelper.getTextFromObject(
                 mixInfoItem.getObject("videoCountShortText"));
         if (countString == null) {
-            throw new ParsingException("Could not extract item count for playlist/mix info item");
+            return ListExtractor.ITEM_COUNT_INFINITE;
         }
 
         try {

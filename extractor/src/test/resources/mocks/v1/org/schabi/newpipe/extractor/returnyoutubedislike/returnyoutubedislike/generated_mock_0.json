@@ -1,0 +1,63 @@
+{
+  "request": {
+    "httpMethod": "GET",
+    "url": "https://returnyoutubedislikeapi.com/votes?videoId\u003dkxOuG8jMIgI\u0026likeCount\u003d30000",
+    "headers": {
+      "Accept-Language": [
+        "en-GB, en;q\u003d0.9"
+      ]
+    },
+    "localization": {
+      "languageCode": "en",
+      "countryCode": "GB"
+    }
+  },
+  "response": {
+    "responseCode": 200,
+    "responseMessage": "",
+    "responseHeaders": {
+      "alt-svc": [
+        "h3\u003d\":443\"; ma\u003d86400"
+      ],
+      "cache-control": [
+        "public, max-age\u003d180, s-maxage\u003d180"
+      ],
+      "cf-cache-status": [
+        "EXPIRED"
+      ],
+      "cf-ray": [
+        "a26789031b414e75-MIA"
+      ],
+      "content-type": [
+        "application/json; charset\u003dutf-8"
+      ],
+      "data-source": [
+        "db"
+      ],
+      "date": [
+        "Wed, 05 Aug 2026 17:31:24 GMT"
+      ],
+      "last-modified": [
+        "Wed, 05 Aug 2026 17:31:24 GMT"
+      ],
+      "nel": [
+        "{\"report_to\":\"cf-nel\",\"success_fraction\":0.0,\"max_age\":604800}"
+      ],
+      "report-to": [
+        "{\"group\":\"cf-nel\",\"max_age\":604800,\"endpoints\":[{\"url\":\"https://a.nel.cloudflare.com/report/v4?s\u003dOqdjDIw%2FZYP5MZK9G0n1V%2FTWBCbV%2BnFBXYFaOCw6vJFnkVizVkmQcp1LNprADCtRRHzgdz3tq%2F2ME3HDnfrzqNgCPQgBbCvw%2B2uKyOgDCoYYj%2BtJiZohWAxCPcPw5e7tpfCja9OvGyIGmPaEFpU%3D\"}]}"
+      ],
+      "request-context": [
+        "appId\u003dcid-v1:19ab6044-91a6-4c44-a184-4d6a5e121c8a"
+      ],
+      "server": [
+        "cloudflare"
+      ],
+      "server-timing": [
+        "cfCacheStatus;desc\u003d\"EXPIRED\"",
+        "cfEdge;dur\u003d6,cfOrigin;dur\u003d136"
+      ]
+    },
+    "responseBody": "{\"id\":\"kxOuG8jMIgI\",\"dateCreated\":\"2022-04-09T21:44:20.5103Z\",\"likes\":31885,\"rawDislikes\":31947,\"rawLikes\":457,\"dislikes\":579721,\"rating\":1.2085329444119253,\"viewCount\":3762293,\"deleted\":false}",
+    "latestUrl": "https://returnyoutubedislikeapi.com/votes?videoId\u003dkxOuG8jMIgI\u0026likeCount\u003d30000"
+  }
+}

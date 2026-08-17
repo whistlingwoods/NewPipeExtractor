@@ -30,14 +30,14 @@ class BandcampChannelTabExtractorTest {
 
         @Override
         protected ChannelTabExtractor createExtractor() throws Exception {
-            return Bandcamp.getChannelTabExtractorFromId("2450875064", ChannelTabs.ALBUMS);
+            return Bandcamp.getChannelTabExtractorFromId("2464198920", ChannelTabs.ALBUMS);
         }
 
         @Override public StreamingService expectedService() throws Exception { return Bandcamp; }
         @Override public String expectedName() throws Exception { return ChannelTabs.ALBUMS; }
-        @Override public String expectedId() throws Exception { return "2450875064"; }
-        @Override public String expectedUrlContains() throws Exception { return "https://toupie.bandcamp.com/album"; }
-        @Override public String expectedOriginalUrlContains() throws Exception { return "https://toupie.bandcamp.com/album"; }
+        @Override public String expectedId() throws Exception { return "2464198920"; }
+        @Override public String expectedUrlContains() throws Exception { return "https://wintergatan.bandcamp.com/album"; }
+        @Override public String expectedOriginalUrlContains() throws Exception { return "https://wintergatan.bandcamp.com/album"; }
         @Override public InfoItem.InfoType expectedInfoItemType() { return InfoItem.InfoType.PLAYLIST; }
         @Override public boolean expectedHasMoreItems() { return false; }
     }

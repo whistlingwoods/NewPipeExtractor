@@ -53,6 +53,8 @@ public final class ImageSuffix implements Serializable {
     }
 
     /**
+     * Gets the suffix which needs to be appended to get the full image URL
+     *
      * @return the suffix which needs to be appended to get the full image URL
      */
     @Nonnull
@@ -61,6 +63,8 @@ public final class ImageSuffix implements Serializable {
     }
 
     /**
+     * Gets the height corresponding to the image suffix
+     *
      * @return the height corresponding to the image suffix, which may be unknown
      */
     public int getHeight() {
@@ -68,6 +72,8 @@ public final class ImageSuffix implements Serializable {
     }
 
     /**
+     * Gets the width corresponding to the image suffix
+     *
      * @return the width corresponding to the image suffix, which may be unknown
      */
     public int getWidth() {
@@ -75,6 +81,8 @@ public final class ImageSuffix implements Serializable {
     }
 
     /**
+     * Gets the estimated resolution level of the suffix
+     *
      * @return the estimated {@link ResolutionLevel} of the suffix, which is never null.
      */
     @Nonnull

@@ -1,0 +1,87 @@
+{
+  "request": {
+    "httpMethod": "GET",
+    "url": "https://sponsor.ajay.app/api/branding?videoID\u003ddQw4w9WgXcQ\u0026service\u003dYouTube",
+    "headers": {
+      "Accept-Language": [
+        "en-GB, en;q\u003d0.9"
+      ]
+    },
+    "localization": {
+      "languageCode": "en",
+      "countryCode": "GB"
+    }
+  },
+  "response": {
+    "responseCode": 200,
+    "responseMessage": "",
+    "responseHeaders": {
+      "access-control-allow-headers": [
+        "Content-Type, If-None-Match, x-client-name"
+      ],
+      "access-control-allow-methods": [
+        "GET, POST, OPTIONS, DELETE"
+      ],
+      "access-control-allow-origin": [
+        "*"
+      ],
+      "alt-svc": [
+        "h3\u003d\":443\"; ma\u003d86400"
+      ],
+      "cf-cache-status": [
+        "DYNAMIC"
+      ],
+      "cf-ray": [
+        "a26788c20d6f227f-MIA"
+      ],
+      "content-security-policy": [
+        "script-src \u0027none\u0027; object-src \u0027none\u0027"
+      ],
+      "content-type": [
+        "application/json; charset\u003dutf-8"
+      ],
+      "date": [
+        "Wed, 05 Aug 2026 17:31:13 GMT"
+      ],
+      "etag": [
+        "W/\"branding;dQw4w9WgXcQ;YouTube;1785945025000\""
+      ],
+      "sbserver-host": [
+        "sb-server-deployment-5d7fd4c757-ftwrs"
+      ],
+      "server": [
+        "cloudflare"
+      ],
+      "server-timing": [
+        "cfCacheStatus;desc\u003d\"DYNAMIC\"",
+        "cfEdge;dur\u003d3,cfOrigin;dur\u003d136"
+      ],
+      "strict-transport-security": [
+        "max-age\u003d31536000; includeSubDomains"
+      ],
+      "x-cache-status": [
+        "REVALIDATED"
+      ],
+      "x-db-pool-idle": [
+        "8"
+      ],
+      "x-db-pool-total": [
+        "8"
+      ],
+      "x-db-pool-waiting": [
+        "0"
+      ],
+      "x-end-time": [
+        "1785950785133"
+      ],
+      "x-powered-by": [
+        "Express"
+      ],
+      "x-start-time": [
+        "1785950785133"
+      ]
+    },
+    "responseBody": "{\"titles\":[{\"title\":\"Rick Astley - Never gonna give you up (official music video)\",\"original\":false,\"votes\":1,\"locked\":true,\"UUID\":\"b68ad4b9-f4db-47d0-bf07-bf19308927d7\"},{\"title\":\"The video is unavailable\",\"original\":false,\"votes\":0,\"locked\":false,\"UUID\":\"587ee5ef-9090-491b-abc2-c60d7825e077\"}],\"thumbnails\":[{\"timestamp\":3.92349,\"original\":false,\"votes\":2,\"locked\":true,\"UUID\":\"5a39ceec-99f3-4b16-b71f-8ac60e978d41\"},{\"timestamp\":null,\"original\":true,\"votes\":9,\"locked\":false,\"UUID\":\"0e5890b0-8ef0-4543-8158-7c7110b995f0\"},{\"timestamp\":3.742979,\"original\":false,\"votes\":6,\"locked\":false,\"UUID\":\"69007146-6971-4844-978a-da1426ab8980\"},{\"timestamp\":0,\"original\":false,\"votes\":1,\"locked\":false,\"UUID\":\"a0488719-791b-45cc-940e-dc4e0b60814f\"},{\"timestamp\":105.317511,\"original\":false,\"votes\":0,\"locked\":false,\"UUID\":\"92fb5c18-b051-4ef9-9ffc-a3bb39b607f3\"},{\"timestamp\":45.120000000000005,\"original\":false,\"votes\":0,\"locked\":false,\"UUID\":\"f2e7b8f3-7e21-4d28-b65f-935c0a859111\"}],\"casualVotes\":[{\"id\":\"descriptive\",\"count\":1,\"title\":\"rick astley - never gonna give you up (official music video)\"},{\"id\":\"descriptive\",\"count\":3,\"title\":\"rick astley - never gonna give you up (official video) (4k remaster)\"}],\"randomTime\":0.5678500605281442,\"videoDuration\":null}",
+    "latestUrl": "https://sponsor.ajay.app/api/branding?videoID\u003ddQw4w9WgXcQ\u0026service\u003dYouTube"
+  }
+}

@@ -20,13 +20,13 @@ public class BandcampChannelExtractorTest extends DefaultSimpleExtractorTest<Cha
 
     @Override
     protected ChannelExtractor createExtractor() throws Exception {
-        return Bandcamp.getChannelExtractor("https://toupie.bandcamp.com/releases");
+        return Bandcamp.getChannelExtractor("https://wintergatan.bandcamp.com/releases");
     }
 
     @Test
     @Override
     public void testDescription() throws Exception {
-        assertEquals("making music:)", extractor().getDescription());
+        assertEquals("", extractor().getDescription());
     }
 
     @Test
@@ -68,31 +68,31 @@ public class BandcampChannelExtractorTest extends DefaultSimpleExtractorTest<Cha
     @Test
     @Override
     public void testName() throws Exception {
-        assertEquals("toupie", extractor().getName());
+        assertEquals("Wintergatan", extractor().getName());
     }
 
     @Test
     @Override
     public void testId() throws Exception {
-        assertEquals("2450875064", extractor().getId());
+        assertEquals("2464198920", extractor().getId());
     }
 
     @Test
     @Override
     public void testUrl() throws Exception {
-        assertEquals("https://toupie.bandcamp.com", extractor().getUrl());
+        assertEquals("https://wintergatan.bandcamp.com", extractor().getUrl());
     }
 
     @Test
     @Override
     public void testOriginalUrl() throws Exception {
-        assertEquals("https://toupie.bandcamp.com", extractor().getUrl());
+        assertEquals("https://wintergatan.bandcamp.com", extractor().getUrl());
     }
 
     @Test
     @Override
     public void testTabs() throws Exception {
-        assertTabsContain(extractor().getTabs(), ChannelTabs.ALBUMS);
+        assertTabsContain(extractor().getTabs(), ChannelTabs.ALBUMS, ChannelTabs.TRACKS);
     }
 
     @Test

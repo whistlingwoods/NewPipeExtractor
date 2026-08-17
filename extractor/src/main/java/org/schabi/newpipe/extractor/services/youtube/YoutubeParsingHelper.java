@@ -349,6 +349,8 @@ public final class YoutubeParsingHelper {
     }
 
     /**
+     * Extracts the video ID from a mix playlist ID
+     *
      * @param playlistId the playlist id to parse
      * @return the {@link PlaylistInfo.PlaylistType} extracted from the playlistId (mix playlist
      *         types included)
@@ -390,6 +392,8 @@ public final class YoutubeParsingHelper {
     }
 
     /**
+     * Extracts the playlist type from a playlist ID
+     *
      * @param playlistId the playlist id to parse
      * @return the {@link PlaylistInfo.PlaylistType} extracted from the playlistId (mix playlist
      *         types included)
@@ -416,6 +420,8 @@ public final class YoutubeParsingHelper {
     }
 
     /**
+     * Extracts the playlist type from a playlist URL
+     *
      * @param playlistUrl the playlist url to parse
      * @return the {@link PlaylistInfo.PlaylistType} extracted from the playlistUrl's list param
      *         (mix playlist types included)

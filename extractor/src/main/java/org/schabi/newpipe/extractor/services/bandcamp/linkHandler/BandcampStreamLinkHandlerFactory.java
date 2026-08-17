@@ -29,6 +29,8 @@ public final class BandcampStreamLinkHandlerFactory extends LinkHandlerFactory {
 
 
     /**
+     * Gets the ID from the given URL
+     *
      * @see BandcampStreamLinkHandlerFactory
      */
     @Override

@@ -46,6 +46,8 @@ public final class Frameset implements Serializable {
     }
 
     /**
+     * Gets the list of URLs to images with frames
+     *
      * @return list of URLs to images with frames
      */
     public List<String> getUrls() {
@@ -53,6 +55,8 @@ public final class Frameset implements Serializable {
     }
 
     /**
+     * Gets the total count of frames
+     *
      * @return total count of frames
      */
     public int getTotalCount() {
@@ -60,6 +64,8 @@ public final class Frameset implements Serializable {
     }
 
     /**
+     * Gets the maximum frames count by x
+     *
      * @return maximum frames count by x
      */
     public int getFramesPerPageX() {
@@ -67,6 +73,8 @@ public final class Frameset implements Serializable {
     }
 
     /**
+     * Gets the maximum frames count by y
+     *
      * @return maximum frames count by y
      */
     public int getFramesPerPageY() {
@@ -74,6 +82,8 @@ public final class Frameset implements Serializable {
     }
 
     /**
+     * Gets the width of a frame, in pixels
+     *
      * @return width of a one frame, in pixels
      */
     public int getFrameWidth() {
@@ -81,6 +91,8 @@ public final class Frameset implements Serializable {
     }
 
     /**
+     * Gets the height of a frame, in pixels
+     *
      * @return height of a one frame, in pixels
      */
     public int getFrameHeight() {
@@ -88,6 +100,8 @@ public final class Frameset implements Serializable {
     }
 
     /**
+     * Gets the duration per frame in milliseconds
+     *
      * @return duration per frame in milliseconds
      */
     public int getDurationPerFrame() {

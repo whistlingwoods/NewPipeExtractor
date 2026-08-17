@@ -129,6 +129,8 @@ public abstract class ListExtractor<R extends InfoItem> extends Extractor {
         }
 
         /**
+         * Gets the next page of results
+         *
          * @return the next page if available, or null otherwise
          */
         @Nullable

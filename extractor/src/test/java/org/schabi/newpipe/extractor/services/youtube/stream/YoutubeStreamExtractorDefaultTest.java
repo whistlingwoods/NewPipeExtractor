@@ -245,6 +245,7 @@ public class YoutubeStreamExtractorDefaultTest {
         @Override public long expectedDislikeCountAtLeast() { return -1; }
         @Override public String expectedLicence() { return YOUTUBE_LICENCE; }
         @Override public String expectedCategory() { return "Education"; }
+        @Override public boolean expectedHasAudioStreams() { return false; }
         // @formatter:on
     }
 
