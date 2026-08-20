@@ -32,7 +32,6 @@ import org.junit.jupiter.api.Test;
 import org.schabi.newpipe.extractor.InitNewPipeTest;
 import org.schabi.newpipe.extractor.MetaInfo;
 import org.schabi.newpipe.extractor.StreamingService;
-import org.schabi.newpipe.extractor.exceptions.ContentNotAvailableException;
 import org.schabi.newpipe.extractor.exceptions.GeographicRestrictionException;
 import org.schabi.newpipe.extractor.exceptions.PaidContentException;
 import org.schabi.newpipe.extractor.exceptions.ParsingException;
@@ -213,6 +212,7 @@ public class YoutubeStreamExtractorDefaultTest {
         // @formatter:on
     }
 
+    @Disabled("Broken, as we cannot extract videos made for kids for now and this is one of them")
     public static class RatingsDisabledTest extends DefaultStreamExtractorTest
         implements InitYoutubeTest {
         private static final String ID = "it3OtbTxQk0";

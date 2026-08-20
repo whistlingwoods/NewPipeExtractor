@@ -66,7 +66,6 @@ import org.schabi.newpipe.extractor.localization.TimeAgoParser;
 import org.schabi.newpipe.extractor.localization.TimeAgoPatternsManager;
 import org.schabi.newpipe.extractor.services.youtube.ItagItem;
 import org.schabi.newpipe.extractor.services.youtube.PoTokenProvider;
-import org.schabi.newpipe.extractor.services.youtube.PoTokenResult;
 import org.schabi.newpipe.extractor.services.youtube.YoutubeJavaScriptPlayerManager;
 import org.schabi.newpipe.extractor.services.youtube.YoutubeMetaInfoHelper;
 import org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper;
@@ -94,7 +93,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -123,19 +121,11 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     private static final String VIDEO_DETAILS = "videoDetails";
     private static final String TITLE = "title";
 
-    @Nullable
-    private static PoTokenProvider poTokenProvider;
-    private static boolean fetchIosClient;
-
     private JsonObject playerResponse;
     private JsonObject nextResponse;
 
     @Nullable
     private JsonObject visionOsStreamingData;
-    @Nullable
-    private JsonObject iosStreamingData;
-    @Nullable
-    private JsonObject androidStreamingData;
 
     private JsonObject videoPrimaryInfoRenderer;
     private JsonObject videoSecondaryInfoRenderer;
@@ -150,13 +140,6 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     // Also because a nonce should be unique, it should be different between clients used, so
     // three different strings are used.
     private String visionOsCpn;
-    private String iosCpn;
-    private String androidCpn;
-
-    @Nullable
-    private String androidStreamingUrlsPoToken;
-    @Nullable
-    private String iosStreamingUrlsPoToken;
 
     public YoutubeStreamExtractor(final StreamingService service, final LinkHandler linkHandler) {
         super(service, linkHandler);
@@ -333,8 +316,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                     .getString("lengthSeconds");
             return Long.parseLong(duration);
         } catch (final Exception e) {
-            return getDurationFromFirstAdaptiveFormat(Arrays.asList(
-                    androidStreamingData, iosStreamingData));
+            return getDurationFromFirstAdaptiveFormat(Collections.singletonList(
+                    visionOsStreamingData));
         }
     }
 
@@ -626,20 +609,6 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
     @Nonnull
     @Override
-    public String getDashMpdUrl() throws ParsingException {
-        assertPageFetched();
-
-        // There is no DASH manifest available with the iOS and visionOS clients
-        return getManifestUrl(
-                "dash",
-                List.of(new Pair<>(androidStreamingData, androidStreamingUrlsPoToken)),
-                // Return version 7 of the DASH manifest, which is the latest one, reducing
-                // manifest size and allowing playback with some DASH players
-                "mpd_version=7");
-    }
-
-    @Nonnull
-    @Override
     public String getHlsUrl() throws ParsingException {
         assertPageFetched();
 
@@ -649,9 +618,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         // response
         return getManifestUrl(
                 "hls",
-                List.of(new Pair<>(visionOsStreamingData, null),
-                        new Pair<>(iosStreamingData, iosStreamingUrlsPoToken),
-                        new Pair<>(androidStreamingData, androidStreamingUrlsPoToken)),
+                List.of(new Pair<>(visionOsStreamingData, null)),
                 "");
     }
 
@@ -843,23 +810,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         final Localization localization = getExtractorLocalization();
         final ContentCountry contentCountry = getExtractorContentCountry();
 
-        final PoTokenProvider poTokenProviderInstance = poTokenProvider;
-        final boolean noPoTokenProviderSet = poTokenProviderInstance == null;
-
-        final PoTokenResult androidPoTokenResult = noPoTokenProviderSet ? null
-                : poTokenProviderInstance.getAndroidClientPoToken(videoId);
-
-        fetchAndroidClient(localization, contentCountry, videoId, androidPoTokenResult);
-
-        setStreamType();
-
-        if (fetchIosClient) {
-            final PoTokenResult iosPoTokenResult = noPoTokenProviderSet ? null
-                    : poTokenProviderInstance.getIosClientPoToken(videoId);
-            fetchIosClient(localization, contentCountry, videoId, iosPoTokenResult);
-        }
-
         fetchVisionOsClient(localization, contentCountry, videoId);
+        setStreamType();
 
         fetchWebClientMetadataAndSetThumbnails(localization, contentCountry, videoId);
 
@@ -889,7 +841,12 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                             "This age-restricted video cannot be watched anonymously");
                 }
 
-                if (reason.contains("private")) {
+                if (playabilityStatus.getArray("messages")
+                        .stream()
+                        .filter(String.class::isInstance)
+                        .map(String.class::cast)
+                        .anyMatch(message -> !isNullOrEmpty(message)
+                                && message.contains("private"))) {
                     throw new PrivateContentException("This video is private");
                 }
 
@@ -928,86 +885,24 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         throw new ContentNotAvailableException("Got error " + status + ": \"" + reason + "\"");
     }
 
-    private void fetchAndroidClient(@Nonnull final Localization localization,
-                                    @Nonnull final ContentCountry contentCountry,
-                                    @Nonnull final String videoId,
-                                    @Nullable final PoTokenResult androidPoTokenResult)
-            throws IOException, ExtractionException {
-        androidCpn = generateContentPlaybackNonce();
+    private void fetchVisionOsClient(@Nonnull final Localization localization,
+                                     @Nonnull final ContentCountry contentCountry,
+                                     @Nonnull final String videoId) throws IOException,
+            ExtractionException {
+        visionOsCpn = generateContentPlaybackNonce();
 
-        if (androidPoTokenResult == null) {
-            playerResponse = YoutubeStreamHelper.getAndroidReelPlayerResponse(
-                    contentCountry, localization, videoId, androidCpn);
-        } else {
-            playerResponse = YoutubeStreamHelper.getAndroidPlayerResponse(
-                    contentCountry, localization, videoId, androidCpn,
-                    androidPoTokenResult);
-        }
+        playerResponse = YoutubeStreamHelper.getVisionOsPlayerResponse(contentCountry,
+                localization, videoId, visionOsCpn);
 
         checkPlayabilityStatus(playerResponse.getObject(PLAYABILITY_STATUS));
         if (isPlayerResponseNotValid(playerResponse, videoId)) {
-            throw new ExtractionException("ANDROID player response is not valid");
+            throw new ExtractionException("VISIONOS player response is not valid");
         }
 
-        androidStreamingData = playerResponse.getObject(STREAMING_DATA);
+        visionOsStreamingData = playerResponse.getObject(STREAMING_DATA);
 
         playerCaptionsTracklistRenderer = playerResponse.getObject(CAPTIONS)
                 .getObject(PLAYER_CAPTIONS_TRACKLIST_RENDERER);
-
-        if (androidPoTokenResult != null) {
-            androidStreamingUrlsPoToken = androidPoTokenResult.streamingDataPoToken;
-        }
-    }
-
-    private void fetchIosClient(@Nonnull final Localization localization,
-                                @Nonnull final ContentCountry contentCountry,
-                                @Nonnull final String videoId,
-                                @Nullable final PoTokenResult iosPoTokenResult) {
-        try {
-            iosCpn = generateContentPlaybackNonce();
-
-            final JsonObject iosPlayerResponse = YoutubeStreamHelper.getIosPlayerResponse(
-                    contentCountry, localization, videoId, iosCpn, iosPoTokenResult);
-
-            if (!isPlayerResponseNotValid(iosPlayerResponse, videoId)) {
-                iosStreamingData = iosPlayerResponse.getObject(STREAMING_DATA);
-
-                if (isNullOrEmpty(playerCaptionsTracklistRenderer)) {
-                    playerCaptionsTracklistRenderer = iosPlayerResponse.getObject(CAPTIONS)
-                            .getObject(PLAYER_CAPTIONS_TRACKLIST_RENDERER);
-                }
-
-                if (iosPoTokenResult != null) {
-                    iosStreamingUrlsPoToken = iosPoTokenResult.streamingDataPoToken;
-                }
-            }
-        } catch (final Exception ignored) {
-            // Ignore exceptions related to IOS client fetching or parsing, as it is not
-            // compulsory to play contents
-        }
-    }
-
-    private void fetchVisionOsClient(@Nonnull final Localization localization,
-                                     @Nonnull final ContentCountry contentCountry,
-                                     @Nonnull final String videoId) {
-        try {
-            visionOsCpn = generateContentPlaybackNonce();
-
-            final JsonObject visionOsPlayerResponse = YoutubeStreamHelper.getVisionOsPlayerResponse(
-                    contentCountry, localization, videoId, visionOsCpn);
-
-            if (!isPlayerResponseNotValid(visionOsPlayerResponse, videoId)) {
-                visionOsStreamingData = visionOsPlayerResponse.getObject(STREAMING_DATA);
-
-                if (isNullOrEmpty(playerCaptionsTracklistRenderer)) {
-                    playerCaptionsTracklistRenderer = visionOsPlayerResponse.getObject(CAPTIONS)
-                            .getObject(PLAYER_CAPTIONS_TRACKLIST_RENDERER);
-                }
-            }
-        } catch (final Exception ignored) {
-            // Ignore exceptions related to VISIONOS client fetching or parsing, as it is not
-            // compulsory to play contents
-        }
     }
 
     private void fetchWebClientMetadataAndSetThumbnails(
@@ -1137,11 +1032,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             final List<T> streamList = new ArrayList<>();
 
             java.util.stream.Stream.of(
-                    new Pair<>(androidStreamingData,
-                            new Pair<>(androidCpn, androidStreamingUrlsPoToken)),
-                    new Pair<>(visionOsStreamingData, new Pair<>(visionOsCpn, (String) null)),
-                    new Pair<>(iosStreamingData,
-                            new Pair<>(iosCpn, iosStreamingUrlsPoToken)))
+                    new Pair<>(visionOsStreamingData, new Pair<>(visionOsCpn, (String) null)))
                     .flatMap(pair -> getStreamsFromStreamingDataKey(
                             videoId,
                             pair.getFirst(),
@@ -1636,6 +1527,11 @@ public class YoutubeStreamExtractor extends StreamExtractor {
      * Set the {@link PoTokenProvider} instance to be used for fetching {@code poToken}s.
      *
      * <p>
+     * <b>This method currently doesn't do anything, as the extractor doesn't use any client
+     * supporting poTokens until SABR support is added to the extractor.</b>
+     * </p>
+     *
+     * <p>
      * This method allows setting an implementation of {@link PoTokenProvider} which will be used
      * to obtain poTokens required for YouTube player requests and streaming URLs. These tokens
      * are used by YouTube to verify the integrity of the user's device or browser and are required
@@ -1658,26 +1554,6 @@ public class YoutubeStreamExtractor extends StreamExtractor {
      */
     @SuppressWarnings("unused")
     public static void setPoTokenProvider(@Nullable final PoTokenProvider poTokenProvider) {
-        YoutubeStreamExtractor.poTokenProvider = poTokenProvider;
-    }
-
-    /**
-     * Set whether to fetch the iOS player responses.
-     *
-     * <p>
-     * This method allows fetching the iOS player response, which can be useful in scenarios where
-     * streams from the iOS player response are needed, especially HLS manifests.
-     * </p>
-     *
-     * <p>
-     * Note that at the time of writing, YouTube is rolling out a {@code poToken} requirement on
-     * this client, formats from HLS manifests do not seem to be affected.
-     * </p>
-     *
-     * @param fetchIosClient whether to fetch the iOS client
-     */
-    @SuppressWarnings("unused")
-    public static void setFetchIosClient(final boolean fetchIosClient) {
-        YoutubeStreamExtractor.fetchIosClient = fetchIosClient;
+        // Nothing to do for now, see why in the Javadoc
     }
 }
