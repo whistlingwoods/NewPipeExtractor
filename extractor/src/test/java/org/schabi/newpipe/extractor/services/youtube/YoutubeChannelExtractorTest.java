@@ -881,9 +881,7 @@ public class YoutubeChannelExtractorTest {
         @Override
         public void testTabs() throws Exception {
             // Gaming topic channels tabs are not yet supported
-            // However, a Shorts tab like on other channel types is returned, so it is supported
-            // Check that it is returned
-            assertTabsContain(extractor().getTabs(), ChannelTabs.SHORTS);
+            assertEmpty(extractor().getTabs());
         }
 
         @Test
@@ -965,7 +963,7 @@ public class YoutubeChannelExtractorTest {
         @Override
         @Test
         public void testDescription() throws Exception {
-            assertContains("HEY! HEY YOU! YEAH YOU!", extractor().getDescription());
+            assertContains("I cover a variety of topics", extractor().getDescription());
         }
 
         @Override
