@@ -5,8 +5,9 @@ allprojects {
     compileJava.options.encoding = 'UTF-8'
     compileTestJava.options.encoding = 'UTF-8'
 
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    // Java 8 bytecode, so that D8 can desugar it for the legacy devices this fork targets.
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 
     version 'v0.22.7.4'
     group 'com.github.TeamNewPipe'

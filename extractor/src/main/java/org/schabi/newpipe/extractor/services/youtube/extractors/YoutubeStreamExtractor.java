@@ -137,6 +137,14 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     private JsonObject androidStreamingData;
     @Nullable
     private JsonObject iosStreamingData;
+    /**
+     * Full mobile player responses, kept because the WEB one no longer carries a usable
+     * {@code playabilityStatus} and is therefore useless to tell livestreams apart.
+     */
+    @Nullable
+    private JsonObject iosPlayerResponse;
+    @Nullable
+    private JsonObject androidPlayerResponse;
 
     private JsonObject videoPrimaryInfoRenderer;
     private JsonObject videoSecondaryInfoRenderer;
@@ -745,13 +753,25 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     }
 
     private void setStreamType() {
-        if (playerResponse.getObject("playabilityStatus").has("liveStreamability")) {
+        if (hasLiveStreamability(playerResponse) || hasLiveStreamability(iosPlayerResponse)
+                || hasLiveStreamability(androidPlayerResponse)) {
             streamType = StreamType.LIVE_STREAM;
-        } else if (playerResponse.getObject("videoDetails").getBoolean("isPostLiveDvr", false)) {
+        } else if (isPostLiveDvr(playerResponse) || isPostLiveDvr(iosPlayerResponse)
+                || isPostLiveDvr(androidPlayerResponse)) {
             streamType = StreamType.POST_LIVE_STREAM;
         } else {
             streamType = StreamType.VIDEO_STREAM;
         }
+    }
+
+    private static boolean hasLiveStreamability(@Nullable final JsonObject response) {
+        return response != null
+                && response.getObject("playabilityStatus").has("liveStreamability");
+    }
+
+    private static boolean isPostLiveDvr(@Nullable final JsonObject response) {
+        return response != null
+                && response.getObject("videoDetails").getBoolean("isPostLiveDvr", false);
     }
 
     @Nullable
@@ -891,17 +911,47 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             // age-restricted videos
             setStreamType();
         } else {
-            checkPlayabilityStatus(webPlayerResponse, playabilityStatus);
-            // Fetching successfully the iOS player is mandatory to get streams
-            fetchIosMobileJsonPlayer(contentCountry, localization, videoId);
-
-
+            // The WEB client now requires a poToken and answers UNPLAYABLE ("Video unavailable",
+            // "The page needs to be reloaded.") for videos that play perfectly fine through the
+            // iOS client, so its playability status can no longer be used as a gate. Fetch the
+            // streams first and only fall back to the WEB playability status when no streams
+            // could be obtained, so that real errors (private, paid, members-only, geo-blocked,
+            // ...) still produce their specific exception.
+            // The ANDROID client comes first: it is currently the only one that still returns a
+            // progressive (muxed) format, and it keeps serving media for videos where every
+            // adaptive URL of the iOS client answers HTTP 403.
+            Exception fetchException = null;
             try {
                 fetchAndroidMobileJsonPlayer(contentCountry, localization, videoId);
-            } catch (final Exception ignored) {
-                // Ignore exceptions related to ANDROID client fetch or parsing, as it is not
-                // compulsory to play contents
+            } catch (final IOException | ExtractionException e) {
+                fetchException = e;
             }
+
+            if (androidStreamingData == null) {
+                try {
+                    fetchIosMobileJsonPlayer(contentCountry, localization, videoId);
+                } catch (final IOException | ExtractionException e) {
+                    if (fetchException == null) {
+                        fetchException = e;
+                    }
+                }
+            }
+
+            if (androidStreamingData == null && iosStreamingData == null) {
+                checkPlayabilityStatus(webPlayerResponse, playabilityStatus);
+
+                if (fetchException instanceof IOException) {
+                    throw (IOException) fetchException;
+                } else if (fetchException != null) {
+                    throw (ExtractionException) fetchException;
+                }
+                throw new ExtractionException("Could not get any stream from the mobile clients");
+            }
+
+            // The stream type was guessed from the WEB player response above, which no longer
+            // carries a usable playability status, so refresh it now that a mobile response is
+            // available.
+            setStreamType();
         }
 
         // The microformat JSON object of the content is only returned on the WEB client,
@@ -988,10 +1038,6 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         androidCpn = generateContentPlaybackNonce();
         final byte[] mobileBody = JsonWriter.string(
                 prepareAndroidMobileJsonBuilder(localization, contentCountry)
-                        .object("playerRequest")
-                        .value(VIDEO_ID, videoId)
-                        .end()
-                        .value("disablePlayerResponse", false)
                         .value(VIDEO_ID, videoId)
                         .value(CPN, androidCpn)
                         .value(CONTENT_CHECK_OK, true)
@@ -999,20 +1045,23 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                         .done())
                 .getBytes(UTF_8);
 
-        final JsonObject androidPlayerResponse = getJsonAndroidPostResponse("reel/reel_item_watch",
-                mobileBody, localization, "&t=" + generateTParameter()
-                        + "&id=" + videoId + "&$fields=playerResponse");
+        // The plain player endpoint is used rather than reel/reel_item_watch: the reel workaround
+        // is no longer needed and the regular endpoint is the only one still handing out a
+        // progressive (muxed) format.
+        final JsonObject androidPlayerResponse = getJsonAndroidPostResponse(PLAYER,
+                mobileBody, localization, "&t=" + generateTParameter() + "&id=" + videoId);
 
-        final JsonObject playerResponseObject = androidPlayerResponse.getObject("playerResponse");
-        if (isPlayerResponseNotValid(playerResponseObject, videoId)) {
+        if (isPlayerResponseNotValid(androidPlayerResponse, videoId)) {
             return;
         }
+
+        this.androidPlayerResponse = androidPlayerResponse;
 
         final JsonObject streamingData = androidPlayerResponse.getObject(STREAMING_DATA);
         if (!isNullOrEmpty(streamingData)) {
             androidStreamingData = streamingData;
             if (isNullOrEmpty(playerCaptionsTracklistRenderer)) {
-                playerCaptionsTracklistRenderer = playerResponseObject.getObject("captions")
+                playerCaptionsTracklistRenderer = androidPlayerResponse.getObject("captions")
                         .getObject("playerCaptionsTracklistRenderer");
             }
         }
@@ -1043,6 +1092,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         if (isPlayerResponseNotValid(iosPlayerResponse, videoId)) {
             throw new ExtractionException("IOS player response is not valid");
         }
+
+        this.iosPlayerResponse = iosPlayerResponse;
 
         final JsonObject streamingData = iosPlayerResponse.getObject(STREAMING_DATA);
         if (!isNullOrEmpty(streamingData)) {
@@ -1275,16 +1326,15 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
             java.util.stream.Stream.of(
                      /*
-                    Use the iosStreamingData object first because there is no n param and no
-                    signatureCiphers in streaming URLs of the iOS client
-                    The androidStreamingData is used as second way as it isn't used on livestreams,
-                    it doesn't return all available streams, and the Android client extraction is
-                    more likely to break
+                    Use the androidStreamingData object first: like the iOS one it has no n param
+                    and no signatureCiphers in its streaming URLs, it is the only client still
+                    offering a progressive (muxed) format, and its URLs keep working on videos
+                    where every iOS URL answers HTTP 403
                     As age-restricted videos are not common, use tvHtml5SimplyEmbedStreamingData
                     last, which will be the only one not empty for age-restricted content
                      */
-                    new Pair<>(iosStreamingData, iosCpn),
                     new Pair<>(androidStreamingData, androidCpn),
+                    new Pair<>(iosStreamingData, iosCpn),
                     new Pair<>(tvHtml5SimplyEmbedStreamingData, tvHtml5SimplyEmbedCpn)
             )
                     .flatMap(pair -> getStreamsFromStreamingDataKey(videoId, pair.getFirst(),
