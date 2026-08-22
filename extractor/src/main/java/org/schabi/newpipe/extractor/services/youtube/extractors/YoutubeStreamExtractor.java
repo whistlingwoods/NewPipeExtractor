@@ -807,6 +807,16 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                         } else if (result.has("compactPlaylistRenderer")) {
                             return new YoutubeMixOrPlaylistInfoItemExtractor(
                                     result.getObject("compactPlaylistRenderer"));
+                        } else if (result.has("lockupViewModel")) {
+                            // YouTube moved the related videos sidebar over to this renderer.
+                            // Only videos are handled; playlists and podcasts are skipped.
+                            final JsonObject lockupViewModel =
+                                    result.getObject("lockupViewModel");
+                            if ("LOCKUP_CONTENT_TYPE_VIDEO".equals(
+                                    lockupViewModel.getString("contentType"))) {
+                                return new YoutubeStreamInfoItemLockupExtractor(
+                                        lockupViewModel, timeAgoParser);
+                            }
                         }
                         return null;
                     })
