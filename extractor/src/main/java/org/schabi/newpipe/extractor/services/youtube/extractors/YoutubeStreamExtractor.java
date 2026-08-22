@@ -1590,6 +1590,14 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             final String cipherString = formatData.has(CIPHER)
                     ? formatData.getString(CIPHER)
                     : formatData.getString(SIGNATURE_CIPHER);
+            if (isNullOrEmpty(cipherString)) {
+                // The ANDROID client describes its adaptive formats without a url and without a
+                // cipher: they are reachable over SABR only. Skipping the entry keeps the rest of
+                // the list usable -- letting it through would NPE and take every other client's
+                // streams down with it.
+                throw new ParsingException(
+                        "Could not get stream URL: neither a url nor a cipher is present");
+            }
             final Map<String, String> cipher = Parser.compatParseMap(
                     cipherString);
             streamUrl = cipher.get("url") + "&" + cipher.get("sp") + "="
