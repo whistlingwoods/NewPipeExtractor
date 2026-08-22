@@ -69,12 +69,16 @@ public class YoutubeStreamInfoItemLockupExtractor implements StreamInfoItemExtra
     }
 
     @Nonnull
-    private JsonObject getChannelTapCommand() {
+    private JsonObject getDecoratedAvatarViewModel() {
         return getMetadataViewModel()
                 .getObject("image")
-                .getObject("decoratedAvatarViewModel")
-                .getObject("avatar")
-                .getObject("avatarViewModel")
+                .getObject("decoratedAvatarViewModel");
+    }
+
+    @Nonnull
+    private JsonObject getChannelTapCommand() {
+        // rendererContext sits next to "avatar", not inside it
+        return getDecoratedAvatarViewModel()
                 .getObject("rendererContext")
                 .getObject("commandContext")
                 .getObject("onTap")
@@ -222,9 +226,7 @@ public class YoutubeStreamInfoItemLockupExtractor implements StreamInfoItemExtra
 
     @Override
     public String getUploaderAvatarUrl() {
-        final JsonArray sources = getMetadataViewModel()
-                .getObject("image")
-                .getObject("decoratedAvatarViewModel")
+        final JsonArray sources = getDecoratedAvatarViewModel()
                 .getObject("avatar")
                 .getObject("avatarViewModel")
                 .getObject("image")
