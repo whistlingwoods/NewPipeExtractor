@@ -32,12 +32,10 @@ import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.generateContentPlaybackNonce;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.generateTParameter;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonAndroidPostResponse;
-import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonAndroidVrPostResponse;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonIosPostResponse;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonPostResponse;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getTextFromObject;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareAndroidMobileJsonBuilder;
-import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareAndroidVrMobileJsonBuilder;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareDesktopJsonBuilder;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareIosMobileJsonBuilder;
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
@@ -137,13 +135,6 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     private JsonObject tvHtml5SimplyEmbedStreamingData;
     @Nullable
     private JsonObject androidStreamingData;
-    /**
-     * Streaming data of the {@code ANDROID_VR} client, the only source of ordinary H.264 adaptive
-     * formats: the plain {@code ANDROID} client hands out a progressive 360p stream and nothing
-     * else usable.
-     */
-    @Nullable
-    private JsonObject androidVrStreamingData;
     @Nullable
     private JsonObject iosStreamingData;
     /**
@@ -168,7 +159,6 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     // three different strings are used.
     private String tvHtml5SimplyEmbedCpn;
     private String androidCpn;
-    private String androidVrCpn;
     private String iosCpn;
 
     public YoutubeStreamExtractor(final StreamingService service, final LinkHandler linkHandler) {
@@ -371,8 +361,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             return Long.parseLong(duration);
         } catch (final Exception e) {
             return getDurationFromFirstAdaptiveFormat(Arrays.asList(
-                    androidVrStreamingData, iosStreamingData, androidStreamingData,
-                    tvHtml5SimplyEmbedStreamingData));
+                    iosStreamingData, androidStreamingData, tvHtml5SimplyEmbedStreamingData));
         }
     }
 
@@ -641,8 +630,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         // Android client doesn't contain all available streams (mainly the WEBM ones)
         return getManifestUrl(
                 "dash",
-                Arrays.asList(androidVrStreamingData, androidStreamingData,
-                        tvHtml5SimplyEmbedStreamingData));
+                Arrays.asList(androidStreamingData, tvHtml5SimplyEmbedStreamingData));
     }
 
     @Nonnull
@@ -949,15 +937,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                 fetchException = e;
             }
 
-            // ANDROID_VR is what supplies the adaptive H.264 formats, and therefore every
-            // resolution above the single progressive 360p stream the ANDROID client returns.
-            try {
-                fetchAndroidVrMobileJsonPlayer(contentCountry, localization, videoId);
-            } catch (final Exception ignored) {
-                // Optional: playback still works from the progressive stream alone
-            }
-
-            if (androidStreamingData == null && androidVrStreamingData == null) {
+            if (androidStreamingData == null) {
                 try {
                     fetchIosMobileJsonPlayer(contentCountry, localization, videoId);
                 } catch (final IOException | ExtractionException e) {
@@ -967,8 +947,7 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                 }
             }
 
-            if (androidStreamingData == null && androidVrStreamingData == null
-                    && iosStreamingData == null) {
+            if (androidStreamingData == null && iosStreamingData == null) {
                 checkPlayabilityStatus(webPlayerResponse, playabilityStatus);
 
                 if (fetchException instanceof IOException) {
@@ -1093,54 +1072,6 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             androidStreamingData = streamingData;
             if (isNullOrEmpty(playerCaptionsTracklistRenderer)) {
                 playerCaptionsTracklistRenderer = androidPlayerResponse.getObject("captions")
-                        .getObject("playerCaptionsTracklistRenderer");
-            }
-        }
-    }
-
-    /**
-     * Fetch the {@code ANDROID_VR} API and assign the streaming data to the
-     * androidVrStreamingData JSON object.
-     *
-     * <p>
-     * This is what provides the adaptive (DASH) H.264 formats, so it is what makes anything above
-     * 360p available. It needs a visitor id, otherwise YouTube answers "Sign in to confirm that
-     * you're not a bot".
-     * </p>
-     */
-    private void fetchAndroidVrMobileJsonPlayer(@Nonnull final ContentCountry contentCountry,
-                                                @Nonnull final Localization localization,
-                                                @Nonnull final String videoId)
-            throws IOException, ExtractionException {
-        String visitorData = null;
-        try {
-            visitorData = YoutubeParsingHelper.extractVisitorData();
-        } catch (final Exception ignored) {
-            // Without it the request below will simply be rejected and no streams added
-        }
-
-        androidVrCpn = generateContentPlaybackNonce();
-        final byte[] mobileBody = JsonWriter.string(
-                prepareAndroidVrMobileJsonBuilder(localization, contentCountry, visitorData)
-                        .value(VIDEO_ID, videoId)
-                        .value(CPN, androidVrCpn)
-                        .value(CONTENT_CHECK_OK, true)
-                        .value(RACY_CHECK_OK, true)
-                        .done())
-                .getBytes(UTF_8);
-
-        final JsonObject response = getJsonAndroidVrPostResponse(PLAYER, mobileBody, localization,
-                visitorData);
-
-        if (isPlayerResponseNotValid(response, videoId)) {
-            return;
-        }
-
-        final JsonObject streamingData = response.getObject(STREAMING_DATA);
-        if (!isNullOrEmpty(streamingData)) {
-            androidVrStreamingData = streamingData;
-            if (isNullOrEmpty(playerCaptionsTracklistRenderer)) {
-                playerCaptionsTracklistRenderer = response.getObject("captions")
                         .getObject("playerCaptionsTracklistRenderer");
             }
         }
@@ -1405,16 +1336,14 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
             java.util.stream.Stream.of(
                      /*
-                    androidStreamingData comes first because it holds the progressive (muxed)
-                    format, the one thing that plays on its own; androidVrStreamingData follows
-                    because it is the only source of adaptive H.264 formats, and so of every
-                    resolution above 360p. Neither carries an n param or a signatureCipher.
-                    The iOS client is kept as a fallback, its URLs answer HTTP 403 on many videos.
+                    Use the androidStreamingData object first: like the iOS one it has no n param
+                    and no signatureCiphers in its streaming URLs, it is the only client still
+                    offering a progressive (muxed) format, and its URLs keep working on videos
+                    where every iOS URL answers HTTP 403
                     As age-restricted videos are not common, use tvHtml5SimplyEmbedStreamingData
                     last, which will be the only one not empty for age-restricted content
                      */
                     new Pair<>(androidStreamingData, androidCpn),
-                    new Pair<>(androidVrStreamingData, androidVrCpn),
                     new Pair<>(iosStreamingData, iosCpn),
                     new Pair<>(tvHtml5SimplyEmbedStreamingData, tvHtml5SimplyEmbedCpn)
             )
