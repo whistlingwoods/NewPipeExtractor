@@ -172,6 +172,32 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     private String androidVrCpn;
     private String iosCpn;
 
+    /**
+     * Whether to ask the {@code ANDROID_VR} client for adaptive formats. Off by default, see
+     * {@link #setFetchAdaptiveFormats(boolean)}.
+     */
+    private static boolean fetchAdaptiveFormats = false;
+
+    /**
+     * Choose whether resolutions above the progressive 360p stream are offered at all.
+     *
+     * <p>
+     * They come from the {@code ANDROID_VR} client and they are described by generated DASH
+     * manifests, all of which works. What does not work is playing them for more than a moment:
+     * YouTube serves only the first 1 MB of an adaptive format and answers HTTP 403 at every
+     * offset past it, which is roughly a minute at 360p and five seconds at 1080p. Neither a
+     * fresh URL, nor a fresh session, nor a poToken changes that. So this stays off unless
+     * someone deliberately turns it on to check whether YouTube has relented.
+     * </p>
+     */
+    public static void setFetchAdaptiveFormats(final boolean fetchThem) {
+        fetchAdaptiveFormats = fetchThem;
+    }
+
+    public static boolean isFetchingAdaptiveFormats() {
+        return fetchAdaptiveFormats;
+    }
+
     public YoutubeStreamExtractor(final StreamingService service, final LinkHandler linkHandler) {
         super(service, linkHandler);
     }
@@ -952,10 +978,14 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
             // ANDROID_VR is what supplies the adaptive H.264 formats, and therefore every
             // resolution above the single progressive 360p stream the ANDROID client returns.
-            try {
-                fetchAndroidVrMobileJsonPlayer(contentCountry, localization, videoId);
-            } catch (final Exception ignored) {
-                // Optional: playback still works from the progressive stream alone
+            // Off by default because YouTube only serves the first megabyte of those formats;
+            // see isFetchingAdaptiveFormats().
+            if (isFetchingAdaptiveFormats()) {
+                try {
+                    fetchAndroidVrMobileJsonPlayer(contentCountry, localization, videoId);
+                } catch (final Exception ignored) {
+                    // Optional: playback still works from the progressive stream alone
+                }
             }
 
             if (androidStreamingData == null && androidVrStreamingData == null) {
