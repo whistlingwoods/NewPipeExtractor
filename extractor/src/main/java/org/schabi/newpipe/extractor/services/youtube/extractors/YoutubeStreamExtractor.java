@@ -71,7 +71,6 @@ import org.schabi.newpipe.extractor.localization.TimeAgoParser;
 import org.schabi.newpipe.extractor.localization.TimeAgoPatternsManager;
 import org.schabi.newpipe.extractor.services.youtube.ItagItem;
 import org.schabi.newpipe.extractor.services.youtube.YoutubeJavaScriptExtractor;
-import org.schabi.newpipe.extractor.services.youtube.dashmanifestcreators.YoutubeProgressiveDashManifestCreator;
 import org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper;
 import org.schabi.newpipe.extractor.services.youtube.YoutubeThrottlingDecrypter;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeChannelLinkHandlerFactory;
@@ -1696,25 +1695,13 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         final boolean isOtf = formatData.getString("type", "")
                 .equalsIgnoreCase("FORMAT_STREAM_TYPE_OTF");
 
-        // Adaptive streams are only served in bounded byte ranges now: a plain GET, an open-ended
-        // "Range: bytes=0-" and an oversized "&range=" are all answered HTTP 403. A player can
-        // only reach them through DASH, which requests the exact ranges the manifest describes, so
-        // wrap them in a generated manifest rather than handing over a bare URL.
-        if (streamType == StreamType.VIDEO_STREAM && !isOtf
-                && (itagType == ItagItem.ItagType.VIDEO_ONLY
-                    || itagType == ItagItem.ItagType.AUDIO)) {
-            try {
-                final ItagInfo dashItagInfo = new ItagInfo(
-                        YoutubeProgressiveDashManifestCreator.fromProgressiveStreamingUrl(
-                                streamUrl, itagItem, getLength()),
-                        itagItem);
-                dashItagInfo.setIsUrl(false);
-                return dashItagInfo;
-            } catch (final Exception e) {
-                // Fall through and return the bare URL: it is better to offer a stream that might
-                // not play than to drop the format entirely
-            }
-        }
+        // Adaptive formats used to need wrapping in a generated DASH manifest here: the client
+        // that supplied them (ANDROID_VR) served only their first megabyte over ordinary range
+        // requests, and only a DASH-aware player asking for the exact ranges the manifest names
+        // could get more. VISIONOS, the client used now, has no such limit and serves the whole
+        // file to a plain sequential GET, so the bare URL below works directly -- which also
+        // means a stream never carries a manifest without a URL, and a player that only knows
+        // how to open a URL (as VLC's Media/Media.Slave pairing does) keeps working unmodified.
 
         final ItagInfo itagInfo = new ItagInfo(streamUrl, itagItem);
 
