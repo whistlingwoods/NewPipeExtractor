@@ -185,21 +185,26 @@ public final class YoutubeParsingHelper {
     private static final int ANDROID_SDK_VERSION = 30;
 
     /**
-     * Fields of the {@code ANDROID_VR} client, which spoofs the YouTube app of a Meta Quest 3.
+     * Fields of the {@code VISIONOS} client, which spoofs the YouTube app of an Apple Vision Pro.
      *
      * <p>
-     * The plain {@code ANDROID} client only offers a progressive (muxed) 360p format nowadays; its
-     * adaptive formats carry no URL at all and are reachable through SABR only. This client is the
-     * one that still hands out ordinary H.264 adaptive URLs, so it is what makes resolutions above
-     * 360p possible.
+     * The plain {@code ANDROID} client only offers a progressive (muxed) 360p format nowadays, and
+     * {@code WEB} offers adaptive formats that carry neither a URL nor a cipher and are reachable
+     * through SABR only. This is the client that still hands out ordinary adaptive URLs, so it is
+     * what makes resolutions above 360p possible.
+     * </p>
+     *
+     * <p>
+     * The obvious-looking alternative, {@code ANDROID_VR}, also returns URLs but they are served
+     * only up to their first megabyte and answer HTTP 403 at every offset past it -- about five
+     * seconds of 1080p. These are not subject to that.
      * </p>
      */
-    private static final String ANDROID_VR_CLIENT_VERSION = "1.65.10";
-    private static final String ANDROID_VR_DEVICE_MAKE = "Oculus";
-    private static final String ANDROID_VR_DEVICE_MODEL = "Quest 3";
-    private static final String ANDROID_VR_OS_VERSION = "12L";
-    private static final int ANDROID_VR_SDK_VERSION = 32;
-    private static final String ANDROID_VR_BUILD_ID = "SQ3A.220605.009.A1";
+    private static final String VISIONOS_CLIENT_VERSION = "1.04";
+    private static final String VISIONOS_DEVICE_MAKE = "Apple";
+    private static final String VISIONOS_DEVICE_MODEL = "RealityDevice17,1";
+    private static final String VISIONOS_OS_VERSION = "26.6.0.23O770";
+    private static final String VISIONOS_USER_AGENT_VERSION = "26_6_0";
 
     /**
      * The hardcoded client version of the iOS app used for InnerTube requests with this
@@ -1240,23 +1245,23 @@ public final class YoutubeParsingHelper {
     }
 
     /**
-     * Post to the InnerTube API as the {@code ANDROID_VR} client.
+     * Post to the InnerTube API as the {@code VISIONOS} client.
      *
      * <p>
      * The visitor id has to travel in a header as well as in the request body, otherwise YouTube
      * answers "Sign in to confirm that you're not a bot".
      * </p>
      */
-    public static JsonObject getJsonAndroidVrPostResponse(
+    public static JsonObject getJsonVisionOsPostResponse(
             final String endpoint,
             final byte[] body,
             @Nonnull final Localization localization,
             @Nullable final String visitorData) throws IOException, ExtractionException {
         final Map<String, List<String>> headers = new HashMap<>();
-        headers.put("User-Agent", Collections.singletonList(getAndroidVrUserAgent()));
-        headers.put("X-YouTube-Client-Name", Collections.singletonList("28"));
+        headers.put("User-Agent", Collections.singletonList(getVisionOsUserAgent(localization)));
+        headers.put("X-YouTube-Client-Name", Collections.singletonList("101"));
         headers.put("X-YouTube-Client-Version",
-                Collections.singletonList(ANDROID_VR_CLIENT_VERSION));
+                Collections.singletonList(VISIONOS_CLIENT_VERSION));
         headers.put("Origin", Collections.singletonList("https://www.youtube.com"));
         if (!isNullOrEmpty(visitorData)) {
             headers.put("X-Goog-Visitor-Id", Collections.singletonList(visitorData));
@@ -1386,14 +1391,14 @@ public final class YoutubeParsingHelper {
     }
 
     /**
-     * Build the context of an {@code ANDROID_VR} request, the client that still serves ordinary
-     * H.264 adaptive formats.
+     * Build the context of a {@code VISIONOS} request, the client that still serves ordinary
+     * adaptive URLs.
      *
      * @param visitorData a visitor id obtained from YouTube; without it the request is answered
      *                    with "Sign in to confirm that you're not a bot"
      */
     @Nonnull
-    public static JsonBuilder<JsonObject> prepareAndroidVrMobileJsonBuilder(
+    public static JsonBuilder<JsonObject> prepareVisionOsMobileJsonBuilder(
             @Nonnull final Localization localization,
             @Nonnull final ContentCountry contentCountry,
             @Nullable final String visitorData) {
@@ -1401,15 +1406,16 @@ public final class YoutubeParsingHelper {
         final JsonBuilder<JsonObject> builder = JsonObject.builder()
                 .object("context")
                     .object("client")
-                        .value("clientName", "ANDROID_VR")
-                        .value("clientVersion", ANDROID_VR_CLIENT_VERSION)
-                        .value("deviceMake", ANDROID_VR_DEVICE_MAKE)
-                        .value("deviceModel", ANDROID_VR_DEVICE_MODEL)
-                        .value("androidSdkVersion", ANDROID_VR_SDK_VERSION)
+                        .value("clientName", "VISIONOS")
+                        .value("clientVersion", VISIONOS_CLIENT_VERSION)
+                        .value("clientScreen", "WATCH")
+                        .value("platform", "MOBILE")
+                        .value("deviceMake", VISIONOS_DEVICE_MAKE)
+                        .value("deviceModel", VISIONOS_DEVICE_MODEL)
                         // The client must repeat its own HTTP user agent here
-                        .value("userAgent", getAndroidVrUserAgent())
-                        .value("osName", "Android")
-                        .value("osVersion", ANDROID_VR_OS_VERSION)
+                        .value("userAgent", getVisionOsUserAgent(localization))
+                        .value("osName", "visionOS")
+                        .value("osVersion", VISIONOS_OS_VERSION)
                         .value("hl", localization.getLocalizationCode())
                         .value("gl", contentCountry.getCountryCode())
                         .value("timeZone", "UTC")
@@ -1564,14 +1570,16 @@ public final class YoutubeParsingHelper {
     }
 
     /**
-     * @return the user-agent used for InnerTube requests with the {@code ANDROID_VR} client. Must
+     * @return the user-agent used for InnerTube requests with the {@code VISIONOS} client. Must
      *         stay in sync with the {@code userAgent} field sent inside the client object.
      */
     @Nonnull
-    public static String getAndroidVrUserAgent() {
-        return "com.google.android.apps.youtube.vr.oculus/" + ANDROID_VR_CLIENT_VERSION
-                + " (Linux; U; Android " + ANDROID_VR_OS_VERSION + "; eureka-user Build/"
-                + ANDROID_VR_BUILD_ID + ") gzip";
+    public static String getVisionOsUserAgent(@Nullable final Localization localization) {
+        return "com.google.visionos.youtube/" + VISIONOS_CLIENT_VERSION + "("
+                + VISIONOS_DEVICE_MODEL + "; U; CPU visionOS " + VISIONOS_USER_AGENT_VERSION
+                + " like Mac OS X; "
+                + (localization != null ? localization : Localization.DEFAULT).getCountryCode()
+                + ")";
     }
 
     /**
