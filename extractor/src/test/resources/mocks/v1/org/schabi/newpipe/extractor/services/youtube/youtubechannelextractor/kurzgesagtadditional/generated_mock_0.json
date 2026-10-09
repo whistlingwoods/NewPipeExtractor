@@ -3,10 +3,10 @@
     "httpMethod": "GET",
     "url": "https://www.youtube.com/sw.js",
     "headers": {
-      "Referer": [
+      "Origin": [
         "https://www.youtube.com"
       ],
-      "Origin": [
+      "Referer": [
         "https://www.youtube.com"
       ],
       "Accept-Language": [
@@ -39,10 +39,8 @@
       ],
       "content-security-policy": [
         "script-src \u0027unsafe-eval\u0027 \u0027self\u0027 \u0027unsafe-inline\u0027 https://www.google.com https://apis.google.com https://ssl.gstatic.com https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com https://*.youtube.com https://*.google.com https://*.gstatic.com https://youtube.com https://www.youtube.com https://google.com https://*.doubleclick.net https://*.googleapis.com https://www.googleadservices.com https://tpc.googlesyndication.com https://www.youtubekids.com https://www.youtube-nocookie.com https://www.youtubeeducation.com https://www-onepick-opensocial.googleusercontent.com;report-uri https://csp.withgoogle.com/csp/youtube_main/allowlist",
+        "base-uri \u0027self\u0027;object-src \u0027none\u0027;script-src \u0027nonce-H5S_X8h6NbJHN1SIuXKmqg\u0027 \u0027unsafe-inline\u0027 \u0027strict-dynamic\u0027 https: http: \u0027unsafe-eval\u0027;report-uri https://csp.withgoogle.com/csp/youtube_main/strict",
         "require-trusted-types-for \u0027script\u0027"
-      ],
-      "content-security-policy-report-only": [
-        "report-uri https://csp.withgoogle.com/csp/youtube_main/strict;base-uri \u0027self\u0027;object-src \u0027none\u0027;script-src \u0027nonce-7o9X7sgyKLmrmUutwwzDWg\u0027 \u0027unsafe-inline\u0027 \u0027strict-dynamic\u0027 https: http: \u0027unsafe-eval\u0027"
       ],
       "content-type": [
         "text/javascript; charset\u003dutf-8"
@@ -51,13 +49,13 @@
         "same-origin; report-to\u003d\"youtube_main\""
       ],
       "date": [
-        "Mon, 26 Jan 2026 17:59:55 GMT"
+        "Thu, 06 Aug 2026 16:24:18 GMT"
       ],
       "document-policy": [
         "include-js-call-stacks-in-crash-reports"
       ],
       "expires": [
-        "Mon, 26 Jan 2026 17:59:55 GMT"
+        "Thu, 06 Aug 2026 16:24:18 GMT"
       ],
       "origin-trial": [
         "AmhMBR6zCLzDDxpW+HfpP67BqwIknWnyMOXOQGfzYswFmJe+fgaI6XZgAzcxOrzNtP7hEDsOo1jdjFnVr2IdxQ4AAAB4eyJvcmlnaW4iOiJodHRwczovL3lvdXR1YmUuY29tOjQ0MyIsImZlYXR1cmUiOiJXZWJWaWV3WFJlcXVlc3RlZFdpdGhEZXByZWNhdGlvbiIsImV4cGlyeSI6MTc1ODA2NzE5OSwiaXNTdWJkb21haW4iOnRydWV9",
@@ -73,15 +71,15 @@
         "{\"group\":\"youtube_main\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/youtube_main\"}]}"
       ],
       "reporting-endpoints": [
-        "default\u003d\"/web-reports?context\u003deJwN0WtozXEcx3F_7zDnzznn___9vowpmiOJo7PV9kQScUiNEcLG2Gxy2abj7DC551pyyWXmfstkyCWKOa6xXMcu0TLKJcncwwrN78Hr6ef94OM50W5ma6EVGFVkZfeNWCNqFlqbwlHr1_GodboqajX3illZyTFrd0PMmv9qsXXAP7nt4u6T21ZN9VBQ4OFnuYdvLzyUfvGQ1d-mbrRN8xibudk2lypsqs7bNL23SSvpxIfMzsTLOzNggpcTl71kVnvZZnz-5yV9sI9Yvg875mPPRh8pZT4SDvvoet9HPOAnYYYfj1G718-L336mKYfNaQ77Jjo05ThkzHZYutRhjTFss8P1kw69Kh2SzjioeoceHxxetzg0hl1aR7tUjHfJyHJ5X-xy67rL4Mcug2pd-jxzSWxx6dhBkdldkZGkqOypUMmKcEARTFO0jFV4ihXbjbURxbuViqHrFVN2KpZUKDiluGfUnFNcvaCYcUVx84HiTr3ZeK4oNfp8VLR-Uez4rvj7R7HKqwmJJrOrJjFd8zis-W4kz9LkRjWTtmqWl2uuGWcOaR4d1dQaT45p6oxdpzRT4xp1TRO-ocm7rblbrWk2Tt7TXH6i-fjUqNNsaNBUPtcUNmr6vdXk_NTsbyMMaSf86ST08AtTXKFBC8O7CL0ThbnGwW5CTZIwIiDc7S-UDRB-GA-DwuGQ0DRSaDbWTRfK5wlvYkLfUiFuZC8TVhtLVghvVwuFG4QDxqdNQuoW09wuWDvF_Cu82yfUHzKNSiFyVhh6UQjEBddO2Pvs5YP2_q-NR8YlB0uLS6IlufkDF-XnBgsixUXRYH7RrGBeZE50Tt7M-TmpodT0UEpqysBQKGdB6D_-q9gn\""
+        "crash-reporting\u003d\"/web-reports?context\u003deJwNzX9M1HUcx3G-PDdGnNzd97533-_38_naVkiWttMDhWXSL3WOaBCbq0xiCESO5IfR3YmbozJbsCmTRmtkiv9ojCZtmjplqLOQchh11LrxK2WLppCsixA1q88fj7323t6v9zstnrL0p-1aZn6d9tqjDdq-jWFt_lhYO94b1mYeimolGVGt5tdG7bB3c3LjbBolj7sYLnAxU-Ti9Ocuek-4GP_dxerIIvo60uk666Z4wE2bcuu-m9ynPESrPLiiHj5t8ZD1iQfrioe-TC9rCr3EDnoZu-3lvZBOeY5Oq_LZSzrjZTqF23R279bZq6xr1bnQreP06Lx6VmfxDZ3JBZ3_CnwUlvhYG1PpGARzDBZeNEirN_jtXYO-kwYb4wal1wwSUwbtCYN_7hkUW34qwn6aOvz0HPEzM-CnbtBP7YifQ0kBNpgBltgBhpwAz20KUNscQPs4wNWrAc7pJksMk3srTcqzTFKLTA5UmgzWmNx-2-RSxKRrj0n7gEnHDZO5ZItousXFZRY9z1sc32Jxp9HiVovFB-ctUi9YTFyyGO23qBlTOW4RS1jc_8ti_4KFdtdifZpNsW0j8mzaN9sMbrXZ2WLTpky22mw9bBPrsvGdtJn-xqblW5vL39u0_mKjxW06lalkwXoEF1ME59yCx3yC_mxB8mpB0RpBr_JlnuCZpwUj6wRzmwR7twgGytXOm4L33xIcaxCMNgnm3xE8u1_NBwXTRwXbvxAkegSpXwnGTglmTwuae9WtrwWBy4LMHwQ_xgWdI6o_IXjgmmDbdUG10jUlmLgpqJ0RDM2qTkIgkyR5ij9dMvqghEckZ5ZLrijLg5INKyX5ygtKVrYklCcZKpI0vyzRXpH0l0nO10o-rJfcbZDkRiSrdklylNIDko8OSQo7JU92S9YqO05JFs5I2oYlfT-rX2Oq94fkzzlJ07z6d0eSmeZQ7HZY7HXI1x0KlD0PO3RnOOxb5vD3Kod_Sx2-izpML01K8S1KPXEzNpzijU-OX0_OCO6qj4QjFVUrdlZVBN9oqK8LB6vqXg9WNlSHqyvLa8qyQ9m5oSdC2StCOWU7Qv8Dsl4Lcw\""
       ],
       "server": [
         "ESF"
       ],
       "set-cookie": [
-        "__Secure-YENID\u003d13.YTE\u003dn3mILwEuhszSzG9I6u96gQTIpiID0vz7Ohwet17sKLnOY123grlBkHtaLHSzUgyf_gDM8UlW_vUxD6tUjuQY7e6uB9mALylMNwM4bhR303scEqHtN_DN1plKQkSQRqvPs8T6G9DjeU0zLjDZpCQsmFgvm7WgBDQov7j4-PWPNfbfpBsZBDSisDs12OS2QReXQS0JxDEPLgIR-kYYn_SQEKytTQOVRbP2sDiPSrDndv01F3AuDeiczO13bwOiTqT_n1ICnAkaj_Uz-737e-zMQ1rWq1UNWSu3xyowg2rxKI_e9NSPKVyxd-jTSVv3E3SHcp0JOXxiu7YdURSkHi6eTQ; expires\u003dThu, 25-Feb-2027 17:59:55 GMT; path\u003d/; domain\u003d.youtube.com; Secure; HttpOnly; SameSite\u003dlax",
-        "YSC\u003dFwmuWnb-33E; Domain\u003d.youtube.com; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone",
-        "VISITOR_INFO1_LIVE\u003d; Domain\u003d.youtube.com; Expires\u003dTue, 02-May-2023 17:59:55 GMT; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone"
+        "__Secure-YENID\u003d17.YTE\u003dUBJBi9sYr6GHXc2jvVtK3xbtv2UvU3Lfa4FPwduCX-HoeE7hAfEtsB884mBvxZmoHLcTd5zP6zilfEfQYvO9rPtSpgqgmvgAOrcOipzwRnZ9-y_um7iaUJA8IvYJ2TNR5AoAHgk4Rrzh2XvzZHADg2S-R4kxYu3z8bUPCVYKP1cpOHdONeH3-7FZfIS2eAN9xFzY8J54DrgNsuH3P6K5VhEdOyw6qN_PU3AccAhiyU8b4k2GwX-i_UQunziliYQEF5tmJnGKYodaLWxaToRYCqSoSHAd4TtN1sm1XQfpqqj70jzrE-yLqkJDStAdtssU48DKNcObiz3itVLW0OIxYQ; expires\u003dSun, 05-Sep-2027 16:24:18 GMT; path\u003d/; domain\u003d.youtube.com; Secure; HttpOnly; SameSite\u003dlax",
+        "YSC\u003dMZRgNv-pBX0; Domain\u003d.youtube.com; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone",
+        "VISITOR_INFO1_LIVE\u003d; Domain\u003d.youtube.com; Expires\u003dFri, 10-Nov-2023 16:24:18 GMT; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone"
       ],
       "strict-transport-security": [
         "max-age\u003d31536000"
