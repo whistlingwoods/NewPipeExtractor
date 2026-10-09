@@ -39,10 +39,8 @@
       ],
       "content-security-policy": [
         "script-src \u0027unsafe-eval\u0027 \u0027self\u0027 \u0027unsafe-inline\u0027 https://www.google.com https://apis.google.com https://ssl.gstatic.com https://www.gstatic.com https://www.googletagmanager.com https://www.google-analytics.com https://*.youtube.com https://*.google.com https://*.gstatic.com https://youtube.com https://www.youtube.com https://google.com https://*.doubleclick.net https://*.googleapis.com https://www.googleadservices.com https://tpc.googlesyndication.com https://www.youtubekids.com https://www.youtube-nocookie.com https://www.youtubeeducation.com https://www-onepick-opensocial.googleusercontent.com;report-uri https://csp.withgoogle.com/csp/youtube_main/allowlist",
+        "base-uri \u0027self\u0027;object-src \u0027none\u0027;script-src \u0027nonce-85ZTuwCyg_WyaR2Z-U6TkA\u0027 \u0027unsafe-inline\u0027 \u0027strict-dynamic\u0027 https: http: \u0027unsafe-eval\u0027;report-uri https://csp.withgoogle.com/csp/youtube_main/strict",
         "require-trusted-types-for \u0027script\u0027"
-      ],
-      "content-security-policy-report-only": [
-        "report-uri https://csp.withgoogle.com/csp/youtube_main/strict;base-uri \u0027self\u0027;object-src \u0027none\u0027;script-src \u0027nonce-6T0pWKoyOFzGt1__vHWWsA\u0027 \u0027unsafe-inline\u0027 \u0027strict-dynamic\u0027 https: http: \u0027unsafe-eval\u0027"
       ],
       "content-type": [
         "text/javascript; charset\u003dutf-8"
@@ -51,13 +49,13 @@
         "same-origin; report-to\u003d\"youtube_main\""
       ],
       "date": [
-        "Mon, 26 Jan 2026 18:01:48 GMT"
+        "Thu, 06 Aug 2026 16:44:46 GMT"
       ],
       "document-policy": [
         "include-js-call-stacks-in-crash-reports"
       ],
       "expires": [
-        "Mon, 26 Jan 2026 18:01:48 GMT"
+        "Thu, 06 Aug 2026 16:44:46 GMT"
       ],
       "origin-trial": [
         "AmhMBR6zCLzDDxpW+HfpP67BqwIknWnyMOXOQGfzYswFmJe+fgaI6XZgAzcxOrzNtP7hEDsOo1jdjFnVr2IdxQ4AAAB4eyJvcmlnaW4iOiJodHRwczovL3lvdXR1YmUuY29tOjQ0MyIsImZlYXR1cmUiOiJXZWJWaWV3WFJlcXVlc3RlZFdpdGhEZXByZWNhdGlvbiIsImV4cGlyeSI6MTc1ODA2NzE5OSwiaXNTdWJkb21haW4iOnRydWV9",
@@ -73,15 +71,15 @@
         "{\"group\":\"youtube_main\",\"max_age\":2592000,\"endpoints\":[{\"url\":\"https://csp.withgoogle.com/csp/report-to/youtube_main\"}]}"
       ],
       "reporting-endpoints": [
-        "default\u003d\"/web-reports?context\u003deJwNzWtMjWEAwHFvf5eck3PO-z7PI9TGUmumY6dW2Yy5jJO1lWZYCaU6GetiOR3lmua-ZlpIrmUmU_rgg0VLQ1sjq6gmJm1kjcIwnA3L--H3-WfxT8wbz9fCVxdomyKLtFXdu7QKt1f7dcOr3W7xamNzfFp6mE873-_T8oZKtCuO1ICSWakBLRst5OZa-Flj4dsbCyVfLaTPt9KbaGUs2crdeistd6wMjliJLQ7iY8o0WmumEbXOxs17NlI6bFSavvyzEb_Ejs9jx-qzc-GEnehqO4F1doKf2mkNdxCY6cBienHRwZvfDjYLnTKXzqk4nUvrdQYzdJK26ezbp3PYtOKUTtstnZAmHdGnE_pR551fJw2DvYsMXrsNxhMN6tcaJKUbjBQaPGozWNJlsPiFQcRLA8crgxl-g6lTBEkhgobZAhEmcMYJPMsE_jUCS6GgynSkSPChTLD8mGBPvYBGwRNTTrMg877gYaegvU_gHhCUmiJGBWe-C_7-ERyySWKlJCVY4l0o6XJLvpusCZKwHEmWV7LhtORAjeSBqalW0nNd0ms61yj51CLZ2CrJfiwZ65Dc65GMPjf1So73SxoGJPmvJfOGJRk_JZcnKJZOUvwJUoQ6FGmGol8qVk5XzJ2h2GG6OlPRHaKojlL8MD1zKupcCvdSxWCC4rPp6BbFe58islTRatq0X1Fu2nNQMVyu6Dmp-FKhSK40nyqFdlbRe1HRV6tov6a41KgwggIrBt52Tnb4h5rHA8KcpYXF3uIsz4LdnixnblFhgdfpKchxZhdt927P3pqXEeOKiXdFx0QvcLkydrr-AzviyVI\""
+        "crash-reporting\u003d\"/web-reports?context\u003deJwNzX9M1HUcx3G-PDdGd8Ld97533-_38_naVoSlttOTgH6MfonTwjxdrGKBQyByTA6I7g7YmDmtBZsycrRGpjRbxrBoy6KUoWYYzWEirMX4YeVCZ6CsAxEkqu8fj73ef7z2ejv-TEh9rkIpeKha2b8xrMwdCytfdIeV4C8RZeq-qJKfElXKf6tVjrjz4uumHeQ_7GQox8lU0MmuAiddnznp_srJ-HUnGZFl9LQm0X4ymW19ybxnu7WUTOaTLqKlLpxRFx82ulj3gQvjgoueVDeDh9yM3XFTlKHSZPvoJZXxQpUtO1Xq61Xetq1vUjnToWJ1quSdVFl-Q-XqvMp_OR625Hs4XuUha9C-LQ1_hsb8Vg1HpcbEHo2eExol32lsHNaIXdNoiWn8s6ixzfBSHPayu9VL58depvq8VPR7CY14ORznY4Pu4wHTxyXLx7O5PoK1PkINPpT3fVy86OOUqpOq6Syu1Slap5MY1Gku0ekv15l_U-f7iE77Xp2WPp3WGzqz8QbRJIOzqww6nzeYzDX4_FWDhVqDW40G75w2SDxjcOWcweh5g9CYneMGsZsGgzGDpRmDg3cMDswbKHcNsh0mW00TkWXSkmfSv8OkptHkapPJjiMmg-0mnhMmf_WaNP5k8uPPJk2_mijDJm22iXhBNoKzCYJTyYKVHsH5NEF8uqD7ccGXWYKnnxKMrBfM5gr6igT73hB8Ui0Y3S2Ye0vwzAHBsUOCyU8Fu44LorZYpyDxa0GvbbpL0NBt7_wgWDEguDwsaBsRvHDF3rDd87tg5x-CMlv7NUFoSnBp2u7HBDWLAhknybJ5kyTnPJLReyWskHy7WnLBttov2bBWssmWYwtkSQaCkoaXJXGvSHoLJTOlktMhybuVkoVqSWZEkl4nedS2vVly8LAk2CZ5osP-Zav6RtI8JOkak9y9Kfl7VjJxW1I_J8lekKQ6LF5MtljuttikWuTY9t5v0ZFicX2lxf5VFrcfsShItzi62WJpu8Xkg3EJnmWJ_84MDiW491we2Kek-OsqI-FIcemamtJi_-vVlRVhf2nFa_6S6rJwWUlReWFaIC0z8FggbU0go7Aq8D_4CREx\""
       ],
       "server": [
         "ESF"
       ],
       "set-cookie": [
-        "__Secure-YENID\u003d13.YTE\u003dZJZyZNEX--QBZ0IH9l_ipGeiQUYsaPjB1yGXTgiYhLOOup8ZeAB2YyGP8QcLw57xVaOYsch0_WycP599H0Irf99kby0DHFT8gR8gHsNOu5sWQW-LGJqFyGKnQfAOkNX7PHAvQRC7pvqNugfXQfEPbNndikW3i00zr-J8icOQT3RTQu_4zjhFUUoLZcYIAqZ8FZSLs2wBjMRcGAlQBdwPOdYG-MQkee863WaQKgn9IUShNaG5Xz45SHJnhk0JjwM-mAoEVCjnIp0bD6Bmpce5upy6vdG_GS35sBngdqohZu9zo9S0Mx1AcptWJ5IWb800q96asJqdJ2ocI4Uq7ItOug; expires\u003dThu, 25-Feb-2027 18:01:48 GMT; path\u003d/; domain\u003d.youtube.com; Secure; HttpOnly; SameSite\u003dlax",
-        "YSC\u003dkqGfZiWiyGU; Domain\u003d.youtube.com; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone",
-        "VISITOR_INFO1_LIVE\u003d; Domain\u003d.youtube.com; Expires\u003dTue, 02-May-2023 18:01:48 GMT; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone"
+        "__Secure-YENID\u003d17.YTE\u003dl3tC0iIfKdCCf98f0jk_9mpxpZRqzbUS6gzjgPnRMOf5iv7EnVfEvzHmY4z-I0H5Dqme7e5vMxBZj_LwsKnQCeTH4GRO2WS8DONssY6jEJXm7LPZI-P_5hwzpJU1p6iGz1hekDwThb6TYf0c1jYUxdJl9d36_7NIbyik_S_bNGX0n4P7HrJijQQm_2ihh3Ak1HAGjW0fDiVOJ1RNN3eoA9HCxbyI6pg1aB6xeMTmrH7tBcBDNqYtNo9qBhv11q7ucgIcQLedSgSWDwCzkmICIZfA3CBplTOiGkuHOrKbge5JCzdBr94NA8cHra1BZ71gSZHo2jslkzXr78tNWGDMTQ; expires\u003dSun, 05-Sep-2027 16:44:46 GMT; path\u003d/; domain\u003d.youtube.com; Secure; HttpOnly; SameSite\u003dlax",
+        "YSC\u003d6jgW_VC8YLk; Domain\u003d.youtube.com; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone",
+        "VISITOR_INFO1_LIVE\u003d; Domain\u003d.youtube.com; Expires\u003dFri, 10-Nov-2023 16:44:46 GMT; Path\u003d/; Secure; HttpOnly; SameSite\u003dnone"
       ],
       "strict-transport-security": [
         "max-age\u003d31536000"

@@ -21,11 +21,7 @@
 package org.schabi.newpipe.extractor.services.youtube;
 
 import static org.schabi.newpipe.extractor.NewPipe.getDownloader;
-import static org.schabi.newpipe.extractor.services.youtube.ClientsConstants.ANDROID_CLIENT_VERSION;
 import static org.schabi.newpipe.extractor.services.youtube.ClientsConstants.DESKTOP_CLIENT_PLATFORM;
-import static org.schabi.newpipe.extractor.services.youtube.ClientsConstants.IOS_CLIENT_VERSION;
-import static org.schabi.newpipe.extractor.services.youtube.ClientsConstants.IOS_DEVICE_MODEL;
-import static org.schabi.newpipe.extractor.services.youtube.ClientsConstants.IOS_USER_AGENT_VERSION;
 import static org.schabi.newpipe.extractor.services.youtube.ClientsConstants.VISIONOS_CLIENT_VERSION;
 import static org.schabi.newpipe.extractor.services.youtube.ClientsConstants.VISIONOS_DEVICE_MODEL;
 import static org.schabi.newpipe.extractor.services.youtube.ClientsConstants.VISIONOS_USER_AGENT_VERSION;
@@ -195,14 +191,9 @@ public final class YoutubeParsingHelper {
     private static final Pattern C_VISIONOS_PATTERN = Pattern.compile("&c=VISIONOS");
 
     private static final Set<String> GOOGLE_URLS = Set.of("google.", "m.google.", "www.google.");
-    private static final Set<String> INVIDIOUS_URLS = Set.of("invidio.us", "dev.invidio.us",
-            "www.invidio.us", "redirect.invidious.io", "invidious.snopyta.org", "yewtu.be",
-            "tube.connect.cafe", "tubus.eduvid.org", "invidious.kavin.rocks", "invidious.site",
-            "invidious-us.kavin.rocks", "piped.kavin.rocks", "vid.mint.lgbt", "invidiou.site",
-            "invidious.fdn.fr", "invidious.048596.xyz", "invidious.zee.li", "vid.puffyan.us",
-            "ytprivate.com", "invidious.namazso.eu", "invidious.silkky.cloud", "ytb.trom.tf",
-            "invidious.exonip.de", "inv.riverside.rocks", "invidious.blamefran.net", "y.com.cm",
-            "invidious.moomoo.me", "yt.cyberhost.uk");
+    private static final Set<String> INVIDIOUS_URLS = Set.of("redirect.invidious.io", "yewtu.be",
+            "piped.kavin.rocks", "piped.video", "inv.nadeko.net", "invidious.nerdvpn.de",
+            "yt.chocolatemoo53.com", "invidious.tiekoetter.com", "invidious.f5.si");
     private static final Set<String> YOUTUBE_URLS = Set.of("youtube.com", "www.youtube.com",
             "m.youtube.com", "music.youtube.com");
 
@@ -226,11 +217,6 @@ public final class YoutubeParsingHelper {
         final String host = url.getHost();
         return host.equalsIgnoreCase("www.youtube-nocookie.com")
                 || host.equalsIgnoreCase("youtu.be");
-    }
-
-    public static boolean isHooktubeURL(@Nonnull final URL url) {
-        final String host = url.getHost();
-        return host.equalsIgnoreCase("hooktube.com");
     }
 
     public static boolean isInvidiousURL(@Nonnull final URL url) {
@@ -1086,48 +1072,6 @@ public final class YoutubeParsingHelper {
     }
 
     /**
-     * Get the user-agent string used as the user-agent for InnerTube requests with the Android
-     * client.
-     *
-     * <p>
-     * If the {@link Localization} provided is {@code null}, fallbacks to
-     * {@link Localization#DEFAULT the default one}.
-     * </p>
-     *
-     * @param localization the {@link Localization} to set in the user-agent
-     * @return the Android user-agent used for InnerTube requests with the Android client,
-     * depending on the {@link Localization} provided
-     */
-    @Nonnull
-    public static String getAndroidUserAgent(@Nullable final Localization localization) {
-        return "com.google.android.youtube/" + ANDROID_CLIENT_VERSION
-                + " (Linux; U; Android 15; "
-                + (localization != null ? localization : Localization.DEFAULT).getCountryCode()
-                + ") gzip";
-    }
-
-    /**
-     * Get the user-agent string used as the user-agent for InnerTube requests with the iOS
-     * client.
-     *
-     * <p>
-     * If the {@link Localization} provided is {@code null}, fallbacks to
-     * {@link Localization#DEFAULT the default one}.
-     * </p>
-     *
-     * @param localization the {@link Localization} to set in the user-agent
-     * @return the iOS user-agent used for InnerTube requests with the iOS client, depending on the
-     * {@link Localization} provided
-     */
-    @Nonnull
-    public static String getIosUserAgent(@Nullable final Localization localization) {
-        return "com.google.ios.youtube/" + IOS_CLIENT_VERSION + "(" + IOS_DEVICE_MODEL
-                + "; U; CPU iOS " + IOS_USER_AGENT_VERSION + " like Mac OS X; "
-                + (localization != null ? localization : Localization.DEFAULT).getCountryCode()
-                + ")";
-    }
-
-    /**
      * Get the user-agent string used as the user-agent for InnerTube requests with the visionOS
      * client.
      *
@@ -1380,36 +1324,6 @@ public final class YoutubeParsingHelper {
      */
     public static boolean isWebStreamingUrl(@Nonnull final String url) {
         return Parser.isMatch(C_WEB_PATTERN, url);
-    }
-
-    /**
-     * Check if the streaming URL is from the YouTube {@code WEB_EMBEDDED_PLAYER} client.
-     *
-     * @param url the streaming URL to be checked.
-     * @return true if it's a {@code WEB_EMBEDDED_PLAYER} streaming URL, false otherwise
-     */
-    public static boolean isWebEmbeddedPlayerStreamingUrl(@Nonnull final String url) {
-        return Parser.isMatch(C_WEB_EMBEDDED_PLAYER_PATTERN, url);
-    }
-
-    /**
-     * Check if the streaming URL is a URL from the YouTube {@code ANDROID} client.
-     *
-     * @param url the streaming URL to be checked.
-     * @return true if it's a {@code ANDROID} streaming URL, false otherwise
-     */
-    public static boolean isAndroidStreamingUrl(@Nonnull final String url) {
-        return Parser.isMatch(C_ANDROID_PATTERN, url);
-    }
-
-    /**
-     * Check if the streaming URL is a URL from the YouTube {@code IOS} client.
-     *
-     * @param url the streaming URL on which check if it's a {@code IOS} streaming URL.
-     * @return true if it's a {@code IOS} streaming URL, false otherwise
-     */
-    public static boolean isIosStreamingUrl(@Nonnull final String url) {
-        return Parser.isMatch(C_IOS_PATTERN, url);
     }
 
     /**
