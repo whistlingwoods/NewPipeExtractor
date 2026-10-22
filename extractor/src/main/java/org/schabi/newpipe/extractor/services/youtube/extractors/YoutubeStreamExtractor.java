@@ -75,7 +75,6 @@ import org.schabi.newpipe.extractor.stream.AudioStream;
 import org.schabi.newpipe.extractor.stream.DeliveryMethod;
 import org.schabi.newpipe.extractor.stream.Description;
 import org.schabi.newpipe.extractor.stream.Frameset;
-import org.schabi.newpipe.extractor.stream.SongMetadata;
 import org.schabi.newpipe.extractor.stream.Stream;
 import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.stream.StreamSegment;
@@ -1530,21 +1529,6 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                 .getObject("results")
                 .getObject("results")
                 .getArray("contents"));
-    }
-
-    @Nullable
-    @Override
-    public SongMetadata getSongMetadata() throws ParsingException {
-        assertPageFetched();
-        // The song info is only available for music videos
-        final String attributedDescription = getVideoSecondaryInfoRenderer()
-                .getObject("attributedDescription")
-                .getString("content");
-        if (isNullOrEmpty(attributedDescription)) {
-            return null;
-        }
-        return YoutubeParsingHelper.getSongMetadata(
-                new Description(attributedDescription, Description.PLAIN_TEXT));
     }
 
     /**

@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Locale;
 
 import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
 
@@ -357,11 +356,6 @@ public class StreamInfo extends Info {
         } catch (final Exception e) {
             streamInfo.addError(e);
         }
-        try {
-            streamInfo.setSongMetadata(extractor.getSongMetadata());
-        } catch (final Exception e) {
-            streamInfo.addError(e);
-        }
 
         streamInfo.setRelatedItems(ExtractorHelper.getRelatedItemsOrLogError(streamInfo,
                 extractor));
@@ -415,7 +409,6 @@ public class StreamInfo extends Info {
     private boolean shortFormContent = false;
     @Nonnull
     private ContentAvailability contentAvailability = ContentAvailability.AVAILABLE;
-    private SongMetadata songMetadata = null;
 
     /**
      * Preview frames, e.g. for the storyboard / seekbar thumbnail preview
@@ -770,26 +763,5 @@ public class StreamInfo extends Info {
 
     public void setContentAvailability(@Nonnull final ContentAvailability availability) {
         this.contentAvailability = availability;
-    }
-
-    /**
-     * Get the song metadata if this stream is a music stream
-     * and the service provides this information.
-     * <p>
-     * A {@link SongMetadata} is only provided if the information on the song does not match
-     * the {@link StreamInfo}'s title and uploader or if the service explicitly provides
-     * this information. Otherwise, the {@link StreamInfo}'s title and uploader are assumed
-     * to be the song's title and artist.
-     * </p>
-     *
-     * @return the song metadata or {@code null}
-     */
-    @Nullable
-    public SongMetadata getSongMetadata() {
-        return songMetadata;
-    }
-
-    public void setSongMetadata(final SongMetadata songMetadata) {
-        this.songMetadata = songMetadata;
     }
 }
