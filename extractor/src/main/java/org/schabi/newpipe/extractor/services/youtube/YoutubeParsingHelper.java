@@ -174,13 +174,37 @@ public final class YoutubeParsingHelper {
      * such as <a href="https://www.apkmirror.com/apk/google-inc/youtube/">APKMirror</a>.
      * </p>
      */
-    private static final String ANDROID_YOUTUBE_CLIENT_VERSION = "19.28.35";
+    private static final String ANDROID_YOUTUBE_CLIENT_VERSION = "21.02.35";
 
     /**
-     * The InnerTube API key used by the {@code ANDROID} client. Found with the help of
-     * reverse-engineering app network requests.
+     * The Android version spoofed in {@code ANDROID} client requests, and the matching SDK level.
+     * A valid pair is required, otherwise the player response is replaced by the one of a
+     * 5-minute video saying the content is not available on this app.
      */
-    private static final String ANDROID_YOUTUBE_KEY = "AIzaSyA8eiZmM1FaDVjRy-df2KTyQ_vz_yYM39w";
+    private static final String ANDROID_OS_VERSION = "11";
+    private static final int ANDROID_SDK_VERSION = 30;
+
+    /**
+     * Fields of the {@code VISIONOS} client, which spoofs the YouTube app of an Apple Vision Pro.
+     *
+     * <p>
+     * The plain {@code ANDROID} client only offers a progressive (muxed) 360p format nowadays, and
+     * {@code WEB} offers adaptive formats that carry neither a URL nor a cipher and are reachable
+     * through SABR only. This is the client that still hands out ordinary adaptive URLs, so it is
+     * what makes resolutions above 360p possible.
+     * </p>
+     *
+     * <p>
+     * The obvious-looking alternative, {@code ANDROID_VR}, also returns URLs but they are served
+     * only up to their first megabyte and answer HTTP 403 at every offset past it -- about five
+     * seconds of 1080p. These are not subject to that.
+     * </p>
+     */
+    private static final String VISIONOS_CLIENT_VERSION = "1.04";
+    private static final String VISIONOS_DEVICE_MAKE = "Apple";
+    private static final String VISIONOS_DEVICE_MODEL = "RealityDevice17,1";
+    private static final String VISIONOS_OS_VERSION = "26.6.0.23O770";
+    private static final String VISIONOS_USER_AGENT_VERSION = "26_6_0";
 
     /**
      * The hardcoded client version of the iOS app used for InnerTube requests with this
@@ -192,7 +216,20 @@ public final class YoutubeParsingHelper {
      * Store page of the YouTube app</a>, in the {@code What’s New} section.
      * </p>
      */
-    private static final String IOS_YOUTUBE_CLIENT_VERSION = "20.03.02";
+    private static final String IOS_YOUTUBE_CLIENT_VERSION = "21.03.2";
+
+    /**
+     * The iOS version sent in the {@code osVersion} field, following the
+     * "iOS major.minor.patch.build" structure. Must be kept in sync with
+     * {@link #IOS_USER_AGENT_VERSION}.
+     */
+    private static final String IOS_OS_VERSION = "18.7.2.22H124";
+
+    /**
+     * The iOS version used in the HTTP user agent. Must be kept in sync with
+     * {@link #IOS_OS_VERSION}.
+     */
+    private static final String IOS_USER_AGENT_VERSION = "18_7_2";
 
     /**
      * The InnerTube API key used by the {@code iOS} client. Found with the help of
@@ -358,7 +395,7 @@ public final class YoutubeParsingHelper {
     public static String extractVisitorData()
             throws ParsingException, IOException, ReCaptchaException {
         final String url = YOUTUBE_BASE + "sw.js_data";
-        final var headers = getOriginReferrerHeaders(YOUTUBE_BASE);
+        final Map<String, List<String>> headers = getOriginReferrerHeaders(YOUTUBE_BASE);
         final String response = getDownloader().get(url, headers).responseBody();
         final JsonArray jsonArray = JsonUtils.toJsonArray(
                 Parser.matchGroup(JSON_ARRAY, response, 0));
@@ -792,10 +829,9 @@ public final class YoutubeParsingHelper {
             return key;
         }
 
-        // The ANDROID API key is also valid with the WEB client so return it if we couldn't
-        // extract the WEB API key. This can be used as a way to fingerprint the extractor in this
-        // case
-        return ANDROID_YOUTUBE_KEY;
+        // Last resort: the long-lived WEB key. The ANDROID one used to be returned here, but that
+        // client no longer authenticates with an API key at all.
+        return HARDCODED_KEY;
     }
 
     /**
@@ -1172,13 +1208,70 @@ public final class YoutubeParsingHelper {
                         + getKey() + DISABLE_PRETTY_PRINT_PARAMETER, headers, body, localization)));
     }
 
+    /**
+     * Post to the InnerTube API as the {@code ANDROID} client.
+     *
+     * <p>
+     * Unlike the other mobile clients this does <b>not</b> go through
+     * {@code youtubei.googleapis.com} with a hardcoded API key: that combination is answered with
+     * {@code HTTP 400 FAILED_PRECONDITION} nowadays. Posting to the regular
+     * {@link #YOUTUBEI_V1_URL} without any key, with a current client version, is accepted and is
+     * currently the only client that still returns a progressive (muxed) format, which is what the
+     * legacy devices this fork targets can actually play.
+     * </p>
+     */
     public static JsonObject getJsonAndroidPostResponse(
             final String endpoint,
             final byte[] body,
             @Nonnull final Localization localization,
             @Nullable final String endPartOfUrlRequest) throws IOException, ExtractionException {
-        return getMobilePostResponse(endpoint, body, localization,
-                getAndroidUserAgent(localization), ANDROID_YOUTUBE_KEY, endPartOfUrlRequest);
+        final Map<String, List<String>> headers = new HashMap<>();
+        headers.put("User-Agent",
+                Collections.singletonList(getAndroidUserAgent(localization)));
+        headers.put("X-YouTube-Client-Name", Collections.singletonList("3"));
+        headers.put("X-YouTube-Client-Version",
+                Collections.singletonList(ANDROID_YOUTUBE_CLIENT_VERSION));
+        headers.put("Origin", Collections.singletonList("https://www.youtube.com"));
+
+        // DISABLE_PRETTY_PRINT_PARAMETER already carries its leading '&'
+        final String baseEndpointUrl = YOUTUBEI_V1_URL + endpoint + "?"
+                + DISABLE_PRETTY_PRINT_PARAMETER.substring(1);
+
+        return JsonUtils.toJsonObject(getValidJsonResponseBody(
+                getDownloader().postWithContentTypeJson(isNullOrEmpty(endPartOfUrlRequest)
+                                ? baseEndpointUrl
+                                : baseEndpointUrl + endPartOfUrlRequest,
+                        headers, body, localization)));
+    }
+
+    /**
+     * Post to the InnerTube API as the {@code VISIONOS} client.
+     *
+     * <p>
+     * The visitor id has to travel in a header as well as in the request body, otherwise YouTube
+     * answers "Sign in to confirm that you're not a bot".
+     * </p>
+     */
+    public static JsonObject getJsonVisionOsPostResponse(
+            final String endpoint,
+            final byte[] body,
+            @Nonnull final Localization localization,
+            @Nullable final String visitorData) throws IOException, ExtractionException {
+        final Map<String, List<String>> headers = new HashMap<>();
+        headers.put("User-Agent", Collections.singletonList(getVisionOsUserAgent(localization)));
+        headers.put("X-YouTube-Client-Name", Collections.singletonList("101"));
+        headers.put("X-YouTube-Client-Version",
+                Collections.singletonList(VISIONOS_CLIENT_VERSION));
+        headers.put("Origin", Collections.singletonList("https://www.youtube.com"));
+        if (!isNullOrEmpty(visitorData)) {
+            headers.put("X-Goog-Visitor-Id", Collections.singletonList(visitorData));
+        }
+
+        final String url = YOUTUBEI_V1_URL + endpoint + "?"
+                + DISABLE_PRETTY_PRINT_PARAMETER.substring(1);
+
+        return JsonUtils.toJsonObject(getValidJsonResponseBody(
+                getDownloader().postWithContentTypeJson(url, headers, body, localization)));
     }
 
     public static JsonObject getJsonIosPostResponse(
@@ -1265,9 +1358,12 @@ public final class YoutubeParsingHelper {
                     .object("client")
                         .value("clientName", "ANDROID")
                         .value("clientVersion", ANDROID_YOUTUBE_CLIENT_VERSION)
+                        // The client must repeat its own HTTP user agent here, otherwise the
+                        // request is rejected
+                        .value("userAgent", getAndroidUserAgent(localization))
                         .value("platform", "MOBILE")
                         .value("osName", "Android")
-                        .value("osVersion", "12")
+                        .value("osVersion", ANDROID_OS_VERSION)
                         /*
                         A valid Android SDK version is required to be sure to get a valid player
                         response
@@ -1279,14 +1375,57 @@ public final class YoutubeParsingHelper {
                         The Android SDK version corresponding to the Android version used in
                         requests is sent
                         */
-                        .value("androidSdkVersion", 31)
+                        .value("androidSdkVersion", ANDROID_SDK_VERSION)
                         .value("hl", localization.getLocalizationCode())
                         .value("gl", contentCountry.getCountryCode())
+                        .value("timeZone", "UTC")
+                        .value("utcOffsetMinutes", 0)
                     .end()
                     .object("user")
                         // TO DO: provide a way to enable restricted mode with:
                         // .value("enableSafetyMode", boolean)
                         .value("lockedSafetyMode", false)
+                    .end()
+                .end();
+        // @formatter:on
+    }
+
+    /**
+     * Build the context of a {@code VISIONOS} request, the client that still serves ordinary
+     * adaptive URLs.
+     *
+     * @param visitorData a visitor id obtained from YouTube; without it the request is answered
+     *                    with "Sign in to confirm that you're not a bot"
+     */
+    @Nonnull
+    public static JsonBuilder<JsonObject> prepareVisionOsMobileJsonBuilder(
+            @Nonnull final Localization localization,
+            @Nonnull final ContentCountry contentCountry,
+            @Nullable final String visitorData) {
+        // @formatter:off
+        final JsonBuilder<JsonObject> builder = JsonObject.builder()
+                .object("context")
+                    .object("client")
+                        .value("clientName", "VISIONOS")
+                        .value("clientVersion", VISIONOS_CLIENT_VERSION)
+                        .value("clientScreen", "WATCH")
+                        .value("platform", "MOBILE")
+                        .value("deviceMake", VISIONOS_DEVICE_MAKE)
+                        .value("deviceModel", VISIONOS_DEVICE_MODEL)
+                        // The client must repeat its own HTTP user agent here
+                        .value("userAgent", getVisionOsUserAgent(localization))
+                        .value("osName", "visionOS")
+                        .value("osVersion", VISIONOS_OS_VERSION)
+                        .value("hl", localization.getLocalizationCode())
+                        .value("gl", contentCountry.getCountryCode())
+                        .value("timeZone", "UTC")
+                        .value("utcOffsetMinutes", 0);
+
+        if (!isNullOrEmpty(visitorData)) {
+            builder.value("visitorData", visitorData);
+        }
+
+        return builder
                     .end()
                 .end();
         // @formatter:on
@@ -1321,7 +1460,7 @@ public final class YoutubeParsingHelper {
                         // "iOS version.0.build version"
                         // The build version corresponding to the iOS version used can be found on
                         // https://theapplewiki.com/wiki/Firmware/iPhone/18.x#iPhone_15_Pro_Max
-                        .value("osVersion", "18.2.1.22C161")
+                        .value("osVersion", IOS_OS_VERSION)
                         .value("visitorData", visitorData)
                         .value("hl", localization.getLocalizationCode())
                         .value("gl", contentCountry.getCountryCode())
@@ -1424,11 +1563,23 @@ public final class YoutubeParsingHelper {
      */
     @Nonnull
     public static String getAndroidUserAgent(@Nullable final Localization localization) {
-        // Spoofing an Android 14 device with the hardcoded version of the Android app
+        // Must stay in sync with ANDROID_OS_VERSION and with the userAgent field sent inside the
+        // client object, otherwise the request is rejected.
         return "com.google.android.youtube/" + ANDROID_YOUTUBE_CLIENT_VERSION
-                + " (Linux; U; Android 14; "
+                + " (Linux; U; Android " + ANDROID_OS_VERSION + ") gzip";
+    }
+
+    /**
+     * @return the user-agent used for InnerTube requests with the {@code VISIONOS} client. Must
+     *         stay in sync with the {@code userAgent} field sent inside the client object.
+     */
+    @Nonnull
+    public static String getVisionOsUserAgent(@Nullable final Localization localization) {
+        return "com.google.visionos.youtube/" + VISIONOS_CLIENT_VERSION + "("
+                + VISIONOS_DEVICE_MODEL + "; U; CPU visionOS " + VISIONOS_USER_AGENT_VERSION
+                + " like Mac OS X; "
                 + (localization != null ? localization : Localization.DEFAULT).getCountryCode()
-                + ") gzip";
+                + ")";
     }
 
     /**
@@ -1446,9 +1597,10 @@ public final class YoutubeParsingHelper {
      */
     @Nonnull
     public static String getIosUserAgent(@Nullable final Localization localization) {
-        // Spoofing an iPhone 15 Pro Max running iOS 18.2.1 with the hardcoded version of the iOS app
+        // Spoofing an iPhone 15 Pro Max running iOS 18.7.2 with the hardcoded version of the app
         return "com.google.ios.youtube/" + IOS_YOUTUBE_CLIENT_VERSION
-                + "(" + IOS_DEVICE_MODEL + "; U; CPU iOS 18_2_1 like Mac OS X; "
+                + "(" + IOS_DEVICE_MODEL + "; U; CPU iOS " + IOS_USER_AGENT_VERSION
+                + " like Mac OS X; "
                 + (localization != null ? localization : Localization.DEFAULT).getCountryCode()
                 + ")";
     }

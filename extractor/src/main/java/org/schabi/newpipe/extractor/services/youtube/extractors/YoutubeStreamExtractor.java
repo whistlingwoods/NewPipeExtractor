@@ -32,10 +32,12 @@ import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.generateContentPlaybackNonce;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.generateTParameter;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonAndroidPostResponse;
+import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonVisionOsPostResponse;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonIosPostResponse;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getJsonPostResponse;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.getTextFromObject;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareAndroidMobileJsonBuilder;
+import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareVisionOsMobileJsonBuilder;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareDesktopJsonBuilder;
 import static org.schabi.newpipe.extractor.services.youtube.YoutubeParsingHelper.prepareIosMobileJsonBuilder;
 import static org.schabi.newpipe.extractor.utils.Utils.isNullOrEmpty;
@@ -135,8 +137,22 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     private JsonObject tvHtml5SimplyEmbedStreamingData;
     @Nullable
     private JsonObject androidStreamingData;
+    /**
+     * Streaming data of the {@code VISIONOS} client, the only source of ordinary adaptive formats:
+     * the plain {@code ANDROID} client hands out a progressive 360p stream and nothing else usable.
+     */
+    @Nullable
+    private JsonObject visionOsStreamingData;
     @Nullable
     private JsonObject iosStreamingData;
+    /**
+     * Full mobile player responses, kept because the WEB one no longer carries a usable
+     * {@code playabilityStatus} and is therefore useless to tell livestreams apart.
+     */
+    @Nullable
+    private JsonObject iosPlayerResponse;
+    @Nullable
+    private JsonObject androidPlayerResponse;
 
     private JsonObject videoPrimaryInfoRenderer;
     private JsonObject videoSecondaryInfoRenderer;
@@ -151,7 +167,33 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     // three different strings are used.
     private String tvHtml5SimplyEmbedCpn;
     private String androidCpn;
+    private String visionOsCpn;
     private String iosCpn;
+
+    /**
+     * Whether to ask the {@code VISIONOS} client for adaptive formats. See
+     * {@link #setFetchAdaptiveFormats(boolean)}.
+     */
+    private static boolean fetchAdaptiveFormats = true;
+
+    /**
+     * Choose whether resolutions above the progressive 360p stream are offered at all.
+     *
+     * <p>
+     * They come from the {@code VISIONOS} client and are described by generated DASH manifests.
+     * The switch exists because this was once off: the same formats fetched from
+     * {@code ANDROID_VR} are served only up to their first megabyte and answer HTTP 403 at every
+     * offset past it, which made every resolution above 360p stall after a few seconds. The
+     * visionOS client is not subject to that -- it hands over whole files -- so this is on.
+     * </p>
+     */
+    public static void setFetchAdaptiveFormats(final boolean fetchThem) {
+        fetchAdaptiveFormats = fetchThem;
+    }
+
+    public static boolean isFetchingAdaptiveFormats() {
+        return fetchAdaptiveFormats;
+    }
 
     public YoutubeStreamExtractor(final StreamingService service, final LinkHandler linkHandler) {
         super(service, linkHandler);
@@ -353,7 +395,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             return Long.parseLong(duration);
         } catch (final Exception e) {
             return getDurationFromFirstAdaptiveFormat(Arrays.asList(
-                    iosStreamingData, androidStreamingData, tvHtml5SimplyEmbedStreamingData));
+                    visionOsStreamingData, iosStreamingData, androidStreamingData,
+                    tvHtml5SimplyEmbedStreamingData));
         }
     }
 
@@ -622,7 +665,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         // Android client doesn't contain all available streams (mainly the WEBM ones)
         return getManifestUrl(
                 "dash",
-                Arrays.asList(androidStreamingData, tvHtml5SimplyEmbedStreamingData));
+                Arrays.asList(visionOsStreamingData, androidStreamingData,
+                        tvHtml5SimplyEmbedStreamingData));
     }
 
     @Nonnull
@@ -745,13 +789,25 @@ public class YoutubeStreamExtractor extends StreamExtractor {
     }
 
     private void setStreamType() {
-        if (playerResponse.getObject("playabilityStatus").has("liveStreamability")) {
+        if (hasLiveStreamability(playerResponse) || hasLiveStreamability(iosPlayerResponse)
+                || hasLiveStreamability(androidPlayerResponse)) {
             streamType = StreamType.LIVE_STREAM;
-        } else if (playerResponse.getObject("videoDetails").getBoolean("isPostLiveDvr", false)) {
+        } else if (isPostLiveDvr(playerResponse) || isPostLiveDvr(iosPlayerResponse)
+                || isPostLiveDvr(androidPlayerResponse)) {
             streamType = StreamType.POST_LIVE_STREAM;
         } else {
             streamType = StreamType.VIDEO_STREAM;
         }
+    }
+
+    private static boolean hasLiveStreamability(@Nullable final JsonObject response) {
+        return response != null
+                && response.getObject("playabilityStatus").has("liveStreamability");
+    }
+
+    private static boolean isPostLiveDvr(@Nullable final JsonObject response) {
+        return response != null
+                && response.getObject("videoDetails").getBoolean("isPostLiveDvr", false);
     }
 
     @Nullable
@@ -787,6 +843,16 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                         } else if (result.has("compactPlaylistRenderer")) {
                             return new YoutubeMixOrPlaylistInfoItemExtractor(
                                     result.getObject("compactPlaylistRenderer"));
+                        } else if (result.has("lockupViewModel")) {
+                            // YouTube moved the related videos sidebar over to this renderer.
+                            // Only videos are handled; playlists and podcasts are skipped.
+                            final JsonObject lockupViewModel =
+                                    result.getObject("lockupViewModel");
+                            if ("LOCKUP_CONTENT_TYPE_VIDEO".equals(
+                                    lockupViewModel.getString("contentType"))) {
+                                return new YoutubeStreamInfoItemLockupExtractor(
+                                        lockupViewModel, timeAgoParser);
+                            }
                         }
                         return null;
                     })
@@ -891,17 +957,58 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             // age-restricted videos
             setStreamType();
         } else {
-            checkPlayabilityStatus(webPlayerResponse, playabilityStatus);
-            // Fetching successfully the iOS player is mandatory to get streams
-            fetchIosMobileJsonPlayer(contentCountry, localization, videoId);
-
-
+            // The WEB client now requires a poToken and answers UNPLAYABLE ("Video unavailable",
+            // "The page needs to be reloaded.") for videos that play perfectly fine through the
+            // iOS client, so its playability status can no longer be used as a gate. Fetch the
+            // streams first and only fall back to the WEB playability status when no streams
+            // could be obtained, so that real errors (private, paid, members-only, geo-blocked,
+            // ...) still produce their specific exception.
+            // The ANDROID client comes first: it is currently the only one that still returns a
+            // progressive (muxed) format, and it keeps serving media for videos where every
+            // adaptive URL of the iOS client answers HTTP 403.
+            Exception fetchException = null;
             try {
                 fetchAndroidMobileJsonPlayer(contentCountry, localization, videoId);
-            } catch (final Exception ignored) {
-                // Ignore exceptions related to ANDROID client fetch or parsing, as it is not
-                // compulsory to play contents
+            } catch (final IOException | ExtractionException e) {
+                fetchException = e;
             }
+
+            // VISIONOS is what supplies the adaptive formats, and therefore every resolution
+            // above the single progressive 360p stream the ANDROID client returns.
+            if (isFetchingAdaptiveFormats()) {
+                try {
+                    fetchVisionOsMobileJsonPlayer(contentCountry, localization, videoId);
+                } catch (final Exception ignored) {
+                    // Optional: playback still works from the progressive stream alone
+                }
+            }
+
+            if (androidStreamingData == null && visionOsStreamingData == null) {
+                try {
+                    fetchIosMobileJsonPlayer(contentCountry, localization, videoId);
+                } catch (final IOException | ExtractionException e) {
+                    if (fetchException == null) {
+                        fetchException = e;
+                    }
+                }
+            }
+
+            if (androidStreamingData == null && visionOsStreamingData == null
+                    && iosStreamingData == null) {
+                checkPlayabilityStatus(webPlayerResponse, playabilityStatus);
+
+                if (fetchException instanceof IOException) {
+                    throw (IOException) fetchException;
+                } else if (fetchException != null) {
+                    throw (ExtractionException) fetchException;
+                }
+                throw new ExtractionException("Could not get any stream from the mobile clients");
+            }
+
+            // The stream type was guessed from the WEB player response above, which no longer
+            // carries a usable playability status, so refresh it now that a mobile response is
+            // available.
+            setStreamType();
         }
 
         // The microformat JSON object of the content is only returned on the WEB client,
@@ -988,10 +1095,6 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         androidCpn = generateContentPlaybackNonce();
         final byte[] mobileBody = JsonWriter.string(
                 prepareAndroidMobileJsonBuilder(localization, contentCountry)
-                        .object("playerRequest")
-                        .value(VIDEO_ID, videoId)
-                        .end()
-                        .value("disablePlayerResponse", false)
                         .value(VIDEO_ID, videoId)
                         .value(CPN, androidCpn)
                         .value(CONTENT_CHECK_OK, true)
@@ -999,20 +1102,71 @@ public class YoutubeStreamExtractor extends StreamExtractor {
                         .done())
                 .getBytes(UTF_8);
 
-        final JsonObject androidPlayerResponse = getJsonAndroidPostResponse("reel/reel_item_watch",
-                mobileBody, localization, "&t=" + generateTParameter()
-                        + "&id=" + videoId + "&$fields=playerResponse");
+        // The plain player endpoint is used rather than reel/reel_item_watch: the reel workaround
+        // is no longer needed and the regular endpoint is the only one still handing out a
+        // progressive (muxed) format.
+        final JsonObject androidPlayerResponse = getJsonAndroidPostResponse(PLAYER,
+                mobileBody, localization, "&t=" + generateTParameter() + "&id=" + videoId);
 
-        final JsonObject playerResponseObject = androidPlayerResponse.getObject("playerResponse");
-        if (isPlayerResponseNotValid(playerResponseObject, videoId)) {
+        if (isPlayerResponseNotValid(androidPlayerResponse, videoId)) {
             return;
         }
+
+        this.androidPlayerResponse = androidPlayerResponse;
 
         final JsonObject streamingData = androidPlayerResponse.getObject(STREAMING_DATA);
         if (!isNullOrEmpty(streamingData)) {
             androidStreamingData = streamingData;
             if (isNullOrEmpty(playerCaptionsTracklistRenderer)) {
-                playerCaptionsTracklistRenderer = playerResponseObject.getObject("captions")
+                playerCaptionsTracklistRenderer = androidPlayerResponse.getObject("captions")
+                        .getObject("playerCaptionsTracklistRenderer");
+            }
+        }
+    }
+
+    /**
+     * Fetch the {@code VISIONOS} API and assign the streaming data to the visionOsStreamingData
+     * JSON object.
+     *
+     * <p>
+     * This is what provides the adaptive (DASH) formats, so it is what makes anything above 360p
+     * available. It needs a visitor id, otherwise YouTube answers "Sign in to confirm that you're
+     * not a bot".
+     * </p>
+     */
+    private void fetchVisionOsMobileJsonPlayer(@Nonnull final ContentCountry contentCountry,
+                                               @Nonnull final Localization localization,
+                                               @Nonnull final String videoId)
+            throws IOException, ExtractionException {
+        String visitorData = null;
+        try {
+            visitorData = YoutubeParsingHelper.extractVisitorData();
+        } catch (final Exception ignored) {
+            // Without it the request below will simply be rejected and no streams added
+        }
+
+        visionOsCpn = generateContentPlaybackNonce();
+        final byte[] mobileBody = JsonWriter.string(
+                prepareVisionOsMobileJsonBuilder(localization, contentCountry, visitorData)
+                        .value(VIDEO_ID, videoId)
+                        .value(CPN, visionOsCpn)
+                        .value(CONTENT_CHECK_OK, true)
+                        .value(RACY_CHECK_OK, true)
+                        .done())
+                .getBytes(UTF_8);
+
+        final JsonObject response = getJsonVisionOsPostResponse(PLAYER, mobileBody, localization,
+                visitorData);
+
+        if (isPlayerResponseNotValid(response, videoId)) {
+            return;
+        }
+
+        final JsonObject streamingData = response.getObject(STREAMING_DATA);
+        if (!isNullOrEmpty(streamingData)) {
+            visionOsStreamingData = streamingData;
+            if (isNullOrEmpty(playerCaptionsTracklistRenderer)) {
+                playerCaptionsTracklistRenderer = response.getObject("captions")
                         .getObject("playerCaptionsTracklistRenderer");
             }
         }
@@ -1043,6 +1197,8 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         if (isPlayerResponseNotValid(iosPlayerResponse, videoId)) {
             throw new ExtractionException("IOS player response is not valid");
         }
+
+        this.iosPlayerResponse = iosPlayerResponse;
 
         final JsonObject streamingData = iosPlayerResponse.getObject(STREAMING_DATA);
         if (!isNullOrEmpty(streamingData)) {
@@ -1275,16 +1431,17 @@ public class YoutubeStreamExtractor extends StreamExtractor {
 
             java.util.stream.Stream.of(
                      /*
-                    Use the iosStreamingData object first because there is no n param and no
-                    signatureCiphers in streaming URLs of the iOS client
-                    The androidStreamingData is used as second way as it isn't used on livestreams,
-                    it doesn't return all available streams, and the Android client extraction is
-                    more likely to break
+                    androidStreamingData comes first because it holds the progressive (muxed)
+                    format, the one thing that plays on its own; visionOsStreamingData follows
+                    because it is the only source of adaptive formats, and so of every resolution
+                    above 360p. Neither carries an n param or a signatureCipher.
+                    The iOS client is kept as a fallback, its URLs answer HTTP 403 on many videos.
                     As age-restricted videos are not common, use tvHtml5SimplyEmbedStreamingData
                     last, which will be the only one not empty for age-restricted content
                      */
-                    new Pair<>(iosStreamingData, iosCpn),
                     new Pair<>(androidStreamingData, androidCpn),
+                    new Pair<>(visionOsStreamingData, visionOsCpn),
+                    new Pair<>(iosStreamingData, iosCpn),
                     new Pair<>(tvHtml5SimplyEmbedStreamingData, tvHtml5SimplyEmbedCpn)
             )
                     .flatMap(pair -> getStreamsFromStreamingDataKey(videoId, pair.getFirst(),
@@ -1459,6 +1616,14 @@ public class YoutubeStreamExtractor extends StreamExtractor {
             final String cipherString = formatData.has(CIPHER)
                     ? formatData.getString(CIPHER)
                     : formatData.getString(SIGNATURE_CIPHER);
+            if (isNullOrEmpty(cipherString)) {
+                // The ANDROID client describes its adaptive formats without a url and without a
+                // cipher: they are reachable over SABR only. Skipping the entry keeps the rest of
+                // the list usable -- letting it through would NPE and take every other client's
+                // streams down with it.
+                throw new ParsingException(
+                        "Could not get stream URL: neither a url nor a cipher is present");
+            }
             final Map<String, String> cipher = Parser.compatParseMap(
                     cipherString);
             streamUrl = cipher.get("url") + "&" + cipher.get("sp") + "="
@@ -1527,11 +1692,21 @@ public class YoutubeStreamExtractor extends StreamExtractor {
         itagItem.setApproxDurationMs(Long.parseLong(formatData.getString("approxDurationMs",
                 String.valueOf(APPROX_DURATION_MS_UNKNOWN))));
 
+        final boolean isOtf = formatData.getString("type", "")
+                .equalsIgnoreCase("FORMAT_STREAM_TYPE_OTF");
+
+        // Adaptive formats used to need wrapping in a generated DASH manifest here: the client
+        // that supplied them (ANDROID_VR) served only their first megabyte over ordinary range
+        // requests, and only a DASH-aware player asking for the exact ranges the manifest names
+        // could get more. VISIONOS, the client used now, has no such limit and serves the whole
+        // file to a plain sequential GET, so the bare URL below works directly -- which also
+        // means a stream never carries a manifest without a URL, and a player that only knows
+        // how to open a URL (as VLC's Media/Media.Slave pairing does) keeps working unmodified.
+
         final ItagInfo itagInfo = new ItagInfo(streamUrl, itagItem);
 
         if (streamType == StreamType.VIDEO_STREAM) {
-            itagInfo.setIsUrl(!formatData.getString("type", "")
-                    .equalsIgnoreCase("FORMAT_STREAM_TYPE_OTF"));
+            itagInfo.setIsUrl(!isOtf);
         } else {
             // We are currently not able to generate DASH manifests for running
             // livestreams, so because of the requirements of StreamInfo

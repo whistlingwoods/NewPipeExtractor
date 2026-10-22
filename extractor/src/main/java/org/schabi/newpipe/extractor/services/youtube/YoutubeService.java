@@ -32,12 +32,14 @@ import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeSearchExt
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeStreamExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeSubscriptionExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeSuggestionExtractor;
+import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeLiveExtractor;
 import org.schabi.newpipe.extractor.services.youtube.extractors.YoutubeTrendingExtractor;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeChannelLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeCommentsLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubePlaylistLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeSearchQueryHandlerFactory;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeStreamLinkHandlerFactory;
+import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeLiveLinkHandlerFactory;
 import org.schabi.newpipe.extractor.services.youtube.linkHandler.YoutubeTrendingLinkHandlerFactory;
 import org.schabi.newpipe.extractor.stream.StreamExtractor;
 import org.schabi.newpipe.extractor.subscription.SubscriptionExtractor;
@@ -139,6 +141,9 @@ public class YoutubeService extends StreamingService {
 
         // add kiosks here e.g.:
         try {
+            // Kept registered so that existing tab configurations keep resolving, but YouTube
+            // retired the feed behind it: browseId FEtrending is answered with HTTP 400
+            // INVALID_ARGUMENT, so this kiosk always fails.
             list.addKioskEntry(
                     (streamingService, url, id) -> new YoutubeTrendingExtractor(
                             YoutubeService.this,
@@ -148,7 +153,18 @@ public class YoutubeService extends StreamingService {
                     new YoutubeTrendingLinkHandlerFactory(),
                     "Trending"
             );
-            list.setDefaultKiosk("Trending");
+            list.addKioskEntry(
+                    (streamingService, url, id) -> new YoutubeLiveExtractor(
+                            YoutubeService.this,
+                            new YoutubeLiveLinkHandlerFactory().fromUrl(url),
+                            id
+                    ),
+                    new YoutubeLiveLinkHandlerFactory(),
+                    YoutubeLiveLinkHandlerFactory.KIOSK_ID
+            );
+            // Not Trending: the feed behind it is gone, so it would only ever greet the user with
+            // an error.
+            list.setDefaultKiosk(YoutubeLiveLinkHandlerFactory.KIOSK_ID);
         } catch (final Exception e) {
             throw new ExtractionException(e);
         }
