@@ -55,7 +55,9 @@ public class BandcampSearchExtractor extends SearchExtractor {
         final MultiInfoItemsCollector collector = new MultiInfoItemsCollector(getServiceId());
 //        final Document d = Jsoup.parse(getDownloader().get(page.getUrl()).responseBody());
         final var headers = Map.of("Cookie", List.of("identity"));
-        final var response = getDownloader().get(page.getUrl(), headers).responseBody();
+        final var response = getDownloader()
+                .get(page.getUrl(), headers, getExtractorLocalization())
+                .responseBody();
         final Document d = Jsoup.parse(response);
 
         for (final Element searchResult : d.getElementsByClass("searchresult")) {
