@@ -36,6 +36,7 @@ import org.schabi.newpipe.extractor.utils.Utils;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
@@ -54,7 +55,9 @@ public class BandcampStreamExtractor extends StreamExtractor {
     @Override
     public void onFetchPage(@Nonnull final Downloader downloader)
             throws IOException, ExtractionException {
-        final String html = downloader.get(getLinkHandler().getUrl()).responseBody();
+        final Map<String, List<String>> headers = Map.of(
+                "Cookie", List.of(BandcampExtractorHelper.getRandomCartClientIdCookie()));
+        final String html = downloader.get(getLinkHandler().getUrl(), headers).responseBody();
         document = Jsoup.parse(html);
         albumJson = getAlbumInfoJson(html);
         current = albumJson.getObject("current");
